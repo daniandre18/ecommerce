@@ -1,4 +1,4 @@
-import { RoleBasedAuthorizationService } from '@ecommerce/application';
+import { RoleBasedAuthorizationService, requireOwner, requirePermission } from '@ecommerce/application';
 import { InMemorySecurityEventRecorder, InMemoryUnitOfWork } from '@ecommerce/application/testing';
 import {
   activateMembership,
@@ -11,7 +11,7 @@ import {
 } from '@ecommerce/domain';
 import type { CallableRequest } from 'firebase-functions/https';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { guarded, requireOwner, requirePermission, type GuardDependencies } from './guard';
+import { guarded, type GuardDependencies } from './guard';
 
 const AT = new Date('2026-09-30T12:00:00Z');
 const T1 = tenantId('t1');
