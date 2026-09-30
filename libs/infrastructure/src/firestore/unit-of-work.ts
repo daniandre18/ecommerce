@@ -40,7 +40,8 @@ class FirestoreScope implements TransactionScope {
   readonly members: MembershipRepository = {
     findByUid: async (id) => {
       const snap = await this.t.get(this.col('members').doc(id));
-      return snap.exists ? membershipFromDoc(snap.id, this.tenantId, snap.data()!) : null;
+      const data = snap.data();
+      return data ? membershipFromDoc(snap.id, this.tenantId, data) : null;
     },
     save: async (m) => {
       this.t.set(this.col('members').doc(m.uid), membershipToDoc(m));
@@ -50,7 +51,8 @@ class FirestoreScope implements TransactionScope {
   readonly roles: RoleRepository = {
     findById: async (id) => {
       const snap = await this.t.get(this.col('roles').doc(id));
-      return snap.exists ? roleFromDoc(snap.id, this.tenantId, snap.data()!) : null;
+      const data = snap.data();
+      return data ? roleFromDoc(snap.id, this.tenantId, data) : null;
     },
     list: async () => {
       const snap = await this.t.get(this.col('roles'));
@@ -63,8 +65,9 @@ class FirestoreScope implements TransactionScope {
     delete: async (id: RoleId) => {
       const ref = this.col('roles').doc(id);
       const snap = await this.t.get(ref);
-      if (!snap.exists) return;
-      assertCanDeleteRole(roleFromDoc(snap.id, this.tenantId, snap.data()!));
+      const data = snap.data();
+      if (!data) return;
+      assertCanDeleteRole(roleFromDoc(snap.id, this.tenantId, data));
       this.t.delete(ref);
     },
   };

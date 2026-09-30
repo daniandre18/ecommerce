@@ -1,3 +1,4 @@
+import type { TransactionScope } from '@ecommerce/application';
 import { activateMembership, inviteMembership, roleId, RoleNotDeletableError, tenantId, uid } from '@ecommerce/domain';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { firestore } from './firestore';
@@ -20,6 +21,13 @@ const ana = () =>
     AT,
   );
 
+/** Lee a Ana dentro de la transacción; falla con un mensaje claro si la siembra no la creó. */
+async function findAna(tx: TransactionScope) {
+  const member = await tx.members.findByUid(uid('ana'));
+  if (!member) throw new Error('La siembra no creó la membresía de Ana');
+  return member;
+}
+
 const memberRoleId = async (tenant: string, memberUid: string) =>
   (await db.doc(`tenants/${tenant}/members/${memberUid}`).get()).data()?.['roleId'];
 const auditEntryCount = async (tenant: string) =>
@@ -36,8 +44,8 @@ describe('FirestoreUnitOfWork contra el emulador', () => {
 
   it('confirma juntos el cambio y su entrada', async () => {
     await uow.run(async (tx) => {
-      const member = await tx.members.findByUid(uid('ana'));
-      await tx.members.save({ ...member!, roleId: roleId('pricing') });
+      const member = await findAna(tx);
+      await tx.members.save({ ...member, roleId: roleId('pricing') });
       await tx.audit.append([roleChangedEntry(T1, 'e1')]);
     });
     expect(await memberRoleId('t1', 'ana')).toBe('pricing');
@@ -48,8 +56,8 @@ describe('FirestoreUnitOfWork contra el emulador', () => {
     await uow.run(async (tx) => tx.audit.append([roleChangedEntry(T1, 'dup')]));
 
     const attempt = uow.run(async (tx) => {
-      const member = await tx.members.findByUid(uid('ana'));
-      await tx.members.save({ ...member!, roleId: roleId('pricing') });
+      const member = await findAna(tx);
+      await tx.members.save({ ...member, roleId: roleId('pricing') });
       await tx.audit.append([roleChangedEntry(T1, 'dup')]); // id repetido: `create` falla al confirmar
     });
 
@@ -99,8 +107,8 @@ describe('FirestoreUnitOfWork contra el emulador', () => {
     expect(seen?.roleId).toBe('catalog');
 
     await uow.run(async (tx) => {
-      const member = await tx.members.findByUid(uid('ana'));
-      await tx.members.save({ ...member!, roleId: roleId('cambiado') });
+      const member = await findAna(tx);
+      await tx.members.save({ ...member, roleId: roleId('cambiado') });
     });
     expect(await memberRoleId('t2', 'ana')).toBe('otro');
   });

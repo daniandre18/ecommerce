@@ -30,6 +30,13 @@ function activeMember(u: string, role: string, isOwner = false): Membership {
 
 describe('RoleBasedAuthorizationService', () => {
   let uow: InMemoryUnitOfWork;
+
+  function seeded<T>(value: T | undefined, what: string): T {
+    if (value === undefined) throw new Error(`La siembra no creó ${what}`);
+    return value;
+  }
+  const storedMember = (u: string) => seeded(uow.store.members.get(uid(u)), `la membresía ${u}`);
+  const storedRole = (id: string) => seeded(uow.store.roles.get(roleId(id)), `el rol ${id}`);
   const authz = new RoleBasedAuthorizationService();
   const check = (u: string, p: Parameters<typeof authz.assert>[2]) =>
     uow.run((tx) => authz.assert(tx, ctx(u), p));
@@ -85,7 +92,7 @@ describe('RoleBasedAuthorizationService', () => {
   });
 
   it('una membresía dada de baja no opera, aunque su rol conceda (FR-008a)', async () => {
-    uow.store.members.set(uid('ana'), disableMembership(uow.store.members.get(uid('ana'))!, AT));
+    uow.store.members.set(uid('ana'), disableMembership(storedMember('ana'), AT));
     await expect(check('ana', 'catalog.write')).rejects.toThrow(PermissionDeniedError);
   });
 
@@ -97,7 +104,7 @@ describe('RoleBasedAuthorizationService', () => {
 
   it('retirar un permiso rige en la operación siguiente, sin tocar tokens (FR-008)', async () => {
     await expect(check('beto', 'variant.price.write')).resolves.toBeUndefined();
-    const pricing = uow.store.roles.get(roleId('pricing'))!;
+    const pricing = storedRole('pricing');
     uow.store.roles.set(pricing.id, setRolePermissions(pricing, ['catalog.read']));
     await expect(check('beto', 'variant.price.write')).rejects.toThrow(PermissionDeniedError);
   });
@@ -112,7 +119,7 @@ describe('RoleBasedAuthorizationService', () => {
     });
 
     it('rechaza a un Propietario dado de baja', async () => {
-      uow.store.members.set(uid('owner'), disableMembership(uow.store.members.get(uid('owner'))!, AT));
+      uow.store.members.set(uid('owner'), disableMembership(storedMember('owner'), AT));
       await expect(uow.run((tx) => authz.assertOwner(tx, ctx('owner')))).rejects.toThrow(PermissionDeniedError);
     });
   });

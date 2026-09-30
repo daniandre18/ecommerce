@@ -34,9 +34,21 @@ export function membershipFromDoc(id: string, tid: string, d: DocumentData): Mem
   };
 }
 
+/**
+ * Campos persistidos, enumerados a propósito: un campo nuevo de `Membership` no llega a Firestore
+ * hasta que alguien decide guardarlo. `uid` y `tenantId` no se guardan porque están en la ruta.
+ */
 export function membershipToDoc(m: Membership): DocumentData {
-  const { uid: _uid, tenantId: _tid, ...rest } = m;
-  return rest;
+  return {
+    roleId: m.roleId,
+    isOwner: m.isOwner,
+    displayName: m.displayName,
+    email: m.email,
+    status: m.status,
+    invitedAt: m.invitedAt,
+    activatedAt: m.activatedAt,
+    disabledAt: m.disabledAt,
+  };
 }
 
 export function roleFromDoc(id: string, tid: string, d: DocumentData): Role {
@@ -52,7 +64,14 @@ export function roleFromDoc(id: string, tid: string, d: DocumentData): Role {
   };
 }
 
+/** Campos persistidos, enumerados a propósito. `id` y `tenantId` están en la ruta. */
 export function roleToDoc(r: Role): DocumentData {
-  const { id: _id, tenantId: _tid, ...rest } = r;
-  return { ...rest, permissions: [...r.permissions] };
+  return {
+    name: r.name,
+    permissions: [...r.permissions],
+    preset: r.preset,
+    editable: r.editable,
+    memberCount: r.memberCount,
+    createdAt: r.createdAt,
+  };
 }
