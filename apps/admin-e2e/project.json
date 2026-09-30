@@ -1,0 +1,22 @@
+{
+  "name": "admin-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/admin-e2e/src",
+  "projectType": "application",
+  "tags": ["layer:presentation"],
+  "implicitDependencies": ["admin"],
+  "targets": {
+    "e2e": {
+      "executor": "nx:run-commands",
+      "options": { "command": "playwright test --config apps/admin-e2e/playwright.config.ts" }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc -p apps/admin-e2e/tsconfig.json --noEmit" }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": { "command": "eslint apps/admin-e2e --no-error-on-unmatched-pattern --pass-on-no-patterns" }
+    }
+  }
+}
