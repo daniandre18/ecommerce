@@ -1,5 +1,5 @@
 import { isActive, type Membership, type Permission } from '@ecommerce/domain';
-import { PermissionDeniedError, type AuthorizationService } from '../ports/authorization';
+import { NotAMemberError, PermissionDeniedError, type AuthorizationService } from '../ports/authorization';
 import type { OperationContext } from '../ports/operation-context';
 import type { TransactionScope } from '../ports/unit-of-work';
 
@@ -31,8 +31,11 @@ export class RoleBasedAuthorizationService implements AuthorizationService {
 
   private async activeMember(tx: TransactionScope, ctx: OperationContext): Promise<Membership> {
     const member = await tx.members.findByUid(ctx.actorUid);
-    if (!member || !isActive(member)) {
-      throw new PermissionDeniedError(`${ctx.actorUid} no tiene membresía activa en ${ctx.tenantId}`);
+    if (!member) {
+      throw new NotAMemberError(`${ctx.actorUid} no es miembro de ${ctx.tenantId}`);
+    }
+    if (!isActive(member)) {
+      throw new PermissionDeniedError(`La membresía de ${ctx.actorUid} en ${ctx.tenantId} no está activa`);
     }
     return member;
   }

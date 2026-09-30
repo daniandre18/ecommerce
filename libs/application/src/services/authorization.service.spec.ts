@@ -11,7 +11,7 @@ import {
   type Membership,
 } from '@ecommerce/domain';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { PermissionDeniedError } from '../ports/authorization';
+import { NotAMemberError, PermissionDeniedError } from '../ports/authorization';
 import type { OperationContext } from '../ports/operation-context';
 import { InMemoryUnitOfWork } from '../testing/in-memory';
 import { RoleBasedAuthorizationService } from './authorization.service';
@@ -89,6 +89,11 @@ describe('RoleBasedAuthorizationService', () => {
 
   it('sin membresía en el comercio, nada', async () => {
     await expect(check('intruso', 'catalog.read')).rejects.toThrow(PermissionDeniedError);
+  });
+
+  it('distingue a quien no es miembro de quien no tiene el permiso (FR-004)', async () => {
+    await expect(check('intruso', 'catalog.read')).rejects.toThrow(NotAMemberError);
+    await expect(check('ana', 'variant.price.write')).rejects.not.toThrow(NotAMemberError);
   });
 
   it('una membresía dada de baja no opera, aunque su rol conceda (FR-008a)', async () => {

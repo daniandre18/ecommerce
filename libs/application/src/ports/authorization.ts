@@ -3,7 +3,16 @@ import type { OperationContext } from './operation-context';
 import type { TransactionScope } from './unit-of-work';
 
 export class PermissionDeniedError extends Error {
-  override readonly name = 'PermissionDeniedError';
+  override readonly name: string = 'PermissionDeniedError';
+}
+
+/**
+ * La cuenta no tiene ninguna membresía en el comercio al que intentó acceder: es un intento de
+ * acceso cruzado entre comercios (FR-004). Una membresía dada de baja NO cae acá: esa persona es
+ * del comercio, solo que ya no opera.
+ */
+export class NotAMemberError extends PermissionDeniedError {
+  override readonly name = 'NotAMemberError';
 }
 
 /**

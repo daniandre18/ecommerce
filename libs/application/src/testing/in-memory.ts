@@ -5,6 +5,7 @@ import type {
   RoleRepository,
   VariantCostsRepository,
 } from '../ports/repositories';
+import type { SecurityEvent, SecurityEventRecorder } from '../ports/security-events';
 import type { TransactionScope, UnitOfWork } from '../ports/unit-of-work';
 
 /**
@@ -74,5 +75,14 @@ export class InMemoryUnitOfWork implements UnitOfWork {
     const result = await work(new Scope(draft));
     this.store = draft; // solo se confirma si `work` no lanzó
     return result;
+  }
+}
+
+/** Registra los eventos en memoria. Vive fuera de la unidad de trabajo, como el de verdad. */
+export class InMemorySecurityEventRecorder implements SecurityEventRecorder {
+  readonly events: SecurityEvent[] = [];
+
+  async record(event: SecurityEvent): Promise<void> {
+    this.events.push(event);
   }
 }
