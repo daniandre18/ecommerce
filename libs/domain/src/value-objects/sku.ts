@@ -12,7 +12,7 @@ export class InvalidSkuError extends Error {
   override readonly name = 'InvalidSkuError';
 }
 
-export function normalizarSku(input: string): Sku {
+export function normalizeSku(input: string): Sku {
   const raw = input.trim();
   if (raw === '') {
     throw new InvalidSkuError('El SKU no puede estar vacío');
