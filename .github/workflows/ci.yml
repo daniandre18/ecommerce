@@ -1,0 +1,107 @@
+# Compuertas del principio X de la constitución. Un merge se rechaza si falla cualquiera de estos
+# trabajos, sin excepción por plazos.
+#
+# IMPORTANTE: este archivo no bloquea nada por sí solo. Para que un merge se rechace, los cinco
+# trabajos tienen que estar marcados como "required status checks" en la protección de la rama
+# principal (Settings → Branches → Branch protection rules).
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '22'
+  FIREBASE_TOOLS_VERSION: '15.26.0'
+
+jobs:
+  # Frontera de capas (T003). Tiene que correr A TRAVÉS DE NX: invocado como `eslint` directo, sin
+  # el grafo de proyectos de Nx, `@nx/enforce-module-boundaries` imprime un aviso, SE SALTA y sale
+  # con código 0. Sería una compuerta verde que no verifica nada.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npx nx run-many -t lint --skip-nx-cache
+
+  # Vitest no chequea tipos: las pruebas pueden pasar con el código roto. Por eso va aparte.
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npx nx run-many -t typecheck --skip-nx-cache
+
+  # Dominio puro y casos de uso, sin emuladores: motor de variantes, dinero entero, autorización.
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npx nx run-many -t test --skip-nx-cache
+
+  # Aislamiento entre comercios y rutas reservadas al Propietario, contra el emulador.
+  rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ env.FIREBASE_TOOLS_VERSION }}
+      - run: npm ci
+      - run: >
+          npx --yes firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}
+          emulators:exec --only firestore --project demo-ecommerce "npm run test:rules"
+
+  # Atomicidad de la bitácora en ambos sentidos (FR-030, FR-033), contra el emulador.
+  # Cuando exista apps/functions (T051), sus pruebas de integración se suman a este trabajo.
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ env.FIREBASE_TOOLS_VERSION }}
+      - run: npm ci
+      - run: >
+          npx --yes firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}
+          emulators:exec --only firestore --project demo-ecommerce "npm run test:infrastructure"

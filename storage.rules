@@ -1,0 +1,18 @@
+rules_version = '2';
+
+// Lectura para miembros del comercio; escritura para nadie desde el cliente. Las imágenes se suben
+// con URL firmada de duración corta, emitida por una Cloud Function que antes verifica
+// `catalog.write` y valida tipo y tamaño del lado del servidor.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /tenants/{tenantId}/{allPaths=**} {
+      allow read: if request.auth != null
+        && firestore.exists(/databases/(default)/documents/tenants/$(tenantId)/members/$(request.auth.uid))
+        && firestore.get(/databases/(default)/documents/tenants/$(tenantId)/members/$(request.auth.uid)).data.status == 'active';
+      allow write: if false;
+    }
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

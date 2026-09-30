@@ -1,0 +1,40 @@
+{
+  "name": "ecommerce-catalog-rbac",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "build": "nx run-many -t build",
+    "test": "nx run-many -t test",
+    "lint": "nx run-many -t lint",
+    "emulators": "firebase emulators:start",
+    "test:domain": "vitest run --config libs/domain/vite.config.mts",
+    "test:application": "vitest run --config libs/application/vite.config.mts",
+    "test:rules": "vitest run --config tests/rules/vite.config.mts",
+    "test:infrastructure": "vitest run --config libs/infrastructure/vite.config.mts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@firebase/rules-unit-testing": "5.0.2",
+    "@nx/eslint": "23.2.1",
+    "@nx/eslint-plugin": "23.2.1",
+    "@nx/js": "23.2.1",
+    "@nx/vite": "23.2.1",
+    "@types/node": "26.6.3",
+    "eslint": "10.11.0",
+    "jiti": "2.7.0",
+    "nx": "23.2.1",
+    "prettier": "3.9.9",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "8.71.0",
+    "vite": "8.3.1",
+    "vitest": "5.0.3"
+  },
+  "dependencies": {
+    "firebase-admin": "14.5.0",
+    "firebase-functions": "7.4.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

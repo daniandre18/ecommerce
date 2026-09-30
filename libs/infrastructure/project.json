@@ -1,0 +1,23 @@
+{
+  "name": "infrastructure",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/infrastructure/src",
+  "projectType": "library",
+  "tags": [
+    "layer:infrastructure"
+  ],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint libs/infrastructure --no-error-on-unmatched-pattern --pass-on-no-patterns"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/infrastructure/tsconfig.json --noEmit"
+      }
+    }
+  }
+}

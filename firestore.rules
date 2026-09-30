@@ -1,0 +1,98 @@
+rules_version = '2';
+
+// Contrato: specs/001-catalog-rbac/contracts/firestore-rules.md
+//
+// Las reglas responden solo dos preguntas: ¿tenés membresía activa en este comercio? y ¿sos su
+// Propietario? Los permisos granulares se verifican en las Cloud Functions, que son las únicas
+// que escriben. La pertenencia se lee de la membresía —no de un claim— porque una cuenta puede
+// estar en varios comercios (FR-005) y la baja tiene que cortar el acceso de inmediato (FR-008a).
+//
+// ── POR QUÉ NO HAY UN COMODÍN `{document=**}` BAJO EL INQUILINO ──────────────────────────────────
+// Firestore combina con OR todas las reglas que coinciden con un documento, SIN importar el orden
+// en que están escritas. Un `match /tenants/{tenantId}/{document=**}` con `allow read` para
+// miembros coincide también con `config/secrets` y `auditLog`, y concede su lectura a cualquier
+// colaborador — por más que una regla más específica diga "solo el Propietario". Por eso cada
+// colección legible está declarada de forma explícita, y todo lo que no esté listado queda
+// denegado. Prueba de regresión: tests/rules/member-cannot-read-owner-paths.spec.ts
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function membershipPath(tenantId) {
+      return /databases/$(database)/documents/tenants/$(tenantId)/members/$(request.auth.uid);
+    }
+
+    function member(tenantId) {
+      return get(membershipPath(tenantId)).data;
+    }
+
+    function isActiveMember(tenantId) {
+      return request.auth != null
+        && exists(membershipPath(tenantId))
+        && member(tenantId).status == 'active';
+    }
+
+    function isOwnerOf(tenantId) {
+      return isActiveMember(tenantId) && member(tenantId).isOwner == true;
+    }
+
+    // Lee el rol de la membresía. Solo lo usa la ruta de costos (T068, Historia 2).
+    function hasPermission(tenantId, permission) {
+      return isActiveMember(tenantId)
+        && permission in get(/databases/$(database)/documents/tenants/$(tenantId)/roles/$(member(tenantId).roleId)).data.permissions;
+    }
+
+    match /tenants/{tenantId} {
+
+      // ── Legible por miembros activos ───────────────────────────────────────────────────────
+      match /products/{productId} {
+        allow read: if isActiveMember(tenantId);
+
+        match /variants/{variantId} {
+          allow read: if isActiveMember(tenantId);
+        }
+
+        // Costos: documento aparte porque Firestore no protege campos sueltos (FR-015).
+        // Hoy, solo el Propietario. T068 suma `|| hasPermission(tenantId, 'variant.cost.read')`.
+        match /private/{docId} {
+          allow read: if isOwnerOf(tenantId);
+        }
+      }
+
+      match /roles/{roleId} {
+        allow read: if isActiveMember(tenantId);
+      }
+
+      // Cada cuenta lee su propia membresía (para conocer su estado y su rol); el Propietario
+      // lee todas.
+      match /members/{memberUid} {
+        allow read: if (request.auth != null && request.auth.uid == memberUid)
+          || isOwnerOf(tenantId);
+      }
+
+      // ── Solo el Propietario ────────────────────────────────────────────────────────────────
+      match /invitations/{invitationId} {
+        allow read: if isOwnerOf(tenantId);
+      }
+
+      // Credenciales de pasarelas y facturación (FR-014)
+      match /config/{docId} {
+        allow read: if isOwnerOf(tenantId);
+      }
+
+      // Bitácora (FR-032, FR-034). No hay `allow create/update/delete` en ningún lado: nadie
+      // escribe desde un cliente, ni el Propietario. El Admin SDK de las Functions evade estas
+      // reglas por diseño.
+      match /auditLog/{entryId} {
+        allow read: if isOwnerOf(tenantId);
+      }
+
+      match /securityEvents/{eventId} {
+        allow read: if isOwnerOf(tenantId);
+      }
+
+      // `skuIndex` no se declara: lo consulta solo el servidor.
+    }
+
+    // Ninguna regla de este archivo concede `write`. Todo lo no listado queda denegado.
+  }
+}
