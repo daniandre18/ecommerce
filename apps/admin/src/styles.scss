@@ -1,4 +1,8 @@
+@use '@angular/cdk';
 @use '@angular/material' as mat;
+
+// Clase `cdk-visually-hidden`: texto solo para lectores de pantalla. La usan los estados de @ecommerce/ui.
+@include cdk.a11y-visually-hidden();
 
 // Tipografía del sistema en lugar de una fuente web: evita una descarga bloqueante antes del
 // primer render (principio VIII, carga percibida) y se lee bien en cualquier dispositivo.

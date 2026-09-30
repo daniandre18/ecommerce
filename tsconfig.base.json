@@ -3,7 +3,9 @@
     "target": "ES2023",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2023"],
+    "lib": [
+      "ES2023"
+    ],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
@@ -17,10 +19,23 @@
     "declaration": true,
     "sourceMap": true,
     "paths": {
-      "@ecommerce/domain": ["./libs/domain/src/index.ts"],
-      "@ecommerce/application": ["./libs/application/src/index.ts"],
-      "@ecommerce/infrastructure": ["./libs/infrastructure/src/index.ts"]
+      "@ecommerce/domain": [
+        "./libs/domain/src/index.ts"
+      ],
+      "@ecommerce/application": [
+        "./libs/application/src/index.ts"
+      ],
+      "@ecommerce/infrastructure": [
+        "./libs/infrastructure/src/index.ts"
+      ],
+      "@ecommerce/ui": [
+        "./libs/ui/src/index.ts"
+      ]
     }
   },
-  "exclude": ["node_modules", "tmp", "dist"]
+  "exclude": [
+    "node_modules",
+    "tmp",
+    "dist"
+  ]
 }

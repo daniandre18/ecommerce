@@ -1,0 +1,25 @@
+{
+  "name": "ui",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/ui/src",
+  "projectType": "library",
+  "tags": ["layer:presentation"],
+  "targets": {
+    "test": {
+      "executor": "@angular/build:unit-test",
+      "options": {
+        "buildTarget": "admin:build:development",
+        "tsConfig": "libs/ui/tsconfig.spec.json",
+        "include": ["libs/ui/src/**/*.spec.ts"]
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "ngc -p libs/ui/tsconfig.lib.json --noEmit" }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": { "command": "eslint libs/ui --no-error-on-unmatched-pattern --pass-on-no-patterns" }
+    }
+  }
+}
