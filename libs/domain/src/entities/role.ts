@@ -94,6 +94,22 @@ export function setRolePermissions(role: Role, permissions: readonly unknown[]):
   return Object.freeze({ ...role, permissions: Object.freeze(unique) });
 }
 
+export class RoleNotDeletableError extends Error {
+  override readonly name = 'RoleNotDeletableError';
+}
+
+/** El Propietario no se elimina (FR-016), y un rol con miembros tampoco (FR-013). */
 export function canDeleteRole(role: Role): boolean {
   return role.editable && role.memberCount === 0;
+}
+
+export function assertCanDeleteRole(role: Role): void {
+  if (!role.editable) {
+    throw new RoleNotDeletableError(`El rol ${role.id} es del sistema y no se elimina`);
+  }
+  if (role.memberCount > 0) {
+    throw new RoleNotDeletableError(
+      `El rol ${role.id} tiene ${role.memberCount} miembros asignados; hay que reasignarlos antes`,
+    );
+  }
 }

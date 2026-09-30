@@ -91,7 +91,7 @@ interface RoleRepository {
   findById(id: RoleId): Promise<Role | null>;
   list(): Promise<Role[]>;
   save(role: Role): Promise<void>;
-  delete(id: RoleId): Promise<void>;   // lanza si memberCount > 0
+  delete(id: RoleId): Promise<void>;   // lanza RoleNotDeletableError si tiene miembros (FR-013) o es del sistema (FR-016)
 }
 
 // ───────── Fuera de la transacción de Firestore ─────────

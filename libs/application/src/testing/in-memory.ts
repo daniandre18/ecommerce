@@ -1,4 +1,4 @@
-import type { AuditEntry, Membership, Money, ProductId, Role, RoleId, Uid, VariantId } from '@ecommerce/domain';
+import { assertCanDeleteRole, type AuditEntry, type Membership, type Money, type ProductId, type Role, type RoleId, type Uid, type VariantId } from '@ecommerce/domain';
 import type {
   AuditLogRepository,
   MembershipRepository,
@@ -52,7 +52,8 @@ class Scope implements TransactionScope {
     },
     delete: async (id) => {
       const role = this.s.roles.get(id);
-      if (role && role.memberCount > 0) throw new Error(`El rol ${id} tiene miembros asignados`);
+      if (!role) return;
+      assertCanDeleteRole(role);
       this.s.roles.delete(id);
     },
   };

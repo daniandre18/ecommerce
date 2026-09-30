@@ -48,7 +48,11 @@ export interface RoleRepository {
   findById(id: RoleId): Promise<Role | null>;
   list(): Promise<readonly Role[]>;
   save(role: Role): Promise<void>;
-  /** Lanza si el rol tiene miembros asignados (FR-013). */
+  /**
+   * Lanza `RoleNotDeletableError` si el rol tiene miembros (FR-013) o es del sistema (FR-016).
+   * La regla es la de `canDeleteRole` del dominio; el repositorio la aplica para que ningún caso de
+   * uso pueda saltearla. Borrar un rol inexistente no hace nada.
+   */
   delete(id: RoleId): Promise<void>;
 }
 

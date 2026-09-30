@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { roleId, tenantId } from '../value-objects/ids';
 import {
+  assertCanDeleteRole,
   canDeleteRole,
   createCatalogRole,
   createCustomRole,
   createOwnerRole,
   PRESET_CATALOG_PERMISSIONS,
+  RoleNotDeletableError,
   RoleNotEditableError,
   setRolePermissions,
   UnknownPermissionError,
@@ -45,6 +47,12 @@ describe('Role', () => {
     const role = { ...customRole(), memberCount: 3 };
     expect(canDeleteRole(role)).toBe(false);
     expect(canDeleteRole({ ...role, memberCount: 0 })).toBe(true);
+  });
+
+  it('assertCanDeleteRole explica por qué no se puede borrar', () => {
+    expect(() => assertCanDeleteRole({ ...customRole(), memberCount: 1 })).toThrow(RoleNotDeletableError);
+    expect(() => assertCanDeleteRole(createOwnerRole(T1, NOW))).toThrow(RoleNotDeletableError);
+    expect(() => assertCanDeleteRole(customRole())).not.toThrow();
   });
 
   describe('rol de Propietario', () => {

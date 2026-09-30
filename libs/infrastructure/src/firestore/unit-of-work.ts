@@ -6,13 +6,9 @@ import type {
   UnitOfWork,
   VariantCostsRepository,
 } from '@ecommerce/application';
-import type { Money, ProductId, RoleId, TenantId, VariantId } from '@ecommerce/domain';
+import { assertCanDeleteRole, type Money, type ProductId, type RoleId, type TenantId, type VariantId } from '@ecommerce/domain';
 import type { Firestore, Transaction } from 'firebase-admin/firestore';
 import { membershipFromDoc, membershipToDoc, roleFromDoc, roleToDoc } from './mappers';
-
-export class RoleHasMembersError extends Error {
-  override readonly name = 'RoleHasMembersError';
-}
 
 /**
  * Repositorios atados a UNA transacción y a UN comercio. El `tenantId` se fija al construir la
@@ -63,12 +59,13 @@ class FirestoreScope implements TransactionScope {
     save: async (r) => {
       this.t.set(this.col('roles').doc(r.id), roleToDoc(r));
     },
+    // La regla es del dominio; el repositorio la aplica para que ningún caso de uso pueda saltearla.
     delete: async (id: RoleId) => {
-      const snap = await this.t.get(this.col('roles').doc(id));
-      if (snap.exists && Number(snap.data()!['memberCount'] ?? 0) > 0) {
-        throw new RoleHasMembersError(`El rol ${id} tiene miembros asignados (FR-013)`);
-      }
-      this.t.delete(this.col('roles').doc(id));
+      const ref = this.col('roles').doc(id);
+      const snap = await this.t.get(ref);
+      if (!snap.exists) return;
+      assertCanDeleteRole(roleFromDoc(snap.id, this.tenantId, snap.data()!));
+      this.t.delete(ref);
     },
   };
 

@@ -1,8 +1,8 @@
-import { activateMembership, inviteMembership, roleId, tenantId, uid } from '@ecommerce/domain';
+import { activateMembership, inviteMembership, roleId, RoleNotDeletableError, tenantId, uid } from '@ecommerce/domain';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { firestore } from './firestore';
 import { roleChangedEntry } from './testing/fixtures';
-import { FirestoreUnitOfWork, RoleHasMembersError } from './unit-of-work';
+import { FirestoreUnitOfWork } from './unit-of-work';
 
 const db = firestore();
 const T1 = tenantId('t1');
@@ -76,8 +76,20 @@ describe('FirestoreUnitOfWork contra el emulador', () => {
 
   it('no borra un rol con miembros asignados (FR-013)', async () => {
     await db.doc('tenants/t1/roles/catalog').set({ name: 'Catálogo', permissions: [], memberCount: 2, editable: true, createdAt: AT });
-    await expect(uow.run(async (tx) => tx.roles.delete(roleId('catalog')))).rejects.toThrow(RoleHasMembersError);
+    await expect(uow.run(async (tx) => tx.roles.delete(roleId('catalog')))).rejects.toThrow(RoleNotDeletableError);
     expect((await db.doc('tenants/t1/roles/catalog').get()).exists).toBe(true);
+  });
+
+  it('no borra el rol de Propietario, aunque no tenga miembros contados (FR-016)', async () => {
+    await db.doc('tenants/t1/roles/owner').set({ name: 'Propietario', permissions: [], memberCount: 0, editable: false, preset: 'owner', createdAt: AT });
+    await expect(uow.run(async (tx) => tx.roles.delete(roleId('owner')))).rejects.toThrow(RoleNotDeletableError);
+    expect((await db.doc('tenants/t1/roles/owner').get()).exists).toBe(true);
+  });
+
+  it('borra un rol propio sin miembros', async () => {
+    await db.doc('tenants/t1/roles/temporal').set({ name: 'Temporal', permissions: [], memberCount: 0, editable: true, createdAt: AT });
+    await uow.run(async (tx) => tx.roles.delete(roleId('temporal')));
+    expect((await db.doc('tenants/t1/roles/temporal').get()).exists).toBe(false);
   });
 
   it('una unidad de trabajo de t1 no alcanza datos de t2: el comercio se fija al construirla', async () => {
