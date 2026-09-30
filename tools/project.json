@@ -1,0 +1,21 @@
+{
+  "name": "tools",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "tools",
+  "projectType": "application",
+  "tags": ["layer:presentation"],
+  "targets": {
+    "seed": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsx --tsconfig tools/tsconfig.json tools/seed/src/main.ts" }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc -p tools/tsconfig.json --noEmit" }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": { "command": "eslint tools --no-error-on-unmatched-pattern --pass-on-no-patterns" }
+    }
+  }
+}

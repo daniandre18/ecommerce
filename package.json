@@ -12,7 +12,8 @@
     "test:domain": "vitest run --config libs/domain/vite.config.mts",
     "test:application": "vitest run --config libs/application/vite.config.mts",
     "test:rules": "vitest run --config tests/rules/vite.config.mts",
-    "test:infrastructure": "vitest run --config libs/infrastructure/vite.config.mts"
+    "test:infrastructure": "vitest run --config libs/infrastructure/vite.config.mts",
+    "test:tools": "vitest run --config tools/vite.config.mts"
   },
   "devDependencies": {
     "@angular/build": "22.2.0",
@@ -29,6 +30,7 @@
     "jsdom": "30.1.1",
     "nx": "23.2.1",
     "prettier": "3.9.9",
+    "tsx": "4.23.15",
     "typescript": "~6.0.3",
     "typescript-eslint": "8.71.0",
     "vite": "8.3.1",
