@@ -65,7 +65,7 @@ el primer commit.
 ### Pruebas primero (motor y reglas base)
 
 - [X] T012 [P] Pruebas de `Money` en `libs/domain/src/value-objects/money.spec.ts`: el importe es **entero en la unidad mínima de la moneda**, nunca punto flotante; rechaza decimales; la moneda se toma del inquilino
-- [X] T013 [P] Pruebas de `normalizarSku` en `libs/domain/src/value-objects/sku.spec.ts`: normaliza a **mayúsculas y sin espacios al borde**, de modo que `abc-1` y `ABC-1` colisionen; la forma original se conserva aparte
+- [X] T013 [P] Pruebas de `normalizeSku` en `libs/domain/src/value-objects/sku.spec.ts`: normaliza a **mayúsculas y sin espacios al borde**, de modo que `abc-1` y `ABC-1` colisionen; la forma original se conserva aparte
 - [X] T014 [P] Pruebas de `StockLevel` en `libs/domain/src/value-objects/stock-level.spec.ts`: `{ kind: 'undefined' }` y `{ kind: 'quantity'; value: 0 }` son **estados distintos** (FR-029)
 - [X] T015 Pruebas de reglas de aislamiento en `tests/rules/isolation.spec.ts` — casos **1 a 7** de `contracts/firestore-rules.md`: miembro activo lee lo suyo; sin membresía se deniega aun conociendo el id exacto; consulta de colección ajena denegada; sin autenticar denegado; `status: 'invited'` denegado. Incluir además el caso de **identidad autenticada sin ninguna membresía** —la forma que toma el operador de la plataforma— contra `products`, `variants`, `private/costs`, `config/*` y `auditLog` (FR-041, SC-013)
 - [X] T016 [P] Pruebas de inmutabilidad de bitácora en `tests/rules/audit-immutability.spec.ts` — casos **30, 31 y 32**: ni el Propietario puede actualizar, borrar ni crear entradas a mano
@@ -105,12 +105,12 @@ existencias produce su registro. Entrega valor por sí sola.
 
 > Escribir estas pruebas primero y verificar que **fallan** antes de implementar.
 
-- [ ] T032 [P] [US1] Pruebas de `generarCombinaciones` en `libs/domain/src/services/generar-combinaciones.spec.ts`: producto cartesiano de los valores; producto sin opciones → **una variante implícita** con `optionValues: {}` (FR-020)
-- [ ] T033 [P] [US1] Pruebas de `validarLimites` en `libs/domain/src/services/validar-limites.spec.ts`: **máximo 5 atributos de variación y 100 combinaciones**; el sexto atributo se rechaza; la combinatoria que supere 100 se rechaza **antes de crear nada**, informando cuántas produciría (FR-025)
-- [ ] T033a [P] [US1] Pruebas de `validarEstructuraDeOpciones` en `libs/domain/src/services/validar-estructura-opciones.spec.ts` (FR-022): rechaza dos valores con la misma etiqueta dentro de una opción —incluida la coincidencia ignorando mayúsculas y espacios al borde, de modo que "Rojo", "rojo" y " Rojo " colisionen—; rechaza dos opciones con el mismo nombre dentro del producto; y garantiza que no queden dos variantes con la misma combinación de valores
-- [ ] T034 [US1] Pruebas de `reconciliarVariantes` en `libs/domain/src/services/reconciliar-variantes.spec.ts` — el caso más denso de la feature (FR-024): al agregar un atributo a un producto con variantes cargadas, las existentes **conservan SKU, precio, precio comparativo, costo, stock e imágenes**; las combinaciones nuevas nacen **sin precio y sin existencias definidas —`{ kind: 'undefined' }`, NO en cero** (FR-029); faltar una asignación devuelve la lista de variantes sin asignar; renombrar una opción o un valor **no** regenera ni archiva variantes (FR-026); quitar un valor en uso archiva sus variantes
-- [ ] T035 [P] [US1] Pruebas de `puedeCambiarEstado` en `libs/domain/src/services/puede-cambiar-estado.spec.ts`: `active` y `unlisted` exigen `hasIncompleteVariants === false`; `draft` siempre permitido; `archived` es **ortogonal** al estado (FR-023a)
-- [ ] T036 [P] [US1] Pruebas de `construirEntradasDeBitacora` en `libs/domain/src/services/construir-entradas-bitacora.spec.ts`: una entrada **por variante** con el mismo `batchId`, tipo de evento correcto, y el nombre del actor copiado al momento del hecho (FR-030, FR-031)
+- [ ] T032 [P] [US1] Pruebas de `generateCombinations` en `libs/domain/src/services/generate-combinations.spec.ts`: producto cartesiano de los valores; producto sin opciones → **una variante implícita** con `optionValues: {}` (FR-020)
+- [ ] T033 [P] [US1] Pruebas de `validateOptionLimits` en `libs/domain/src/services/validate-option-limits.spec.ts`: **máximo 5 atributos de variación y 100 combinaciones**; el sexto atributo se rechaza; la combinatoria que supere 100 se rechaza **antes de crear nada**, informando cuántas produciría (FR-025)
+- [ ] T033a [P] [US1] Pruebas de `validateOptionStructure` en `libs/domain/src/services/validate-option-structure.spec.ts` (FR-022): rechaza dos valores con la misma etiqueta dentro de una opción —incluida la coincidencia ignorando mayúsculas y espacios al borde, de modo que "Rojo", "rojo" y " Rojo " colisionen—; rechaza dos opciones con el mismo nombre dentro del producto; y garantiza que no queden dos variantes con la misma combinación de valores
+- [ ] T034 [US1] Pruebas de `reconcileVariants` en `libs/domain/src/services/reconcile-variants.spec.ts` — el caso más denso de la feature (FR-024): al agregar un atributo a un producto con variantes cargadas, las existentes **conservan SKU, precio, precio comparativo, costo, stock e imágenes**; las combinaciones nuevas nacen **sin precio y sin existencias definidas —`{ kind: 'undefined' }`, NO en cero** (FR-029); faltar una asignación devuelve la lista de variantes sin asignar; renombrar una opción o un valor **no** regenera ni archiva variantes (FR-026); quitar un valor en uso archiva sus variantes
+- [ ] T035 [P] [US1] Pruebas de `canChangeStatus` en `libs/domain/src/services/can-change-status.spec.ts`: `active` y `unlisted` exigen `hasIncompleteVariants === false`; `draft` siempre permitido; `archived` es **ortogonal** al estado (FR-023a)
+- [ ] T036 [P] [US1] Pruebas de `buildAuditEntries` en `libs/domain/src/services/build-audit-entries.spec.ts`: una entrada **por variante** con el mismo `batchId`, tipo de evento correcto, y el nombre del actor copiado al momento del hecho (FR-030, FR-031)
 
 ### Pruebas de reglas de esta historia (ANTES de la implementación) ⚠️
 
@@ -121,17 +121,17 @@ existencias produce su registro. Entrega valor por sí sola.
 
 - [ ] T039 [P] [US1] Entidad `Product` en `libs/domain/src/entities/product.ts` con `options` (máximo 5), `status: 'draft' | 'active' | 'unlisted'`, `archived` independiente del estado, `variantCount` (≤ 100), `hasIncompleteVariants`, `nameNormalized` y `version`
 - [ ] T040 [P] [US1] Entidad `Variant` en `libs/domain/src/entities/variant.ts` con `sku`, `price`, `compareAtPrice`, `stock`, `images`, `complete` (derivado de `sku !== null`), `archived` y `version`. **Sin campo de costo**: el costo vive en otro documento (FR-015)
-- [ ] T041 [US1] Implementar `generarCombinaciones` y `validarLimites` en `libs/domain/src/services/` hasta que T032 y T033 pasen
-- [ ] T042 [US1] Implementar `reconciliarVariantes` en `libs/domain/src/services/reconciliar-variantes.ts` hasta que T034 pase
-- [ ] T043 [P] [US1] Implementar `puedeCambiarEstado`, `normalizarSku` y `normalizarNombre` en `libs/domain/src/services/`
-- [ ] T043a [US1] Implementar `validarEstructuraDeOpciones` en `libs/domain/src/services/validar-estructura-opciones.ts` hasta que T033a pase
+- [ ] T041 [US1] Implementar `generateCombinations` y `validateOptionLimits` en `libs/domain/src/services/` hasta que T032 y T033 pasen
+- [ ] T042 [US1] Implementar `reconcileVariants` en `libs/domain/src/services/reconcile-variants.ts` hasta que T034 pase
+- [ ] T043 [P] [US1] Implementar `canChangeStatus`, `normalizeSku` y `normalizeName` en `libs/domain/src/services/`
+- [ ] T043a [US1] Implementar `validateOptionStructure` en `libs/domain/src/services/validate-option-structure.ts` hasta que T033a pase
 - [ ] T044 [P] [US1] Puertos `ProductRepository` y `VariantRepository` en `libs/application/src/ports/` (agregarlos a `TransactionScope`) y sus adaptadores en `libs/infrastructure/src/firestore/`
 - [ ] T045 [US1] Puerto `SkuIndexRepository` en `libs/application/src/ports/` y su adaptador en `libs/infrastructure/src/firestore/sku-index.repository.ts`: id del documento = **SKU normalizado** bajo `tenants/{tid}/skuIndex/{SKU}`, creado con `tx.create` en la misma transacción que la variante para que la colisión falle de forma atómica; `release()` solo marca `archived: true`, **nunca borra** (FR-021, FR-023)
 - [ ] T046 [P] [US1] Adaptador `VariantCostsRepository` en `libs/infrastructure/src/firestore/variant-costs.repository.ts` sobre `products/{pid}/private/costs`, **un documento por producto** con el mapa `{ [variantId]: Money }`
-- [ ] T047 [P] [US1] Casos de uso `CrearProducto` y `ActualizarDetallesProducto` en `libs/application/src/use-cases/`
-- [ ] T048 [US1] Caso de uso `DefinirOpcionesProducto` en `libs/application/src/use-cases/definir-opciones-producto.ts`: invoca `validarEstructuraDeOpciones` y `validarLimites` **antes** de generar combinaciones, y después `reconciliarVariantes`
-- [ ] T049 [P] [US1] Casos de uso `AsignarSkuVariante`, `CambiarEstadoProducto`, `ArchivarProducto` y `ArchivarVariante` en `libs/application/src/use-cases/`
-- [ ] T050 [US1] Casos de uso `EditarPrecioVariante`, `EditarCostoVariante` y `AjustarStockVariante` en `libs/application/src/use-cases/`: escriben el cambio **y** su entrada de bitácora en una sola transacción; una acción masiva produce **una entrada por variante** y **no se aplica parcialmente** (FR-030)
+- [ ] T047 [P] [US1] Casos de uso `CreateProduct` y `UpdateProductDetails` en `libs/application/src/use-cases/`
+- [ ] T048 [US1] Caso de uso `SetProductOptions` en `libs/application/src/use-cases/set-product-options.ts`: invoca `validateOptionStructure` y `validateOptionLimits` **antes** de generar combinaciones, y después `reconcileVariants`
+- [ ] T049 [P] [US1] Casos de uso `SetVariantSku`, `SetProductStatus`, `ArchiveProduct` y `ArchiveVariant` en `libs/application/src/use-cases/`
+- [ ] T050 [US1] Casos de uso `SetVariantPrice`, `SetVariantCost` y `SetVariantStock` en `libs/application/src/use-cases/`: escriben el cambio **y** su entrada de bitácora en una sola transacción; una acción masiva produce **una entrada por variante** y **no se aplica parcialmente** (FR-030)
 - [ ] T051 [P] [US1] Callables de catálogo en `apps/functions/src/catalog/`: `createProduct`, `updateProductDetails`, `setProductOptions`, `setProductStatus`, `setVariantSku`, `archiveProduct`, `archiveVariant`
 - [ ] T052 [US1] Callables de importes en `apps/functions/src/pricing/`: `setVariantPrice`, `setVariantCost`, `setVariantStock`, con los códigos de error del contrato (`sku-conflict`, `version-conflict`, `limit-exceeded`, `incomplete-variants`, `audit-write-failed`)
 - [ ] T053 [P] [US1] Índices compuestos en `firestore.indexes.json` para el listado de catálogo: `(status, updatedAt desc)`, `(archived, updatedAt desc)` y `(nameNormalized asc)` para búsqueda por prefijo
@@ -172,9 +172,9 @@ interfaz como cuando el intento la evita por completo.
 - [ ] T068 [US2] Extender en `firestore.rules` la regla de `products/{productId}/private/{docId}` —hoy solo `isOwnerOf`— con `|| hasPermission(tenantId, 'variant.cost.read')`, hasta que T063 y T065 pasen
 - [ ] T069 [P] [US2] Adaptadores `MembershipRepository` y `RoleRepository` en `libs/infrastructure/src/firestore/`
 - [ ] T070 [P] [US2] Sembrar los roles predefinidos al crear el inquilino en `apps/functions/src/team/seed-preset-roles.ts`: `owner` (`editable: false`, indeleble) y `catalog` con exactamente `catalog.read`, `catalog.write`, `variant.stock.write` — **sin precios y sin costo** (FR-016)
-- [ ] T071 [US2] Casos de uso `CrearRol`, `ActualizarRol` y `EliminarRol` en `libs/application/src/use-cases/`: un rol nace **con la lista de permisos vacía** (FR-009); no se elimina con `memberCount > 0` (FR-013); `updateRole` sobre `owner` se rechaza (FR-016); **todos escriben bitácora** con el conjunto anterior y el resultante (FR-031a)
-- [ ] T072 [US2] Casos de uso `InvitarColaborador` y `AceptarInvitacion` en `libs/application/src/use-cases/`: si la persona ya tiene cuenta, se le **suma una membresía** en vez de crear otra cuenta (FR-005); sin tope de cantidad (FR-006); sin acceso hasta aceptar (FR-007)
-- [ ] T073 [US2] Casos de uso `AsignarRol`, `DarDeBajaMembresia` y `TransferirPropiedad` en `libs/application/src/use-cases/`: la baja es **de la membresía en ese comercio**, no de la cuenta, y no toca Firebase Auth ni las otras membresías (FR-008a); el traspaso deja **exactamente un** Propietario antes y después (FR-011); los tres escriben bitácora
+- [ ] T071 [US2] Casos de uso `CreateRole`, `UpdateRole` y `DeleteRole` en `libs/application/src/use-cases/`: un rol nace **con la lista de permisos vacía** (FR-009); no se elimina con `memberCount > 0` (FR-013); `updateRole` sobre `owner` se rechaza (FR-016); **todos escriben bitácora** con el conjunto anterior y el resultante (FR-031a)
+- [ ] T072 [US2] Casos de uso `InviteCollaborator` y `AcceptInvitation` en `libs/application/src/use-cases/`: si la persona ya tiene cuenta, se le **suma una membresía** en vez de crear otra cuenta (FR-005); sin tope de cantidad (FR-006); sin acceso hasta aceptar (FR-007)
+- [ ] T073 [US2] Casos de uso `AssignRole`, `SetMembershipEnabled` y `TransferOwnership` en `libs/application/src/use-cases/`: la baja es **de la membresía en ese comercio**, no de la cuenta, y no toca Firebase Auth ni las otras membresías (FR-008a); el traspaso deja **exactamente un** Propietario antes y después (FR-011); los tres escriben bitácora
 - [ ] T074 [P] [US2] Callables de equipo en `apps/functions/src/team/`: `inviteCollaborator`, `acceptInvitation`, `revokeInvitation`, `createRole`, `updateRole`, `deleteRole`, `assignRole`, `setMembershipEnabled`, `transferOwnership`
 - [ ] T075 [US2] Selector de comercio activo en `apps/admin/src/app/tenant/tenant-switcher/` con rutas `/t/{tenantId}/…`: cambiar de comercio es **navegación**, sin refrescar el token
 - [ ] T076 [P] [US2] Vista de colaboradores e invitaciones en `apps/admin/src/app/team/members/`, con esqueleto y estados de error y vacío
@@ -285,10 +285,10 @@ se verifica que fallan, y recién después va la implementación que las hace pa
 
 ```bash
 # Primero, las pruebas del motor y de reglas (deben fallar):
-Task: "T032 Pruebas de generarCombinaciones en libs/domain/src/services/generar-combinaciones.spec.ts"
-Task: "T033 Pruebas de validarLimites en libs/domain/src/services/validar-limites.spec.ts"
-Task: "T035 Pruebas de puedeCambiarEstado en libs/domain/src/services/puede-cambiar-estado.spec.ts"
-Task: "T036 Pruebas de construirEntradasDeBitacora en libs/domain/src/services/construir-entradas-bitacora.spec.ts"
+Task: "T032 Pruebas de generateCombinations en libs/domain/src/services/generate-combinations.spec.ts"
+Task: "T033 Pruebas de validateOptionLimits en libs/domain/src/services/validate-option-limits.spec.ts"
+Task: "T035 Pruebas de canChangeStatus en libs/domain/src/services/can-change-status.spec.ts"
+Task: "T036 Pruebas de buildAuditEntries en libs/domain/src/services/build-audit-entries.spec.ts"
 Task: "T037 Pruebas de lectura de catálogo en tests/rules/catalog-read.spec.ts"
 
 # Después, las entidades y adaptadores:

@@ -151,11 +151,11 @@ libs/
 │   └── src/
 │       ├── entities/           # Tenant, Membership, Role, Product, Variant, AuditEntry
 │       ├── value-objects/      # Sku, Money, StockLevel, Permission, TenantId
-│       └── services/           # generarCombinaciones, reconciliarVariantes, validarLimites
+│       └── services/           # generateCombinations, reconcileVariants, validateOptionLimits
 ├── application/                # Casos de uso + puertos. Sin SDK
 │   └── src/
 │       ├── ports/              # ProductRepository, AuditLogRepository, UnitOfWork…
-│       └── use-cases/          # CrearProducto, EditarPrecioVariante, AsignarRol…
+│       └── use-cases/          # CreateProduct, SetVariantPrice, AssignRole…
 ├── infrastructure/             # ÚNICO lugar con SDK de Firebase
 │   └── src/
 │       ├── firestore/          # adaptadores de repositorio + UnitOfWork transaccional
