@@ -15,6 +15,14 @@ export class NotAMemberError extends PermissionDeniedError {
   override readonly name = 'NotAMemberError';
 }
 
+/** Lo que exige una operación: un permiso concreto o ser Propietario del comercio. */
+export type Requirement =
+  | { readonly kind: 'permission'; readonly permission: Permission }
+  | { readonly kind: 'owner' };
+
+export const requirePermission = (permission: Permission): Requirement => ({ kind: 'permission', permission });
+export const requireOwner = (): Requirement => ({ kind: 'owner' });
+
 /**
  * Default-deny: lanza `PermissionDeniedError` salvo concesión explícita. Recibe el `TransactionScope`
  * porque la membresía y el rol se leen DENTRO de la transacción de la mutación: una baja o un

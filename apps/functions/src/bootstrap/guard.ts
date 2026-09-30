@@ -5,19 +5,13 @@ import {
   type AuthorizationService,
   type Clock,
   type OperationContext,
+  type Requirement,
   type SecurityEventRecorder,
   type TransactionScope,
   type UnitOfWork,
 } from '@ecommerce/application';
-import { InvalidIdentifierError, tenantId, uid, type Permission, type TenantId } from '@ecommerce/domain';
+import { InvalidIdentifierError, tenantId, uid, type TenantId } from '@ecommerce/domain';
 import { HttpsError, type CallableRequest } from 'firebase-functions/https';
-
-export type Requirement =
-  | { readonly kind: 'permission'; readonly permission: Permission }
-  | { readonly kind: 'owner' };
-
-export const requirePermission = (permission: Permission): Requirement => ({ kind: 'permission', permission });
-export const requireOwner = (): Requirement => ({ kind: 'owner' });
 
 export interface GuardedOperation {
   /** Nombre de la callable; se registra en los eventos de seguridad. */
