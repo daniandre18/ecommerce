@@ -2,7 +2,7 @@ export * from './value-objects/ids';
 export * from './value-objects/money';
 export * from './value-objects/permission';
 export * from './value-objects/stock-level';
-export * from './services/normalizar-sku';
+export * from './value-objects/sku';
 export * from './entities/tenant';
 export * from './entities/membership';
 export * from './entities/role';

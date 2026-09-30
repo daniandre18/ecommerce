@@ -33,10 +33,10 @@ export const USERS = {
   outsider: 'outsider',
 } as const;
 
-const membership = (status: string, isOwner: boolean, roleId: string) => ({
-  status,
-  isOwner,
-  roleId,
+const membership = (m: { status: 'active' | 'invited'; roleId: string; isOwner?: boolean }) => ({
+  status: m.status,
+  roleId: m.roleId,
+  isOwner: m.isOwner ?? false,
   displayName: 'x',
   email: 'x@test',
 });
@@ -50,13 +50,13 @@ export async function seed(env: RulesTestEnvironment): Promise<void> {
     const f = db(ctx);
     const put = (path: string, data: Record<string, unknown>) => setDoc(doc(f, path), data);
 
-    await put('tenants/t1/members/owner1', membership('active', true, 'owner'));
-    await put('tenants/t1/members/catalog1', membership('active', false, 'catalog'));
-    await put('tenants/t1/members/invited1', membership('invited', false, 'catalog'));
+    await put('tenants/t1/members/owner1', membership({ status: 'active', roleId: 'owner', isOwner: true }));
+    await put('tenants/t1/members/catalog1', membership({ status: 'active', roleId: 'catalog' }));
+    await put('tenants/t1/members/invited1', membership({ status: 'invited', roleId: 'catalog' }));
     await put('tenants/t1/roles/catalog', {
       permissions: ['catalog.read', 'catalog.write', 'variant.stock.write'],
     });
-    await put('tenants/t2/members/owner2', membership('active', true, 'owner'));
+    await put('tenants/t2/members/owner2', membership({ status: 'active', roleId: 'owner', isOwner: true }));
 
     for (const t of ['t1', 't2']) {
       await put(`tenants/${t}/products/p1`, { name: 'Camiseta', status: 'draft' });

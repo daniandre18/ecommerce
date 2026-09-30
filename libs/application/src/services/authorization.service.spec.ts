@@ -1,9 +1,9 @@
 import {
   activateMembership,
+  createCatalogRole,
   createCustomRole,
   disableMembership,
   inviteMembership,
-  PRESET_CATALOG_PERMISSIONS,
   roleId,
   setRolePermissions,
   tenantId,
@@ -36,7 +36,7 @@ describe('RoleBasedAuthorizationService', () => {
 
   beforeEach(() => {
     uow = new InMemoryUnitOfWork();
-    const catalog = setRolePermissions(createCustomRole(roleId('catalog'), T1, 'Catálogo', AT), PRESET_CATALOG_PERMISSIONS);
+    const catalog = createCatalogRole(T1, AT);
     const pricing = setRolePermissions(createCustomRole(roleId('pricing'), T1, 'Precios', AT), ['catalog.read', 'variant.price.write']);
     const empty = createCustomRole(roleId('empty'), T1, 'Nuevo', AT);
     for (const r of [catalog, pricing, empty]) uow.store.roles.set(r.id, r);

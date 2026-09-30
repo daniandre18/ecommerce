@@ -1,5 +1,7 @@
+import type { Branded } from './ids';
+
 /** Código de moneda de tres letras. La moneda la define el inquilino, no la variante. */
-export type CurrencyCode = string & { readonly __currency: true };
+export type CurrencyCode = Branded<string, 'CurrencyCode'>;
 
 /**
  * Importe entero en la unidad mínima de la moneda. Nunca punto flotante: es aritmética de

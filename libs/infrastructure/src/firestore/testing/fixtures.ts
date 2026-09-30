@@ -1,12 +1,9 @@
-import type { AuditEntry, AuditEntryId, TenantId } from '@ecommerce/domain';
-import { uid } from '@ecommerce/domain';
-
-export const auditEntryIdForTest = (id: string) => id as AuditEntryId;
+import { uid, type AuditEntry, type AuditEntryId, type TenantId } from '@ecommerce/domain';
 
 /** Entrada mínima de tipo `role.changed`, para probar la mecánica transaccional. */
 export function roleChangedEntry(tenantId: TenantId, id: string): AuditEntry {
   return {
-    id: auditEntryIdForTest(id),
+    id: id as AuditEntryId,
     tenantId,
     type: 'role.changed',
     change: 'role.assigned',

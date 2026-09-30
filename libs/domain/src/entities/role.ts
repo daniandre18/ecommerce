@@ -30,6 +30,40 @@ export class UnknownPermissionError extends Error {
   override readonly name = 'UnknownPermissionError';
 }
 
+export const OWNER_ROLE_ID = 'owner' as RoleId;
+export const CATALOG_ROLE_ID = 'catalog' as RoleId;
+
+/**
+ * Rol del sistema: da acceso total por `Membership.isOwner`, no por su lista de permisos, que queda
+ * vacía. No se edita ni se elimina (FR-016).
+ */
+export function createOwnerRole(tenantId: TenantId, at: Date): Role {
+  return Object.freeze({
+    id: OWNER_ROLE_ID,
+    tenantId,
+    name: 'Propietario',
+    permissions: Object.freeze([]),
+    preset: 'owner',
+    editable: false,
+    memberCount: 0,
+    createdAt: at,
+  });
+}
+
+/** Plantilla predefinida de Catálogo: usable tal cual o ajustable, sin precios ni costo (FR-016). */
+export function createCatalogRole(tenantId: TenantId, at: Date): Role {
+  return Object.freeze({
+    id: CATALOG_ROLE_ID,
+    tenantId,
+    name: 'Catálogo',
+    permissions: PRESET_CATALOG_PERMISSIONS,
+    preset: 'catalog',
+    editable: true,
+    memberCount: 0,
+    createdAt: at,
+  });
+}
+
 /** Un rol propio nace sin ningún permiso (FR-009). */
 export function createCustomRole(id: RoleId, tenantId: TenantId, name: string, at: Date): Role {
   return Object.freeze({

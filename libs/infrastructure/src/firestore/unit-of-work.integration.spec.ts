@@ -1,21 +1,11 @@
-import {
-  auditEntryIdForTest,
-  roleChangedEntry,
-} from './testing/fixtures';
-import {
-  activateMembership,
-  inviteMembership,
-  roleId,
-  tenantId,
-  uid,
-} from '@ecommerce/domain';
+import { activateMembership, inviteMembership, roleId, tenantId, uid } from '@ecommerce/domain';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { firestore } from './firestore';
+import { roleChangedEntry } from './testing/fixtures';
 import { FirestoreUnitOfWork, RoleHasMembersError } from './unit-of-work';
 
 const db = firestore();
 const T1 = tenantId('t1');
-const T2 = tenantId('t2');
 const AT = new Date('2026-09-30T12:00:00Z');
 
 async function clearEmulator(): Promise<void> {
@@ -30,75 +20,76 @@ const ana = () =>
     AT,
   );
 
-const memberStatus = async (tid: string, id: string) =>
-  (await db.doc(`tenants/${tid}/members/${id}`).get()).data()?.['roleId'];
-const auditCount = async (tid: string) => (await db.collection(`tenants/${tid}/auditLog`).get()).size;
+const memberRoleId = async (tenant: string, memberUid: string) =>
+  (await db.doc(`tenants/${tenant}/members/${memberUid}`).get()).data()?.['roleId'];
+const auditEntryCount = async (tenant: string) =>
+  (await db.collection(`tenants/${tenant}/auditLog`).get()).size;
 
 // T025 — FR-030 y FR-033: el cambio y su entrada de bitácora son una unidad indivisible.
 describe('FirestoreUnitOfWork contra el emulador', () => {
+  const uow = new FirestoreUnitOfWork(db, T1);
+
   beforeEach(async () => {
     await clearEmulator();
-    await new FirestoreUnitOfWork(db, T1).run(async (tx) => tx.members.save(ana()));
+    await uow.run(async (tx) => tx.members.save(ana()));
   });
 
   it('confirma juntos el cambio y su entrada', async () => {
-    await new FirestoreUnitOfWork(db, T1).run(async (tx) => {
-      const m = await tx.members.findByUid(uid('ana'));
-      await tx.members.save({ ...m!, roleId: roleId('pricing') });
+    await uow.run(async (tx) => {
+      const member = await tx.members.findByUid(uid('ana'));
+      await tx.members.save({ ...member!, roleId: roleId('pricing') });
       await tx.audit.append([roleChangedEntry(T1, 'e1')]);
     });
-    expect(await memberStatus('t1', 'ana')).toBe('pricing');
-    expect(await auditCount('t1')).toBe(1);
+    expect(await memberRoleId('t1', 'ana')).toBe('pricing');
+    expect(await auditEntryCount('t1')).toBe(1);
   });
 
   it('sentido 1: si la entrada de bitácora falla al confirmar, el cambio NO queda', async () => {
-    await new FirestoreUnitOfWork(db, T1).run(async (tx) => tx.audit.append([roleChangedEntry(T1, 'dup')]));
+    await uow.run(async (tx) => tx.audit.append([roleChangedEntry(T1, 'dup')]));
 
-    const attempt = new FirestoreUnitOfWork(db, T1).run(async (tx) => {
-      const m = await tx.members.findByUid(uid('ana'));
-      await tx.members.save({ ...m!, roleId: roleId('pricing') });
+    const attempt = uow.run(async (tx) => {
+      const member = await tx.members.findByUid(uid('ana'));
+      await tx.members.save({ ...member!, roleId: roleId('pricing') });
       await tx.audit.append([roleChangedEntry(T1, 'dup')]); // id repetido: `create` falla al confirmar
     });
 
     await expect(attempt).rejects.toThrow();
-    expect(await memberStatus('t1', 'ana')).toBe('catalog'); // intacto
-    expect(await auditCount('t1')).toBe(1); // solo la entrada previa
+    expect(await memberRoleId('t1', 'ana')).toBe('catalog');
+    expect(await auditEntryCount('t1')).toBe(1); // solo la entrada previa
   });
 
   it('sentido 2: si el cambio falla después de encolar la entrada, la entrada NO queda', async () => {
-    const attempt = new FirestoreUnitOfWork(db, T1).run(async (tx) => {
+    const attempt = uow.run(async (tx) => {
       await tx.members.findByUid(uid('ana'));
       await tx.audit.append([roleChangedEntry(T1, 'huerfana')]);
       throw new Error('el cambio no pudo aplicarse');
     });
 
     await expect(attempt).rejects.toThrow('el cambio no pudo aplicarse');
-    expect(await auditCount('t1')).toBe(0); // ninguna entrada de un cambio que no ocurrió
+    expect(await auditEntryCount('t1')).toBe(0);
   });
 
   it('una entrada existente nunca se sobrescribe, ni desde el servidor', async () => {
-    const uow = new FirestoreUnitOfWork(db, T1);
-    await uow.run(async (tx) => tx.audit.append([roleChangedEntry(T1, auditEntryIdForTest('x'))]));
+    await uow.run(async (tx) => tx.audit.append([roleChangedEntry(T1, 'x')]));
     await expect(uow.run(async (tx) => tx.audit.append([roleChangedEntry(T1, 'x')]))).rejects.toThrow();
   });
 
   it('no borra un rol con miembros asignados (FR-013)', async () => {
     await db.doc('tenants/t1/roles/catalog').set({ name: 'Catálogo', permissions: [], memberCount: 2, editable: true, createdAt: AT });
-    await expect(
-      new FirestoreUnitOfWork(db, T1).run(async (tx) => tx.roles.delete(roleId('catalog'))),
-    ).rejects.toThrow(RoleHasMembersError);
+    await expect(uow.run(async (tx) => tx.roles.delete(roleId('catalog')))).rejects.toThrow(RoleHasMembersError);
     expect((await db.doc('tenants/t1/roles/catalog').get()).exists).toBe(true);
   });
 
   it('una unidad de trabajo de t1 no alcanza datos de t2: el comercio se fija al construirla', async () => {
     await db.doc('tenants/t2/members/ana').set({ roleId: 'otro', status: 'active', isOwner: false, invitedAt: AT });
-    const seen = await new FirestoreUnitOfWork(db, T1).run(async (tx) => tx.members.findByUid(uid('ana')));
-    expect(seen?.roleId).toBe('catalog'); // leyó t1, no t2
-    await new FirestoreUnitOfWork(db, T1).run(async (tx) => {
-      const m = await tx.members.findByUid(uid('ana'));
-      await tx.members.save({ ...m!, roleId: roleId('cambiado') });
+
+    const seen = await uow.run(async (tx) => tx.members.findByUid(uid('ana')));
+    expect(seen?.roleId).toBe('catalog');
+
+    await uow.run(async (tx) => {
+      const member = await tx.members.findByUid(uid('ana'));
+      await tx.members.save({ ...member!, roleId: roleId('cambiado') });
     });
-    expect(await memberStatus('t2', 'ana')).toBe('otro'); // t2 intacto
-    expect(T2).toBe('t2');
+    expect(await memberRoleId('t2', 'ana')).toBe('otro');
   });
 });

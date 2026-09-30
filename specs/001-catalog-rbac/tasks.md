@@ -65,7 +65,7 @@ el primer commit.
 ### Pruebas primero (motor y reglas base)
 
 - [X] T012 [P] Pruebas de `Money` en `libs/domain/src/value-objects/money.spec.ts`: el importe es **entero en la unidad mínima de la moneda**, nunca punto flotante; rechaza decimales; la moneda se toma del inquilino
-- [X] T013 [P] Pruebas de `normalizarSku` en `libs/domain/src/services/normalizar-sku.spec.ts`: normaliza a **mayúsculas y sin espacios al borde**, de modo que `abc-1` y `ABC-1` colisionen; la forma original se conserva aparte
+- [X] T013 [P] Pruebas de `normalizarSku` en `libs/domain/src/value-objects/sku.spec.ts`: normaliza a **mayúsculas y sin espacios al borde**, de modo que `abc-1` y `ABC-1` colisionen; la forma original se conserva aparte
 - [X] T014 [P] Pruebas de `StockLevel` en `libs/domain/src/value-objects/stock-level.spec.ts`: `{ kind: 'undefined' }` y `{ kind: 'quantity'; value: 0 }` son **estados distintos** (FR-029)
 - [X] T015 Pruebas de reglas de aislamiento en `tests/rules/isolation.spec.ts` — casos **1 a 7** de `contracts/firestore-rules.md`: miembro activo lee lo suyo; sin membresía se deniega aun conociendo el id exacto; consulta de colección ajena denegada; sin autenticar denegado; `status: 'invited'` denegado. Incluir además el caso de **identidad autenticada sin ninguna membresía** —la forma que toma el operador de la plataforma— contra `products`, `variants`, `private/costs`, `config/*` y `auditLog` (FR-041, SC-013)
 - [X] T016 [P] Pruebas de inmutabilidad de bitácora en `tests/rules/audit-immutability.spec.ts` — casos **30, 31 y 32**: ni el Propietario puede actualizar, borrar ni crear entradas a mano

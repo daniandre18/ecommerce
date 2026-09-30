@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { InvalidSkuError, normalizarSku } from './normalizar-sku';
+import { InvalidSkuError, normalizarSku } from './sku';
 
 // T013 — la unicidad de SKU se evalúa sobre la forma normalizada (FR-021).
 describe('normalizarSku', () => {

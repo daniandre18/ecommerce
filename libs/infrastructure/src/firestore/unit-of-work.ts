@@ -30,6 +30,10 @@ class FirestoreScope implements TransactionScope {
     return this.db.collection(`tenants/${this.tenantId}/${name}`);
   }
 
+  private costsDoc(productId: ProductId) {
+    return this.db.doc(`tenants/${this.tenantId}/products/${productId}/private/costs`);
+  }
+
   readonly audit: AuditLogRepository = {
     // `create` falla si el documento existe: ni por accidente se sobrescribe una entrada.
     append: async (entries) => {
@@ -69,16 +73,12 @@ class FirestoreScope implements TransactionScope {
   };
 
   readonly costs: VariantCostsRepository = {
-    findByProduct: async (pid: ProductId) => {
-      const snap = await this.t.get(this.db.doc(`tenants/${this.tenantId}/products/${pid}/private/costs`));
+    findByProduct: async (pid) => {
+      const snap = await this.t.get(this.costsDoc(pid));
       return (snap.data()?.['costs'] ?? {}) as Record<VariantId, Money>;
     },
     setMany: async (pid, costs) => {
-      this.t.set(
-        this.db.doc(`tenants/${this.tenantId}/products/${pid}/private/costs`),
-        { costs: { ...costs }, updatedAt: new Date() },
-        { merge: true },
-      );
+      this.t.set(this.costsDoc(pid), { costs: { ...costs }, updatedAt: new Date() }, { merge: true });
     },
   };
 }
