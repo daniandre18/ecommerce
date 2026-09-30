@@ -3,6 +3,6 @@
   "compilerOptions": {
     "types": []
   },
-  "include": ["src/**/*.ts", "../../libs/ui/src/**/*.ts"],
-  "exclude": ["src/**/*.spec.ts", "../../libs/ui/src/**/*.spec.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts"]
 }

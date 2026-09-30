@@ -1,24 +1,6 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.angular.json",
   "compileOnSave": false,
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "preserve",
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "experimentalDecorators": true,
-    "importHelpers": true,
-    "noImplicitReturns": true,
-    "paths": {
-      "@ecommerce/domain": ["../../libs/domain/src/index.ts"],
-      "@ecommerce/ui": ["../../libs/ui/src/index.ts"]
-    }
-  },
-  "angularCompilerOptions": {
-    "enableI18nLegacyMessageIdFormat": false,
-    "strictInjectionParameters": true,
-    "strictInputAccessModifiers": true,
-    "strictTemplates": true
-  },
   "files": [],
   "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.spec.json" }]
 }
