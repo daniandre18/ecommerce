@@ -1,0 +1,41 @@
+@use '@angular/material' as mat;
+
+// Tipografía del sistema en lugar de una fuente web: evita una descarga bloqueante antes del
+// primer render (principio VIII, carga percibida) y se lee bien en cualquier dispositivo.
+$system-font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+html {
+  color-scheme: light dark;
+
+  @include mat.theme(
+    (
+      color: mat.$azure-palette,
+      typography: $system-font,
+      density: 0,
+    )
+  );
+}
+
+body {
+  margin: 0;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-large);
+}
+
+// Foco siempre visible con teclado (WCAG 2.4.7 y 2.4.11).
+:focus-visible {
+  outline: 3px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+// Respetar la preferencia de movimiento reducido (WCAG 2.3.3).
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
