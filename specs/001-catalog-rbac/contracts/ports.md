@@ -144,31 +144,40 @@ FR-031a.
 Se prueban como funciones: entrada dentro, salida fuera, sin dobles.
 
 ```typescript
-/** Producto cartesiano de los valores de las opciones. Base de FR-018. */
+/** Producto cartesiano de los valores de las opciones. Base de FR-018. Sin opciones: `[{}]`. */
 function generateCombinations(options: VariationOption[]): Combination[];
 
 /**
- * Reconcilia la estructura de variación con las variantes existentes (FR-024).
- * Núcleo de la feature y el más denso: preserva, crea e identifica lo que falta asignar.
- * Las creadas nacen SIN existencias definidas, no en cero (FR-029).
+ * Reconcilia la estructura de variación con las variantes existentes (FR-024, FR-026).
+ * Núcleo de la feature. Si falta asignar alguna variante con datos, falla sin resultados
+ * parciales y dice cuáles. Las creadas nacen SIN existencias definidas, no en cero (FR-029).
  */
-function reconcileVariants(
-  current: Variant[],
-  newOptions: VariationOption[],
-  assignments: Assignment[],
-): { preserved: Variant[]; created: Variant[]; archived: Variant[]; missingAssignments: VariantId[] };
+function reconcileVariants(input: {
+  product: { id: ProductId; tenantId: TenantId };
+  current: Variant[];                  // las archivadas se ignoran
+  previousOptions: VariationOption[];  // necesarias para decidir quién sobrevive a una fusión
+  options: VariationOption[];
+  assignments: Assignment[];           // valor de cada opción nueva por variante con datos
+  newVariantId: () => VariantId;
+}): Result<
+  { preserved: Variant[]; created: Variant[]; archived: Variant[]; discarded: VariantId[] },
+  { kind: 'missing-assignments'; variantIds: VariantId[] }
+>;
 
 /** Topes de 5 opciones y 100 combinaciones (FR-025). Se evalúa antes de crear nada. */
 function validateOptionLimits(options: VariationOption[]): Result<void, OptionLimitExceeded>;
 
 /**
- * Etiquetas de valor únicas dentro de cada opción y nombres de opción únicos dentro del producto,
- * ignorando mayúsculas y espacios al borde (FR-022).
+ * Nombres y etiquetas no vacíos ni repetidos, ignorando mayúsculas, espacios al borde y la forma
+ * Unicode (FR-022). Rechaza una opción sin valores: daría cero variantes, contra FR-020.
  */
-function validateOptionStructure(options: VariationOption[]): Result<void, DuplicateOptionEntry>;
+function validateOptionStructure(options: VariationOption[]): Result<void, OptionStructureError>;
 
-/** Transiciones permitidas de estado (FR-023a). */
-function canChangeStatus(product: Product, target: ProductStatus): Result<void, IncompleteVariants>;
+/**
+ * Transiciones de estado (FR-023a). Recibe las variantes y no el producto: la regla mira la fuente
+ * de verdad, no el campo de caché `hasIncompleteVariants`, y dice cuáles bloquean.
+ */
+function canChangeStatus(variants: Variant[], target: ProductStatus): Result<void, StatusChangeRejected>;
 
 /** Normalización del SKU para comparar unicidad (FR-021). */
 function normalizeSku(raw: string): Sku;
@@ -179,11 +188,18 @@ function normalizeName(raw: string): string;
 /** Aritmética de dinero sobre enteros en la unidad mínima. Nunca punto flotante. */
 function money(amount: number, currency: CurrencyCode): Money;
 
-/** Construye las entradas de bitácora de un cambio, con su tipo de evento. Pura (FR-031). */
+/**
+ * Una entrada por cambio. Cada cambio lleva su propio tipo de evento, así la entrada no puede
+ * contradecirlo. Pura (FR-030, FR-031).
+ */
 function buildAuditEntries(
-  ctx: OperationContext, type: AuditEventType, changes: ValueChange[],
-  batchId: BatchId, at: Date,
+  actor: { tenantId: TenantId; uid: Uid; name: string },
+  changes: AuditedChange[],
+  meta: { batchId: BatchId | null; at: Date; newEntryId: () => AuditEntryId },
 ): AuditEntry[];
+
+/** Una variante está completa cuando tiene SKU. Se calcula, no se guarda (FR-024). */
+function isVariantComplete(variant: Variant): boolean;
 ```
 
 `reconcileVariants`, `validateOptionLimits`, `validateOptionStructure` y `money` son el "motor"
