@@ -1,0 +1,20 @@
+name: Preparar los emuladores de Firebase
+description: Java para el emulador de Firestore y caché de los binarios del emulador.
+
+inputs:
+  firebase-tools-version:
+    description: Versión de firebase-tools cuyos emuladores se cachean.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '21'
+
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/firebase/emulators
+        key: firebase-emulators-${{ inputs.firebase-tools-version }}

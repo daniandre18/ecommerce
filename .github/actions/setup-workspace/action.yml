@@ -1,0 +1,21 @@
+name: Preparar el workspace
+description: Node del runtime de producción, npm fijado desde package.json y dependencias instaladas.
+
+runs:
+  using: composite
+  steps:
+    # Node 22 es el runtime de las Cloud Functions: se prueba con el mismo que se despliega.
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: npm
+
+    # Node 22 trae npm 10, que se cae con este lockfile ("Cannot read properties of null
+    # (reading 'edgesOut')"). La versión sale de `packageManager` en package.json: una sola fuente
+    # de verdad para la máquina local y para CI.
+    - name: Fijar npm a la versión de packageManager
+      shell: bash
+      run: npm install -g "$(node -p "require('./package.json').packageManager")"
+
+    - shell: bash
+      run: npm ci
