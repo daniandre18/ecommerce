@@ -1,95 +1,33 @@
-import type {
-  AuditLogRepository,
-  MembershipRepository,
-  RoleRepository,
-  TransactionScope,
-  UnitOfWork,
-  VariantCostsRepository,
-} from '@ecommerce/application';
-import { assertCanDeleteRole, type Money, type ProductId, type RoleId, type TenantId, type VariantId } from '@ecommerce/domain';
+import type { TransactionScope, UnitOfWork } from '@ecommerce/application';
+import type { TenantId } from '@ecommerce/domain';
 import type { Firestore, Transaction } from 'firebase-admin/firestore';
-import { membershipFromDoc, membershipToDoc, roleFromDoc, roleToDoc } from './mappers';
+import { auditLogRepository } from './repositories/audit-log.repository';
+import { membershipRepository } from './repositories/membership.repository';
+import { roleRepository } from './repositories/role.repository';
+import { variantCostsRepository } from './repositories/variant-costs.repository';
+import { TenantPaths } from './tenant-paths';
 
-/**
- * Repositorios atados a UNA transacción y a UN comercio. El `tenantId` se fija al construir la
- * unidad de trabajo, así que ningún caso de uso puede construir una ruta de otro comercio: el
- * aislamiento es estructural también del lado del servidor (FR-002).
- */
-class FirestoreScope implements TransactionScope {
-  constructor(
-    private readonly db: Firestore,
-    private readonly t: Transaction,
-    private readonly tenantId: TenantId,
-  ) {}
-
-  private col(name: string) {
-    return this.db.collection(`tenants/${this.tenantId}/${name}`);
-  }
-
-  private costsDoc(productId: ProductId) {
-    return this.db.doc(`tenants/${this.tenantId}/products/${productId}/private/costs`);
-  }
-
-  readonly audit: AuditLogRepository = {
-    // `create` falla si el documento existe: ni por accidente se sobrescribe una entrada.
-    append: async (entries) => {
-      for (const e of entries) this.t.create(this.col('auditLog').doc(e.id), { ...e });
-    },
-  };
-
-  readonly members: MembershipRepository = {
-    findByUid: async (id) => {
-      const snap = await this.t.get(this.col('members').doc(id));
-      const data = snap.data();
-      return data ? membershipFromDoc(snap.id, this.tenantId, data) : null;
-    },
-    save: async (m) => {
-      this.t.set(this.col('members').doc(m.uid), membershipToDoc(m));
-    },
-  };
-
-  readonly roles: RoleRepository = {
-    findById: async (id) => {
-      const snap = await this.t.get(this.col('roles').doc(id));
-      const data = snap.data();
-      return data ? roleFromDoc(snap.id, this.tenantId, data) : null;
-    },
-    list: async () => {
-      const snap = await this.t.get(this.col('roles'));
-      return snap.docs.map((d) => roleFromDoc(d.id, this.tenantId, d.data()));
-    },
-    save: async (r) => {
-      this.t.set(this.col('roles').doc(r.id), roleToDoc(r));
-    },
-    // La regla es del dominio; el repositorio la aplica para que ningún caso de uso pueda saltearla.
-    delete: async (id: RoleId) => {
-      const ref = this.col('roles').doc(id);
-      const snap = await this.t.get(ref);
-      const data = snap.data();
-      if (!data) return;
-      assertCanDeleteRole(roleFromDoc(snap.id, this.tenantId, data));
-      this.t.delete(ref);
-    },
-  };
-
-  readonly costs: VariantCostsRepository = {
-    findByProduct: async (pid) => {
-      const snap = await this.t.get(this.costsDoc(pid));
-      return (snap.data()?.['costs'] ?? {}) as Record<VariantId, Money>;
-    },
-    setMany: async (pid, costs) => {
-      this.t.set(this.costsDoc(pid), { costs: { ...costs }, updatedAt: new Date() }, { merge: true });
-    },
+function transactionScope(t: Transaction, paths: TenantPaths): TransactionScope {
+  return {
+    audit: auditLogRepository(t, paths),
+    members: membershipRepository(t, paths),
+    roles: roleRepository(t, paths),
+    costs: variantCostsRepository(t, paths),
   };
 }
 
+/** Todo lo que ocurre dentro de `run()` se confirma junto o no ocurre, dentro de UN comercio. */
 export class FirestoreUnitOfWork implements UnitOfWork {
+  private readonly paths: TenantPaths;
+
   constructor(
     private readonly db: Firestore,
-    private readonly tenantId: TenantId,
-  ) {}
+    tenantId: TenantId,
+  ) {
+    this.paths = new TenantPaths(db, tenantId);
+  }
 
   run<T>(work: (tx: TransactionScope) => Promise<T>): Promise<T> {
-    return this.db.runTransaction((t) => work(new FirestoreScope(this.db, t, this.tenantId)));
+    return this.db.runTransaction((t) => work(transactionScope(t, this.paths)));
   }
 }
