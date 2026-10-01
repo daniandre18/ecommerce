@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isPermission, PERMISSIONS } from './permission';
+import { allows, isPermission, PERMISSIONS } from './permission';
 
 // T019 — el enumerado es la reserva constitucional hecha tipo (FR-014, principio VI).
 describe('Permission', () => {
@@ -38,5 +38,17 @@ describe('Permission', () => {
     expect(isPermission('config.secrets.read')).toBe(false);
     expect(isPermission('')).toBe(false);
     expect(isPermission(42)).toBe(false);
+  });
+});
+
+describe('allows', () => {
+  it('el Propietario puede todo, aunque su rol no conceda nada', () => {
+    expect(allows({ isOwner: true, permissions: [] }, 'variant.cost.write')).toBe(true);
+  });
+
+  it('el resto, solo lo que concede su rol', () => {
+    const catalog = { isOwner: false, permissions: ['catalog.read', 'catalog.write'] as const };
+    expect(allows(catalog, 'catalog.write')).toBe(true);
+    expect(allows(catalog, 'variant.price.write')).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import { isActive, type Membership, type Permission } from '@ecommerce/domain';
+import { allows, isActive, type Membership, type Permission } from '@ecommerce/domain';
 import { NotAMemberError, PermissionDeniedError, type AuthorizationService } from '../ports/authorization';
 import type { OperationContext } from '../ports/operation-context';
 import type { TransactionScope } from '../ports/unit-of-work';
@@ -14,10 +14,9 @@ import type { TransactionScope } from '../ports/unit-of-work';
 export class RoleBasedAuthorizationService implements AuthorizationService {
   async assert(tx: TransactionScope, ctx: OperationContext, permission: Permission): Promise<void> {
     const member = await this.activeMember(tx, ctx);
-    if (member.isOwner) return;
-
-    const role = await tx.roles.findById(member.roleId);
-    if (!role?.permissions.includes(permission)) {
+    // Al Propietario no le hace falta su rol: se ahorra la lectura.
+    const permissions = member.isOwner ? [] : ((await tx.roles.findById(member.roleId))?.permissions ?? []);
+    if (!allows({ isOwner: member.isOwner, permissions }, permission)) {
       throw new PermissionDeniedError(`${ctx.actorUid} no tiene el permiso ${permission}`);
     }
   }
