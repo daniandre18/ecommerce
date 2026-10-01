@@ -50,17 +50,23 @@ interface TransactionScope {
 }
 
 // ───────── Repositorios ─────────
+/**
+ * Los repositorios NO comparan versiones. Firestore exige que dentro de una transacción todas las
+ * lecturas vayan antes que las escrituras, así que `save` no puede leer para comparar. El caso de
+ * uso compara la versión al cargar (`assertVersion`), en la misma transacción: si otra escritura
+ * cambia el documento antes de confirmar, Firestore reintenta y la comparación falla (FR-027).
+ */
 interface ProductRepository {
   findById(id: ProductId): Promise<Product | null>;
-  save(product: Product, expectedVersion: number): Promise<void>;  // lanza VersionConflictError
-  create(product: Product): Promise<void>;
+  save(product: Product): Promise<void>;   // escribe con la versión que ya trae incrementada
+  /** Caché derivada de las variantes, SIN tocar la versión: no debe generar conflictos espurios. */
+  updateVariantSummary(id: ProductId, summary: VariantSummary): Promise<void>;
 }
 
 interface VariantRepository {
-  findById(productId: ProductId, id: VariantId): Promise<Variant | null>;
-  findByProduct(productId: ProductId): Promise<Variant[]>;
-  save(variant: Variant, expectedVersion: number): Promise<void>;
-  createMany(variants: Variant[]): Promise<void>;
+  findByProduct(productId: ProductId): Promise<Variant[]>;  // incluidas las archivadas
+  save(variant: Variant): Promise<void>;
+  delete(productId: ProductId, id: VariantId): Promise<void>;  // solo variantes sin datos
 }
 
 /** Separado porque el costo vive en otro documento, con su propia regla (FR-015). */
@@ -69,11 +75,16 @@ interface VariantCostsRepository {
   setMany(productId: ProductId, costs: Record<VariantId, Money>): Promise<void>;
 }
 
+/** El id de cada entrada es el SKU normalizado; la unicidad por comercio sale de la ruta. */
 interface SkuIndexRepository {
-  /** Reserva el SKU. Lanza SkuConflictError si ya está tomado por otra variante. */
-  reserve(sku: Sku, variantId: VariantId, productId: ProductId): Promise<void>;
-  release(sku: Sku): Promise<void>;   // solo marca archived; nunca borra (FR-023)
-  findBySku(sku: Sku): Promise<SkuIndexEntry | null>;
+  find(normalized: string): Promise<SkuIndexEntry | null>;
+  reserve(entry: { sku: Sku; variantId: VariantId; productId: ProductId }): Promise<void>;  // `create`: falla al confirmar si existe
+  release(normalized: string): Promise<void>;       // la variante viva cambió de SKU
+  markArchived(normalized: string): Promise<void>;  // queda reservado para siempre (FR-023)
+}
+
+interface TenantRepository {
+  get(): Promise<Tenant | null>;  // para validar la moneda de los importes
 }
 
 interface AuditLogRepository {
@@ -114,9 +125,13 @@ tuvo que justificar en Complexity Tracking: Firebase Auth queda solo para autent
 
 ## Casos de uso
 
-Cada uno es una clase con un único método `execute`, dependencias por constructor, sin estado. Cada
-caso de uso lleva el mismo nombre que su callable (`SetVariantPrice` ↔ `setVariantPrice`): un
-concepto, un nombre, en todas las capas.
+Cada uno es una clase con un único método `execute(tx, ctx, input)`, dependencias por constructor
+(solo las que usa) y sin estado. Cada caso de uso lleva el mismo nombre que su callable
+(`SetVariantPrice` ↔ `setVariantPrice`): un concepto, un nombre, en todas las capas.
+
+**El permiso lo declara el caso de uso** (`static readonly requires`) y la guarda de la callable lo
+hace cumplir: el requisito vive junto a la operación, en un solo lugar. Las reglas de negocio
+violadas se lanzan como `BusinessRuleError` con el código del contrato de las callable.
 
 | Caso de uso | Permiso | Escribe bitácora | Requisitos |
 |---|---|---|---|

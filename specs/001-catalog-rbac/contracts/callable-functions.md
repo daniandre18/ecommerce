@@ -83,8 +83,10 @@ El corazón del editor de variaciones (FR-017, FR-018, FR-024).
 ```typescript
 Request  {
   tenantId; productId; version: number;
-  options: Array<{ id?: OptionId; name: string;
-                   values: Array<{ id?: ValueId; label: string }> }>;
+  // Los ids de opciones y valores NUEVOS los propone el cliente (UUID): las asignaciones de la misma
+  // llamada tienen que poder referirse a ellos. El servidor los valida como únicos (FR-022).
+  options: Array<{ id: OptionId; name: string;
+                   values: Array<{ id: ValueId; label: string }> }>;
   // obligatorio al agregar una opción a un producto con variantes existentes (FR-024)
   assignments?: Array<{ variantId: VariantId; optionId: OptionId; valueId: ValueId }>;
 }

@@ -36,3 +36,7 @@ export function money(amount: number, currency: string): Money {
 export function sameCurrency(a: Money, b: Money): boolean {
   return a.currency === b.currency;
 }
+
+export function moneyEquals(a: Money | null, b: Money | null): boolean {
+  return a === b || (a !== null && b !== null && a.amount === b.amount && a.currency === b.currency);
+}

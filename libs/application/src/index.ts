@@ -1,3 +1,4 @@
+export * from './errors';
 export * from './ports/operation-context';
 export * from './ports/repositories';
 export * from './ports/unit-of-work';
@@ -5,3 +6,11 @@ export * from './ports/authorization';
 export * from './ports/security-events';
 export * from './ports/system';
 export * from './services/authorization.service';
+export * from './use-cases/shared';
+export * from './use-cases/create-product';
+export * from './use-cases/update-product-details';
+export * from './use-cases/set-product-options';
+export * from './use-cases/set-variant-sku';
+export * from './use-cases/set-product-status';
+export * from './use-cases/archive';
+export * from './use-cases/set-variant-amounts';

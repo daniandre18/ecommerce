@@ -46,6 +46,25 @@ describe('validateOptionStructure', () => {
     });
   });
 
+  // Los ids de opciones y valores nuevos los propone el cliente: el servidor no puede confiar en
+  // que no se repitan, y reconcileVariants indexa por id.
+  it('rechaza dos opciones con el mismo id', () => {
+    const sizeWithColorId = { ...option('size', ['S'], 1), id: option('color', []).id };
+    expect(validateOptionStructure([option('color', ['Rojo']), sizeWithColorId])).toEqual({
+      ok: false,
+      error: { kind: 'duplicate-id', id: 'color' },
+    });
+  });
+
+  it('rechaza un id de valor repetido, aunque esté en otra opción', () => {
+    const color = option('color', ['Rojo']);
+    const size = { ...option('size', ['S'], 1), values: [{ ...color.values[0], label: 'S', position: 0 }] };
+    expect(validateOptionStructure([color, size as typeof color])).toEqual({
+      ok: false,
+      error: { kind: 'duplicate-id', id: 'color:Rojo' },
+    });
+  });
+
   it('rechaza nombres de opción y etiquetas vacíos', () => {
     expect(validateOptionStructure([option('  ', ['a'])]).ok).toBe(false);
     expect(validateOptionStructure([option('color', ['  '])]).ok).toBe(false);

@@ -11,6 +11,11 @@ export class TenantPaths {
     readonly tenantId: TenantId,
   ) {}
 
+  /** El documento del comercio mismo: `tenants/{tenantId}`. */
+  tenantDoc() {
+    return this.db.doc(`tenants/${this.tenantId}`);
+  }
+
   collection(name: string) {
     return this.db.collection(`tenants/${this.tenantId}/${name}`);
   }
