@@ -6,3 +6,5 @@ export * from './firestore-catalog-queries';
 export * from './callable-catalog-commands';
 export * from './firebase-image-storage';
 export * from './firestore-tenant-directory';
+export * from './firestore-team-queries';
+export * from './callable-team-commands';

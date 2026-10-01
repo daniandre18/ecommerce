@@ -10,23 +10,33 @@ import type {
   Session,
   SessionUser,
   SignInResult,
+  SignUpResult,
+  TeamCommands,
+  TeamQueries,
   Unsubscribe,
   Watcher,
 } from '@ecommerce/application';
 import { signal, type Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
+  createCatalogRole,
+  createInvitation,
+  createOwnerRole,
+  invitationId,
   normalizeName,
   PRESET_CATALOG_PERMISSIONS,
   productId,
   tenantId,
   uid,
   type CurrencyCode,
+  type Invitation,
   type MemberAccess,
+  type Membership,
   type Money,
   type PlatformOperatorId,
   type Product,
   type ProductId,
+  type Role,
   type Tenant,
   type TenantId,
   type Uid,
@@ -43,6 +53,8 @@ export class FakeSession implements Session {
   user: SessionUser | null = null;
   nextSignIn: SignInResult = { ok: true, user: OWNER };
   readonly signIns: { email: string; password: string }[] = [];
+  nextSignUp: SignUpResult | undefined;
+  readonly signUps: { email: string; password: string; displayName: string }[] = [];
   signedOut = false;
 
   async current(): Promise<SessionUser | null> {
@@ -58,6 +70,13 @@ export class FakeSession implements Session {
     this.signIns.push({ email, password });
     if (this.nextSignIn.ok) this.user = this.nextSignIn.user;
     return this.nextSignIn;
+  }
+
+  async signUp(input: { email: string; password: string; displayName: string }): Promise<SignUpResult> {
+    this.signUps.push(input);
+    const result = this.nextSignUp ?? { ok: true, user: { uid: uid('nueva'), email: input.email, displayName: input.displayName } };
+    if (result.ok) this.user = result.user;
+    return result;
   }
 
   async signOut(): Promise<void> {
@@ -240,3 +259,72 @@ export function provideAccess(access: MemberAccess | null | undefined = OWNER_AC
 export function useAccess(access: MemberAccess | null | undefined): void {
   TestBed.overrideProvider(CURRENT_ACCESS, { useValue: signal(access) });
 }
+
+type TeamSubscription<T> = Subscription<T, TenantId>;
+
+/** Las lecturas del equipo, controladas por la prueba. */
+export class FakeTeamQueries implements TeamQueries {
+  readonly members: TeamSubscription<readonly Membership[]>[] = [];
+  readonly roles: TeamSubscription<readonly Role[]>[] = [];
+  readonly invitations: TeamSubscription<readonly Invitation[]>[] = [];
+
+  watchMembers(id: TenantId, watcher: Watcher<readonly Membership[]>): Unsubscribe {
+    return open(this.members, new Subscription(id, watcher));
+  }
+
+  watchRoles(id: TenantId, watcher: Watcher<readonly Role[]>): Unsubscribe {
+    return open(this.roles, new Subscription(id, watcher));
+  }
+
+  watchInvitations(id: TenantId, watcher: Watcher<readonly Invitation[]>): Unsubscribe {
+    return open(this.invitations, new Subscription(id, watcher));
+  }
+}
+
+function open<S extends { closed: boolean }>(list: S[], subscription: S): Unsubscribe {
+  list.push(subscription);
+  return () => {
+    subscription.closed = true;
+  };
+}
+
+export function fakeTeamCommands(): Mocked<TeamCommands> {
+  const pending = () => vi.fn(() => new Promise<never>(() => undefined));
+  return {
+    createRole: pending(),
+    updateRole: pending(),
+    deleteRole: pending(),
+    inviteCollaborator: pending(),
+    revokeInvitation: pending(),
+    acceptInvitation: pending(),
+    assignRole: pending(),
+    setMembershipEnabled: pending(),
+    transferOwnership: pending(),
+  } as unknown as Mocked<TeamCommands>;
+}
+
+/** Una membresía activa de t1. */
+export const member = (id: string, name: string, roleId: string, overrides: Partial<Membership> = {}): Membership => ({
+  uid: uid(id),
+  tenantId: T1,
+  roleId: roleId as Role['id'],
+  isOwner: false,
+  displayName: name,
+  email: `${id}@t1.test`,
+  status: 'active',
+  invitedAt: AT,
+  activatedAt: AT,
+  disabledAt: null,
+  ...overrides,
+});
+
+/** Los roles con los que nace t1, con cuántas personas tiene cada uno. */
+export const presetRolesOfT1 = (counts: { owner?: number; catalog?: number } = {}): Role[] => [
+  { ...createOwnerRole(T1, AT), memberCount: counts.owner ?? 1 },
+  { ...createCatalogRole(T1, AT), memberCount: counts.catalog ?? 0 },
+];
+
+export const invitation = (id: string, email: string, overrides: Partial<Invitation> = {}): Invitation => ({
+  ...createInvitation({ id: invitationId(id), tenantId: T1, email, roleId: 'catalog' as Role['id'], createdBy: uid('owner'), at: AT }),
+  ...overrides,
+});

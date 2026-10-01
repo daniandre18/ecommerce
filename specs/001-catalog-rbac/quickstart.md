@@ -30,8 +30,8 @@ npx nx serve admin                  # panel en http://localhost:4200
 proyecto `demo-ecommerce`; solo el build de producción reemplaza ese entorno por el del proyecto real.
 El panel se niega a usar los emuladores con un proyecto que no sea `demo-*`.
 
-El panel se abre en `/t/{código del comercio}` —`/t/t1` para el escenario sembrado—. Elegir el
-comercio de una lista llega con la Historia 2 (T075).
+Al entrar, una cuenta con un solo comercio va directo a su catálogo (`/t/t1/catalog` para el
+escenario sembrado); con varios, elige de la lista y cambia desde el encabezado (T075).
 
 ### Datos de prueba
 
@@ -79,7 +79,9 @@ comercio tiene exactamente un Propietario (FR-011); una versión anterior de est
 
 ### Historia 2 — Equipo, permisos y costo
 
-1. Como Propietaria, invitar a `nuevo@t1.test`. Antes de aceptar no accede a nada (FR-007).
+1. Como Propietaria, en **Equipo**, invitar a `nuevo@t1.test` y copiar el enlace. Abrirlo en otro
+   navegador: pide iniciar sesión, y desde ahí **Crear una** cuenta con ese correo. Antes de aceptar
+   no accede a nada (FR-007); al aceptar, entra al catálogo.
 2. Crear un rol propio → nace **sin permisos** (FR-009).
 3. Buscar en el editor de permisos las credenciales de pago, la facturación o la administración de
    roles → **no aparecen como opción activable en ningún rol** (FR-014). No están desmarcadas: no

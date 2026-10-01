@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { gateFailure } from './callable';
 import { uploadFailure } from './firebase-image-storage';
-import { signInFailure } from './firebase-session';
+import { signInFailure, signUpFailure } from './firebase-session';
 
 const firebaseError = (code: string) => Object.assign(new Error(`falla ${code}`), { code });
 
@@ -43,6 +43,27 @@ describe('las fallas de inicio de sesión', () => {
     expect(signInFailure(firebaseError('auth/network-request-failed'))).toBe('unavailable');
     expect(log).not.toHaveBeenCalled();
     expect(signInFailure(firebaseError('auth/internal-error'))).toBe('unavailable');
+    expect(log).toHaveBeenCalledOnce();
+  });
+});
+
+describe('las fallas al crear una cuenta', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it.each([
+    ['auth/email-already-in-use', 'email-in-use'],
+    ['auth/invalid-email', 'invalid-email'],
+    ['auth/weak-password', 'weak-password'],
+    ['auth/too-many-requests', 'too-many-attempts'],
+  ])('%s es %s', (code, reason) => {
+    expect(signUpFailure(firebaseError(code))).toBe(reason);
+  });
+
+  it('sin red es "no disponible", y lo desconocido también, pero queda registrado', () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    expect(signUpFailure(firebaseError('auth/network-request-failed'))).toBe('unavailable');
+    expect(log).not.toHaveBeenCalled();
+    expect(signUpFailure(firebaseError('auth/internal-error'))).toBe('unavailable');
     expect(log).toHaveBeenCalledOnce();
   });
 });

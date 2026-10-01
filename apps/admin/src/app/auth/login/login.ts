@@ -3,7 +3,7 @@ import { email, form, FormField, required, submit } from '@angular/forms/signals
 import { MatButton } from '@angular/material/button';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import type { SignInFailure } from '@ecommerce/application';
 import { SESSION } from '../../core/client';
 
@@ -15,7 +15,7 @@ const SIGN_IN_FAILURES: Record<SignInFailure, string> = {
 
 @Component({
   selector: 'app-login',
-  imports: [FormField, MatFormField, MatLabel, MatError, MatInput, MatButton],
+  imports: [FormField, MatFormField, MatLabel, MatError, MatInput, MatButton, RouterLink],
   template: `
     <h1>Iniciar sesión</h1>
     <form novalidate (submit)="$event.preventDefault(); signIn()">
@@ -39,6 +39,8 @@ const SIGN_IN_FAILURES: Record<SignInFailure, string> = {
 
       <button matButton="filled" type="submit" [disabled]="loginForm().submitting()">Entrar</button>
     </form>
+    <!-- Quien llega por una invitación y todavía no tiene cuenta la crea acá, y vuelve al enlace. -->
+    <p class="other">¿No tenés cuenta? <a routerLink="/signup" [queryParams]="{ returnUrl: returnUrl() }">Creá una</a></p>
   `,
   styles: `
     :host {
@@ -59,6 +61,11 @@ const SIGN_IN_FAILURES: Record<SignInFailure, string> = {
 
     .failure {
       color: var(--mat-sys-error);
+      font: var(--mat-sys-body-medium);
+    }
+
+    .other {
+      margin-top: 16px;
       font: var(--mat-sys-body-medium);
     }
   `,
