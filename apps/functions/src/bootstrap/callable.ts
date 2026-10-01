@@ -1,6 +1,7 @@
 import {
   BusinessRuleError,
-  type BusinessErrorCode,
+  type CommandResult,
+  type EnvelopeErrorCode,
   type IdGenerator,
   type OperationContext,
   type Requirement,
@@ -20,15 +21,12 @@ export interface UseCaseClass<I, O> {
   new (deps: UseCaseDependencies): { execute(tx: TransactionScope, ctx: OperationContext, input: I): Promise<O> };
 }
 
-export type ErrorCode = BusinessErrorCode | 'audit-write-failed';
-
 /**
- * Envoltura de respuesta del contrato. `unauthenticated`, `failed-precondition` y
- * `permission-denied` no viajan acá sino como HttpsError: los corta la guarda antes del caso de uso.
+ * Envoltura de respuesta del contrato, la misma que recibe el panel. `unauthenticated`,
+ * `failed-precondition` y `permission-denied` no viajan acá sino como HttpsError: los corta la
+ * guarda antes del caso de uso.
  */
-export type CallableResult<O> =
-  | { readonly ok: true; readonly data: O }
-  | { readonly ok: false; readonly code: ErrorCode; readonly message: string; readonly details?: unknown };
+export type CallableResult<O> = CommandResult<O, EnvelopeErrorCode>;
 
 export interface CallableOptions {
   /** El caso de uso escribe bitácora en la misma transacción que el cambio (FR-030, FR-033). */

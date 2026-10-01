@@ -40,7 +40,10 @@ service cloud.firestore {
     }
 
     match /tenants/{tenantId} {
-      // Legible por miembros activos
+      // Legible por miembros activos. El documento del comercio (nombre, moneda, estado): el panel
+      // los necesita para mostrar y cargar importes. Alcanza solo a este documento, no a las
+      // subcolecciones.
+      allow read: if isActiveMember(tenantId);
       match /products/{productId} {
         allow read: if isActiveMember(tenantId);
         match /variants/{variantId} { allow read: if isActiveMember(tenantId); }
@@ -130,6 +133,7 @@ obligatorio y CI bloquea el merge si alguno falla.**
 | 5 | Sin autenticar | Leer cualquier cosa | **Denegado** |
 | 6 | Autenticado sin ninguna membresía | Leer `tenants/t1/products/p1` | **Denegado** |
 | 7 | Miembro con `status: 'invited'` (aún no aceptó) | Leer `tenants/t1/products/p1` | **Denegado** (FR-007) |
+| 35 | Miembro activo de `t1` | Leer el documento `tenants/t1`; y el de `tenants/t2` | **Permitido**; **Denegado** (agregado en T054: el panel necesita el nombre y la moneda) |
 
 ### Cuentas en varios comercios (FR-005) — casos nuevos de esta revisión
 
