@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { gateFailure } from './callable-catalog-commands';
+import { gateFailure } from './callable';
 import { uploadFailure } from './firebase-image-storage';
 import { signInFailure } from './firebase-session';
 

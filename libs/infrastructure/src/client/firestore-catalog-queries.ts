@@ -13,6 +13,7 @@ import {
   type QueryConstraint,
 } from 'firebase/firestore';
 import { productFromDoc, tenantFromDoc, variantCostsFromDoc, variantFromDoc } from '../mapping/catalog-mappers';
+import { deliver } from './deliver';
 
 /** Cierre de la búsqueda por prefijo: cualquier texto que empiece por el prefijo queda antes. */
 const PREFIX_END = '';
@@ -77,16 +78,4 @@ export function productList(db: Firestore, tenantId: TenantId, { status, search,
     constraints.push(orderBy('updatedAt', 'desc'));
   }
   return query(collection(db, 'tenants', tenantId, 'products'), ...constraints, limit(max));
-}
-
-/** Un documento corrupto que no pasa las factorías del dominio llega como error, no como excepción suelta. */
-function deliver<T>(watcher: Watcher<T>, read: () => T): void {
-  let value: T;
-  try {
-    value = read();
-  } catch (error) {
-    watcher.error(error);
-    return;
-  }
-  watcher.next(value);
 }
