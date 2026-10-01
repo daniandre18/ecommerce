@@ -21,6 +21,7 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { CATALOG_COMMANDS } from '../../../core/client';
 import { commandErrorMessage } from '../../../shared/command-errors';
+import { trackUnsaved } from '../../../shared/pending-changes/pending-changes';
 import { ConfirmDialog, type ConfirmData } from '../../../shared/confirm-dialog';
 import { combinationLabel } from '../../shared/variant-labels';
 import { AssignOptionDialog, type AssignOptionData } from '../../variant-table/assign-option-dialog/assign-option-dialog';
@@ -81,6 +82,10 @@ export class OptionsEditor {
   /** Los topes se avisan en vivo; el resto de los problemas, al intentar guardar. */
   protected readonly overLimit = computed(() => !validateOptionLimits(this.options()).ok || this.combinations() > MAX_COMBINATIONS);
   protected readonly failure = signal('');
+
+  constructor() {
+    trackUnsaved(() => this.dirty());
+  }
 
   protected nameOf(option: DraftOption | undefined): string {
     return option?.name.trim() || 'la opción nueva';

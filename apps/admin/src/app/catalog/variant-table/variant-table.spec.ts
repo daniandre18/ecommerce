@@ -16,6 +16,7 @@ import {
   type VariationOption,
 } from '@ecommerce/domain';
 import { CATALOG_COMMANDS, CATALOG_QUERIES } from '../../core/client';
+import { PendingChanges } from '../../shared/pending-changes/pending-changes';
 import { CURRENT_ACCESS } from '../../tenant/current-access';
 import { CATALOG_ACCESS, fakeCatalogCommands, FakeCatalogQueries, OWNER_ACCESS, product, T1 } from '../../../testing/fakes';
 import { settle } from '../../../testing/settle';
@@ -159,6 +160,19 @@ describe('VariantTable', () => {
     expect(row('Rojo').group.textContent).toContain('Usá hasta 2 decimales');
   });
 
+  // FR-038a: con Enter el campo no pierde el foco; el error igual se muestra y se anuncia.
+  it('con Enter, un valor mal escrito se marca y se anuncia sin salir del campo', async () => {
+    const { row } = await render([variantOf('v1', 'rojo')]);
+    const price = row('Rojo').field('Precio');
+    price.value = 'abc';
+    price.dispatchEvent(new Event('input'));
+    price.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    await settle();
+    expect(commands.setVariantPrice).not.toHaveBeenCalled();
+    expect(price.getAttribute('aria-invalid')).toBe('true');
+    expect(announcer.announce).toHaveBeenCalledWith(expect.stringMatching(/^Precio de Rojo: /), 'assertive');
+  });
+
   it('vaciar el precio tachado lo quita', async () => {
     const { row } = await render([variantOf('v1', 'rojo', { compareAtPrice: money(20000, 'USD') })]);
     await row('Rojo').edit('Precio tachado', '');
@@ -276,6 +290,39 @@ describe('VariantTable', () => {
       await settle();
       expect(queries.costLists).toHaveLength(1);
       expect(labels(row('Rojo').group)).toContain('Costo (USD)');
+    });
+  });
+
+  // T094 — FR-039: lo rechazado queda escrito y pendiente; lo aceptado, no.
+  describe('trabajo en curso', () => {
+    const pending = () => TestBed.inject(PendingChanges).any();
+
+    it('un guardado rechazado conserva lo escrito y lo deja pendiente hasta que se guarde', async () => {
+      commands.setVariantPrice.mockResolvedValue({ ok: false, code: 'unavailable', message: 'sin red' });
+      const { row } = await render([variantOf('v1', 'rojo')]);
+      expect(pending()).toBe(false);
+      await row('Rojo').edit('Precio', '15');
+      expect(row('Rojo').field('Precio').value).toBe('15');
+      expect(row('Rojo').group.textContent).toContain('No hay conexión con el servidor');
+      expect(pending()).toBe(true);
+
+      expect(row('Rojo').field('Precio').getAttribute('aria-invalid')).toBe('true');
+
+      commands.setVariantPrice.mockResolvedValue({ ok: true, data: { batchId: 'b', updated: 1, auditEntryIds: ['e'] } });
+      row('Rojo').field('Precio').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      await settle();
+      expect(commands.setVariantPrice).toHaveBeenCalledTimes(2);
+      expect(pending()).toBe(false);
+    });
+
+    it('un rechazo por el valor mismo, como un SKU ocupado, no se reenvía igual: hay que cambiarlo', async () => {
+      commands.setVariantSku.mockResolvedValue({ ok: false, code: 'sku-conflict', message: 'ocupado', details: { occupiedBy: 'v2', productId: 'p1' } });
+      const { row } = await render([variantOf('v1', 'rojo'), variantOf('v2', 'azul', { sku: { raw: 'X', normalized: 'X' } })]);
+      await row('Rojo').edit('SKU', 'x');
+      row('Rojo').field('SKU').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      await settle();
+      expect(commands.setVariantSku).toHaveBeenCalledTimes(1);
+      expect(pending()).toBe(true);
     });
   });
 });

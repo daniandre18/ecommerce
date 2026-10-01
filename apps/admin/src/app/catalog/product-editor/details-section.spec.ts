@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { CATALOG_COMMANDS } from '../../core/client';
+import { PendingChanges } from '../../shared/pending-changes/pending-changes';
 import { fakeCatalogCommands, product, provideAccess, READ_ONLY_ACCESS, T1, useAccess } from '../../../testing/fakes';
 import { settle } from '../../../testing/settle';
 import { DetailsSection } from './details-section';
@@ -65,5 +66,17 @@ describe('DetailsSection', () => {
     expect(name()?.value).toBe('Camiseta');
     expect(name()?.readOnly).toBe(true);
     expect(root.querySelector('textarea')?.readOnly).toBe(true);
+  });
+
+  // T094 — FR-039: lo escrito y sin guardar queda pendiente, y descartarlo lo libera.
+  it('lo escrito sin guardar queda pendiente hasta guardarlo o descartarlo', async () => {
+    const { root, type } = await render();
+    const pending = () => TestBed.inject(PendingChanges).any();
+    expect(pending()).toBe(false);
+    await type('Remera');
+    expect(pending()).toBe(true);
+    [...root.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Descartar cambios')?.click();
+    await settle();
+    expect(pending()).toBe(false);
   });
 });

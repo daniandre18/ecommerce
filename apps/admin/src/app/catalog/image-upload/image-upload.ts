@@ -9,6 +9,7 @@ import type { CommandResult, UploadFailure } from '@ecommerce/application';
 import { IMAGE_CONTENT_TYPES, MAX_IMAGE_BYTES, type ImageRef, type ProductId, type TenantId } from '@ecommerce/domain';
 import { IMAGE_STORAGE } from '../../core/client';
 import { commandErrorMessage } from '../../shared/command-errors';
+import { trackUnsaved } from '../../shared/pending-changes/pending-changes';
 import { injectCan } from '../../tenant/current-access';
 import { StorageImage } from './storage-image';
 
@@ -68,6 +69,8 @@ export class ImageUpload {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.releasePreview());
+    // Una imagen elegida y todavía sin subir también es trabajo en curso.
+    trackUnsaved(() => this.chosen() !== undefined);
   }
 
   protected choose(input: HTMLInputElement): void {

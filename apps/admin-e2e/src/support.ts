@@ -10,10 +10,12 @@ export const MULTI = 'multi@test';
 
 export const EMULATORS = { auth: 'http://127.0.0.1:9099', firestore: 'http://127.0.0.1:8080', functions: 'http://127.0.0.1:5001/demo-ecommerce/us-central1' };
 
+/** Inicia sesión desde la pantalla de inicio y espera a salir de ella: la sesión ya quedó guardada. */
 export async function signIn(page: Page, email: string) {
   await page.getByLabel('Correo').fill(email);
   await page.getByLabel('Contraseña').fill(PASSWORD);
   await page.getByRole('button', { name: 'Entrar' }).click();
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toHaveCount(0);
 }
 
 /** La sesión de una cuenta, como la obtendría su navegador: su token y su uid. */
@@ -64,4 +66,27 @@ export async function productAsOwner(name: string): Promise<{ productId: string;
   const { body } = await call(await idTokenOf(OWNER), 'createProduct', { tenantId: 't1', requestId: crypto.randomUUID(), name });
   const { data } = body.result as { data: { productId: string; variantId: string } };
   return { ...data, url: `/t/t1/catalog/${data.productId}` };
+}
+
+/** Un producto con dos opciones y cuatro variantes: la tabla más exigente para una pantalla angosta. */
+export async function productWithVariants(name: string): Promise<string> {
+  const { productId, variantId, url } = await productAsOwner(name);
+  const option = (id: string, label: string, values: string[]) => ({
+    id,
+    name: label,
+    position: id === 'color' ? 0 : 1,
+    values: values.map((value, position) => ({ id: value.toLowerCase(), label: value, position })),
+  });
+  const result = await call(await idTokenOf(OWNER), 'setProductOptions', {
+    tenantId: 't1',
+    productId,
+    version: 1,
+    options: [option('color', 'Color', ['Rojo', 'Azul']), option('talle', 'Talle', ['S', 'M'])],
+    assignments: [
+      { variantId, optionId: 'color', valueId: 'rojo' },
+      { variantId, optionId: 'talle', valueId: 's' },
+    ],
+  });
+  expect(result.status).toBe(200);
+  return url;
 }

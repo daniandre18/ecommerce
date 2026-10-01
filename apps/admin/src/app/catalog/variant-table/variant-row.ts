@@ -6,17 +6,31 @@ import { MatCheckbox } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
-import type { CommandFailure, CommandResult } from '@ecommerce/application';
+import type { CommandErrorCode, CommandFailure, CommandResult } from '@ecommerce/application';
 import { isVariantComplete, type CurrencyCode, type Money, type ProductId, type TenantId, type Variant, type VariantId } from '@ecommerce/domain';
 import { CATALOG_COMMANDS } from '../../core/client';
 import { commandErrorMessage } from '../../shared/command-errors';
 import { keepUnsaved } from '../../shared/keep-unsaved';
+import { trackUnsaved } from '../../shared/pending-changes/pending-changes';
 import { injectCan } from '../../tenant/current-access';
 import { formatMoneyInput, formatStockInput, parseMoneyInput, parseStockInput } from '../shared/amount-input';
 import { VariantImagesDialog, type VariantImagesData } from './variant-images-dialog';
 
 type Field = 'sku' | 'price' | 'compareAtPrice' | 'stock' | 'cost';
 type Fields = Record<Field, string>;
+
+/** Un rechazo del servidor para un valor. Si no es culpa del valor, se puede reenviar tal cual. */
+interface Rejection {
+  readonly value: string;
+  readonly message: string;
+  readonly retryable: boolean;
+}
+
+/**
+ * Fallas que no dicen nada del valor: sin conexión, del servidor, o que otra persona lo cambió
+ * antes. El mismo valor se puede volver a enviar (FR-039); un SKU ocupado o un dato inválido, no.
+ */
+const RETRYABLE: ReadonlySet<CommandErrorCode> = new Set<CommandErrorCode>(['unavailable', 'internal', 'audit-write-failed', 'version-conflict']);
 
 const FIELD_NAMES: Record<Field, string> = { sku: 'SKU', price: 'Precio', compareAtPrice: 'Precio tachado', stock: 'Existencias', cost: 'Costo' };
 
@@ -98,8 +112,19 @@ export class VariantRow {
     computation: keepUnsaved,
   });
 
+  /** Lo que el servidor ya aceptó, en su forma canónica, mientras su versión no llega en tiempo real. */
+  private readonly saved = signal<Partial<Fields>>({});
+  /**
+   * Algún campo tiene algo escrito que no está guardado: sin enviar, en camino o rechazado (FR-039).
+   * Lo aceptado no cuenta aunque todavía no haya llegado de vuelta.
+   */
+  private readonly unsaved = computed(() => {
+    const [draft, stored, saved] = [this.draft(), this.stored(), this.saved()];
+    return (Object.keys(draft) as Field[]).some((field) => draft[field] !== stored[field] && draft[field] !== saved[field]);
+  });
+
   /** El rechazo del servidor vale para el valor que lo provocó: al cambiarlo, desaparece. */
-  private readonly rejections = signal<Partial<Record<Field, { readonly value: string; readonly message: string }>>>({});
+  private readonly rejections = signal<Partial<Record<Field, Rejection>>>({});
 
   protected readonly rowForm = form(this.draft, (path) => {
     readonly(path.sku, { when: () => !this.canWriteCatalog() });
@@ -139,6 +164,10 @@ export class VariantRow {
   /** Las órdenes de una fila van en fila: cada una usa la versión que dejó la anterior. */
   private queue: Promise<void> = Promise.resolve();
 
+  constructor() {
+    trackUnsaved(() => this.unsaved());
+  }
+
   protected openImages(): void {
     const data: VariantImagesData = { tenantId: this.tenantId(), productId: this.productId(), label: this.label(), variant: this.variant };
     // Con el inyector de la fila, el diálogo ve el acceso del comercio (CURRENT_ACCESS) que da su marco.
@@ -152,11 +181,21 @@ export class VariantRow {
   private async save(field: Field): Promise<void> {
     const text = this.draft()[field];
     if (text === this.stored()[field] || text === this.sent[field]) return;
-    if (this.fieldState(field).invalid()) return;
+    const state = this.fieldState(field);
+    const rejected = this.rejections()[field];
+    const retrying = rejected?.retryable === true && rejected.value === text;
+    if (state.invalid() && !retrying) {
+      // Con Enter el campo no pierde el foco: sin esto, el error no se vería ni se anunciaría.
+      state.markAsTouched();
+      const problem = state.errors()[0]?.message;
+      if (problem) void this.announcer.announce(`${FIELD_NAMES[field]} de ${this.label()}: ${problem}`, 'assertive');
+      return;
+    }
 
     this.sent[field] = text;
     const result = await this.send(field, text);
     if (result.ok) {
+      this.clearRejection(field);
       // El costo vive en otro documento: no cambia la versión de la variante.
       if (field !== 'cost') this.knownVersion.set(result.version ?? this.knownVersion() + 1);
       this.markSaved(field, text);
@@ -164,7 +203,9 @@ export class VariantRow {
     } else {
       delete this.sent[field];
       const message = this.failureMessage(field, result.failure);
-      this.rejections.update((current) => ({ ...current, [field]: { value: text, message } }));
+      this.rejections.update((current) => ({ ...current, [field]: { value: text, message, retryable: RETRYABLE.has(result.failure.code) } }));
+      // Visible también si se guardó con Enter, sin salir del campo.
+      this.fieldState(field).markAsTouched();
       void this.announcer.announce(`${FIELD_NAMES[field]} de ${this.label()}: ${message}`, 'assertive');
     }
   }
@@ -176,6 +217,7 @@ export class VariantRow {
    */
   private markSaved(field: Field, text: string): void {
     const canonical = canonicalText(field, text, this.currency());
+    this.saved.update((saved) => ({ ...saved, [field]: canonical }));
     this.draft.update((draft) => (draft[field] === text ? { ...draft, [field]: canonical } : draft));
   }
 
@@ -221,6 +263,14 @@ export class VariantRow {
       return `Cambió mientras la editabas: ahora es «${current}». Si querés tu valor, volvé a guardarlo.`;
     }
     return commandErrorMessage(failure.code);
+  }
+
+  private clearRejection(field: Field): void {
+    this.rejections.update((current) => {
+      const rest = { ...current };
+      delete rest[field];
+      return rest;
+    });
   }
 
   private rejection(field: Field, value: string) {

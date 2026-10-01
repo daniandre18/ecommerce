@@ -61,14 +61,16 @@ function defaultRole(roles: readonly Role[]): RoleId | '' {
     } @else {
       <ul aria-labelledby="pendientes">
         @for (invitation of pending(); track invitation.id) {
-          <li role="group" [attr.aria-label]="invitation.email">
-            <div class="who">
-              <span class="name">{{ invitation.email }}</span>
-              <span class="meta">{{ nameOf(invitation.roleId) }} · {{ expiryOf(invitation) }}</span>
-            </div>
-            <div class="actions">
-              <button matButton type="button" (click)="copy(linkOf(invitation))">Copiar enlace</button>
-              <button matButton type="button" (click)="revoke(invitation)">Revocar</button>
+          <li>
+            <div class="row" role="group" [attr.aria-label]="invitation.email">
+              <div class="who">
+                <span class="name">{{ invitation.email }}</span>
+                <span class="meta">{{ nameOf(invitation.roleId) }} · {{ expiryOf(invitation) }}</span>
+              </div>
+              <div class="actions">
+                <button matButton type="button" (click)="copy(linkOf(invitation))">Copiar enlace</button>
+                <button matButton type="button" (click)="revoke(invitation)">Revocar</button>
+              </div>
             </div>
           </li>
         }
@@ -124,7 +126,7 @@ function defaultRole(roles: readonly Role[]): RoleId | '' {
       list-style: none;
     }
 
-    li {
+    .row {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
