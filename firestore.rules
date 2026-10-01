@@ -44,6 +44,10 @@ service cloud.firestore {
     match /tenants/{tenantId} {
 
       // ── Legible por miembros activos ───────────────────────────────────────────────────────
+      // El documento del comercio: nombre, moneda y estado. Esta regla alcanza solo a este
+      // documento, no a sus subcolecciones.
+      allow read: if isActiveMember(tenantId);
+
       match /products/{productId} {
         allow read: if isActiveMember(tenantId);
 

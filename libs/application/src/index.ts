@@ -14,3 +14,6 @@ export * from './use-cases/set-variant-sku';
 export * from './use-cases/set-product-status';
 export * from './use-cases/archive';
 export * from './use-cases/set-variant-amounts';
+export * from './client/commands';
+export * from './client/queries';
+export * from './client/session';

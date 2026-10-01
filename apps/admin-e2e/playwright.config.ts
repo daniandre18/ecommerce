@@ -8,7 +8,14 @@ const APP_URL = 'http://localhost:4200';
  */
 export default defineConfig({
   testDir: './src',
-  fullyParallel: true,
+  globalSetup: './global-setup.ts',
+  // En serie: todas las pruebas comparten el comercio sembrado en los emuladores. Con varios
+  // navegadores a la vez se observaron cuelgues intermitentes —navegadores ociosos esperando, con
+  // los emuladores atendiendo al resto— cuya causa no se encontró; en serie no aparecieron.
+  fullyParallel: false,
+  workers: 1,
+  // Un cuelgue no puede retener la corrida: falla entera a los 10 minutos.
+  globalTimeout: 10 * 60_000,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 2 : 0,
   reporter: process.env['CI'] ? 'github' : 'list',
@@ -26,7 +33,8 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'firebase emulators:start --only auth,firestore --project demo-ecommerce',
+      // Las callable corren desde su paquete: se empaqueta antes de levantar el emulador de Functions.
+      command: 'npx nx run functions:build && firebase emulators:start --only auth,firestore,functions --project demo-ecommerce',
       url: 'http://127.0.0.1:4400/emulators',
       cwd: '../..',
       reuseExistingServer: !process.env['CI'],

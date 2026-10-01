@@ -59,6 +59,7 @@ export async function seed(env: RulesTestEnvironment): Promise<void> {
     await put('tenants/t2/members/owner2', membership({ status: 'active', roleId: 'owner', isOwner: true }));
 
     for (const t of ['t1', 't2']) {
+      await put(`tenants/${t}`, { name: `Comercio ${t}`, currency: 'USD', status: 'active' });
       await put(`tenants/${t}/products/p1`, { name: 'Camiseta', status: 'draft' });
       await put(`tenants/${t}/products/p1/variants/v1`, { sku: 'ABC-1', price: { amount: 100, currency: 'USD' } });
       await put(`tenants/${t}/products/p1/private/costs`, { costs: { v1: { amount: 40, currency: 'USD' } } });

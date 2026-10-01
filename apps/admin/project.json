@@ -23,7 +23,10 @@
             { "type": "initial", "maximumWarning": "500kB", "maximumError": "1MB" },
             { "type": "anyComponentStyle", "maximumWarning": "4kB", "maximumError": "8kB" }
           ],
-          "outputHashing": "all"
+          "outputHashing": "all",
+          "fileReplacements": [
+            { "replace": "apps/admin/src/environments/environment.ts", "with": "apps/admin/src/environments/environment.production.ts" }
+          ]
         },
         "development": {
           "optimization": false,

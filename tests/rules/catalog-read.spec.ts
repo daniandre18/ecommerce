@@ -17,6 +17,15 @@ describe('lectura del catálogo', () => {
   const as = (user: string) => db(env.authenticatedContext(user));
 
   describe('un miembro activo de su comercio', () => {
+    // Caso 35: el panel necesita el nombre y la moneda del comercio para mostrar y cargar importes.
+    it('lee el documento del comercio', async () => {
+      await assertSucceeds(getDoc(doc(as(USERS.catalog1), 'tenants/t1')));
+    });
+
+    it('no lee el documento de otro comercio', async () => {
+      await assertFails(getDoc(doc(as(USERS.catalog1), 'tenants/t2')));
+    });
+
     it('lee un producto y sus variantes', async () => {
       await assertSucceeds(getDoc(doc(as(USERS.catalog1), 'tenants/t1/products/p1')));
       await assertSucceeds(getDoc(doc(as(USERS.catalog1), 'tenants/t1/products/p1/variants/v1')));
@@ -48,6 +57,7 @@ describe('lectura del catálogo', () => {
       ['una invitación sin aceptar', USERS.invited1],
       ['una cuenta sin membresía', USERS.outsider],
     ])('%s', async (_label, user) => {
+      await assertFails(getDoc(doc(as(user), 'tenants/t1')));
       await assertFails(getDoc(doc(as(user), 'tenants/t1/products/p1')));
       await assertFails(getDocs(collection(as(user), 'tenants/t1/products')));
     });

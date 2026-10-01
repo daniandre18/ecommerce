@@ -25,8 +25,12 @@ firebase emulators:start            # Auth, Firestore, Functions, Storage
 npx nx serve admin                  # panel en http://localhost:4200
 ```
 
-El panel apunta a los emuladores cuando `NG_APP_USE_EMULATORS=true`. Nunca se conecta a un proyecto
-real desde el entorno local.
+`nx serve admin` usa la configuración de desarrollo, que apunta siempre a los emuladores con el
+proyecto `demo-ecommerce`; solo el build de producción reemplaza ese entorno por el del proyecto real.
+El panel se niega a usar los emuladores con un proyecto que no sea `demo-*`.
+
+El panel se abre en `/t/{código del comercio}` —`/t/t1` para el escenario sembrado—. Elegir el
+comercio de una lista llega con la Historia 2 (T075).
 
 ### Datos de prueba
 

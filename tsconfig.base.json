@@ -36,6 +36,9 @@
       ],
       "@ecommerce/infrastructure/testing": [
         "./libs/infrastructure/src/testing/emulator.ts"
+      ],
+      "@ecommerce/infrastructure/client": [
+        "./libs/infrastructure/src/client/index.ts"
       ]
     }
   },

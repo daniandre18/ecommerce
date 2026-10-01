@@ -7,6 +7,12 @@
     "layer:infrastructure"
   ],
   "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/infrastructure/vite.unit.config.mts"
+      }
+    },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
