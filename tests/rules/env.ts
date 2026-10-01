@@ -42,6 +42,8 @@ export const db = (ctx: RulesTestContext) => ctx.firestore() as unknown as Fires
 export const USERS = {
   owner1: 'owner1',
   catalog1: 'catalog1',
+  /** Colaboradora de catálogo en t1 y en t2 (FR-005). */
+  multi1: 'multi1',
   /** Miembro activo con un rol que solo lee el catálogo. */
   viewer1: 'viewer1',
   invited1: 'invited1',
@@ -49,7 +51,8 @@ export const USERS = {
   outsider: 'outsider',
 } as const;
 
-const membership = (m: { status: 'active' | 'invited'; roleId: string; isOwner?: boolean }) => ({
+const membership = (uid: string, m: { status: 'active' | 'invited'; roleId: string; isOwner?: boolean }) => ({
+  uid,
   status: m.status,
   roleId: m.roleId,
   isOwner: m.isOwner ?? false,
@@ -66,15 +69,17 @@ export async function seed(env: RulesTestEnvironment): Promise<void> {
     const f = db(ctx);
     const put = (path: string, data: Record<string, unknown>) => setDoc(doc(f, path), data);
 
-    await put('tenants/t1/members/owner1', membership({ status: 'active', roleId: 'owner', isOwner: true }));
-    await put('tenants/t1/members/catalog1', membership({ status: 'active', roleId: 'catalog' }));
-    await put('tenants/t1/members/invited1', membership({ status: 'invited', roleId: 'catalog' }));
-    await put('tenants/t1/members/viewer1', membership({ status: 'active', roleId: 'lector' }));
+    await put('tenants/t1/members/owner1', membership('owner1', { status: 'active', roleId: 'owner', isOwner: true }));
+    await put('tenants/t1/members/catalog1', membership('catalog1', { status: 'active', roleId: 'catalog' }));
+    await put('tenants/t1/members/invited1', membership('invited1', { status: 'invited', roleId: 'catalog' }));
+    await put('tenants/t1/members/viewer1', membership('viewer1', { status: 'active', roleId: 'lector' }));
     await put('tenants/t1/roles/lector', { permissions: ['catalog.read'] });
     await put('tenants/t1/roles/catalog', {
       permissions: ['catalog.read', 'catalog.write', 'variant.stock.write'],
     });
-    await put('tenants/t2/members/owner2', membership({ status: 'active', roleId: 'owner', isOwner: true }));
+    await put('tenants/t2/members/owner2', membership('owner2', { status: 'active', roleId: 'owner', isOwner: true }));
+    await put('tenants/t1/members/multi1', membership('multi1', { status: 'active', roleId: 'catalog' }));
+    await put('tenants/t2/members/multi1', membership('multi1', { status: 'active', roleId: 'catalog' }));
 
     for (const t of ['t1', 't2']) {
       await put(`tenants/${t}`, { name: `Comercio ${t}`, currency: 'USD', status: 'active' });

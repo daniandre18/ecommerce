@@ -26,10 +26,13 @@ export function membershipFromDoc(id: string, tid: string, d: DocumentData): Mem
 
 /**
  * Campos persistidos, enumerados a propósito: un campo nuevo de `Membership` no llega a Firestore
- * hasta que alguien decide guardarlo. `uid` y `tenantId` no se guardan porque están en la ruta.
+ * hasta que alguien decide guardarlo. `tenantId` no se guarda porque está en la ruta; `uid` también
+ * está, pero se guarda además para que una cuenta encuentre sus comercios con una consulta de grupo
+ * filtrada por su uid (T075), que es lo único que las reglas le permiten listar.
  */
 export function membershipToDoc(m: Membership): DocumentData {
   return {
+    uid: m.uid,
     roleId: m.roleId,
     isOwner: m.isOwner,
     displayName: m.displayName,

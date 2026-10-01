@@ -1,4 +1,4 @@
-import type { ProductListQuery, Watcher } from '@ecommerce/application';
+import type { ProductListQuery, TenantAccess, Watcher } from '@ecommerce/application';
 import {
   activateMembership,
   createIncompleteVariant,
@@ -27,6 +27,7 @@ import { clearFirestoreEmulator } from '../testing/emulator';
 import { FirebaseImageStorage } from './firebase-image-storage';
 import { FirebaseSession } from './firebase-session';
 import { FirestoreCatalogQueries } from './firestore-catalog-queries';
+import { FirestoreTenantDirectory } from './firestore-tenant-directory';
 
 const T1 = tenantId('t1');
 const AT = new Date('2026-09-30T12:00:00Z');
@@ -91,6 +92,14 @@ describe('cliente web contra los emuladores', () => {
     await Promise.all([ensureAccount(OWNER), ensureAccount(OUTSIDER)]);
     const db = firestore();
     await db.doc('tenants/t1').set({ name: 'Comercio Uno', ownerUid: OWNER.uid, currency: 'USD', createdAt: AT, createdBy: 'seed', status: 'active' });
+    // La misma cuenta, colaboradora activa en t2 e invitada sin aceptar en t3 (FR-005, FR-007).
+    for (const [id, name, status] of [['t2', 'Comercio Dos', 'active'], ['t3', 'Comercio Tres', 'invited']] as const) {
+      await db.doc(`tenants/${id}`).set({ name, ownerUid: 'otra', currency: 'USD', createdAt: AT, createdBy: 'seed', status: 'active' });
+      await new FirestoreUnitOfWork(db, tenantId(id)).run(async (tx) => {
+        const invited = inviteMembership({ uid: uid(OWNER.uid), tenantId: tenantId(id), roleId: roleId('catalog'), displayName: 'Dueña', email: OWNER.email, at: AT });
+        await tx.members.save(status === 'active' ? activateMembership(invited, AT) : invited);
+      });
+    }
     await new FirestoreUnitOfWork(db, T1).run(async (tx) => {
       const invited = inviteMembership({ uid: uid(OWNER.uid), tenantId: T1, roleId: roleId('owner'), displayName: 'Dueña', email: OWNER.email, at: AT });
       await tx.members.save({ ...activateMembership(invited, AT), isOwner: true });
@@ -138,6 +147,15 @@ describe('cliente web contra los emuladores', () => {
   describe('lecturas de un miembro activo', () => {
     beforeAll(async () => {
       await session.signIn(OWNER.email, OWNER.password);
+    });
+
+    it('los comercios de la cuenta: solo membresías activas, con su nombre y si es Propietaria (T075)', async () => {
+      const directory = new FirestoreTenantDirectory(webDb);
+      const tenants = await first<readonly TenantAccess[]>((watcher) => directory.watchTenantsOf(uid(OWNER.uid), watcher));
+      expect(tenants).toEqual([
+        { tenantId: 't2', name: 'Comercio Dos', isOwner: false },
+        { tenantId: 't1', name: 'Comercio Uno', isOwner: true },
+      ]);
     });
 
     it('el comercio llega con su nombre y su moneda', async () => {

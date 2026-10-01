@@ -2,6 +2,8 @@ import type {
   CatalogCommands,
   CatalogQueries,
   ImageStorage,
+  TenantAccess,
+  TenantDirectory,
   UploadRequest,
   UploadResult,
   ProductListQuery,
@@ -179,3 +181,24 @@ export class FakeImageStorage implements ImageStorage {
     return `https://imagenes.test/${storagePath}`;
   }
 }
+
+/** Los comercios de la cuenta, controlados por la prueba. */
+export class FakeTenantDirectory implements TenantDirectory {
+  readonly subscriptions: Subscription<readonly TenantAccess[], string>[] = [];
+
+  watchTenantsOf(uid: string, watcher: Watcher<readonly TenantAccess[]>): Unsubscribe {
+    const subscription = new Subscription<readonly TenantAccess[], string>(uid, watcher);
+    this.subscriptions.push(subscription);
+    return () => {
+      subscription.closed = true;
+    };
+  }
+
+  get open(): Subscription<readonly TenantAccess[], string> {
+    const last = this.subscriptions.filter((s) => !s.closed).at(-1);
+    if (!last) throw new Error('No hay ninguna suscripción abierta a los comercios');
+    return last;
+  }
+}
+
+export const access = (id: string, name: string, isOwner = false): TenantAccess => ({ tenantId: tenantId(id), name, isOwner });
