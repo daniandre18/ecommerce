@@ -1,5 +1,5 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { form, FormField, submit, validate } from '@angular/forms/signals';
 import { MatButton } from '@angular/material/button';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
@@ -8,6 +8,7 @@ import type { CommandResult } from '@ecommerce/application';
 import type { CurrencyCode, ProductId, TenantId, Variant } from '@ecommerce/domain';
 import { CATALOG_COMMANDS } from '../../../core/client';
 import { commandErrorMessage } from '../../../shared/command-errors';
+import { injectCan } from '../../../tenant/current-access';
 import { parseMoneyInput, parseStockInput } from '../../shared/amount-input';
 
 type BulkField = 'price' | 'compareAtPrice' | 'stock';
@@ -31,9 +32,13 @@ const FIELD_NAMES: Record<BulkField, string> = { price: 'Precio', compareAtPrice
         <mat-form-field subscriptSizing="dynamic">
           <mat-label>Campo</mat-label>
           <select matNativeControl [formField]="bulkForm.field">
-            <option value="price">Precio ({{ currency() }})</option>
-            <option value="compareAtPrice">Precio tachado ({{ currency() }})</option>
-            <option value="stock">Existencias</option>
+            @if (canWritePrice()) {
+              <option value="price">Precio ({{ currency() }})</option>
+              <option value="compareAtPrice">Precio tachado ({{ currency() }})</option>
+            }
+            @if (canWriteStock()) {
+              <option value="stock">Existencias</option>
+            }
           </select>
         </mat-form-field>
         <mat-form-field subscriptSizing="dynamic">
@@ -93,7 +98,17 @@ export class BulkEdit {
   private readonly commands = inject(CATALOG_COMMANDS);
   private readonly announcer = inject(LiveAnnouncer);
 
-  protected readonly model = signal<{ field: BulkField; value: string }>({ field: 'price', value: '' });
+  protected readonly canWritePrice = injectCan('variant.price.write');
+  protected readonly canWriteStock = injectCan('variant.stock.write');
+  /** Solo los campos que el rol puede cambiar (T079); si pierde el elegido, pasa al primero que quede. */
+  private readonly fields = computed<readonly BulkField[]>(() => [
+    ...(this.canWritePrice() ? (['price', 'compareAtPrice'] as const) : []),
+    ...(this.canWriteStock() ? (['stock'] as const) : []),
+  ]);
+  protected readonly model = linkedSignal<readonly BulkField[], { field: BulkField; value: string }>({
+    source: this.fields,
+    computation: (fields, previous) => (previous && fields.includes(previous.value.field) ? previous.value : { field: fields[0] ?? 'price', value: '' }),
+  });
   protected readonly bulkForm = form(this.model, (path) => {
     validate(path.value, ({ value, valueOf }) => {
       const field = valueOf(path.field);

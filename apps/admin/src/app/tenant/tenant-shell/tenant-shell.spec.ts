@@ -1,15 +1,19 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { SignOut } from '../../auth/sign-out';
 import { CATALOG_QUERIES, SESSION, TENANT_DIRECTORY } from '../../core/client';
-import { access, FakeCatalogQueries, FakeSession, FakeTenantDirectory, OWNER, tenant } from '../../../testing/fakes';
+import { access, CATALOG_ACCESS, FakeCatalogQueries, FakeSession, FakeTenantDirectory, OWNER, tenant } from '../../../testing/fakes';
 import { settle } from '../../../testing/settle';
+import { CURRENT_ACCESS, grants } from '../current-access';
 import { TenantShell } from './tenant-shell';
 
-@Component({ template: '<p>contenido del comercio</p>' })
-class Child {}
+@Component({ template: `<p>contenido del comercio</p><p class="precio">{{ canPrice() ? 'cambia precios' : 'no cambia precios' }}</p>` })
+class Child {
+  private readonly access = inject(CURRENT_ACCESS);
+  protected readonly canPrice = () => grants(this.access(), 'variant.price.write');
+}
 
 describe('TenantShell', () => {
   let queries: FakeCatalogQueries;
@@ -78,6 +82,30 @@ describe('TenantShell', () => {
     directory.open.emit([access('t1', 'Comercio Uno', true), access('t2', 'Comercio Dos')]);
     await settle();
     expect(link()?.getAttribute('href')).toBe('/');
+  });
+
+  // T079: las vistas leen del marco qué puede hacer la cuenta en este comercio, al día con su rol.
+  it('escucha el acceso de la cuenta en el comercio de la ruta y lo comparte con las vistas', async () => {
+    const root = await open();
+    const price = () => root.querySelector('.precio')?.textContent;
+    expect(directory.accesses.map((s) => s.params)).toEqual([{ tenantId: 't1', uid: OWNER.uid }]);
+    expect(price()).toBe('no cambia precios');
+
+    directory.accesses[0]?.emit({ isOwner: false, permissions: ['variant.price.write'] });
+    await settle();
+    expect(price()).toBe('cambia precios');
+    directory.accesses[0]?.emit(CATALOG_ACCESS);
+    await settle();
+    expect(price()).toBe('no cambia precios');
+  });
+
+  it('si la membresía deja de estar activa, el comercio deja de mostrarse', async () => {
+    const root = await open();
+    queries.tenants[0]?.emit(tenant({ name: 'Comercio Uno' }));
+    directory.accesses[0]?.emit(null);
+    await settle();
+    expect(root.querySelector('[role="alert"]')?.textContent).toContain('Puede que no exista o que no tengas acceso');
+    expect(root.textContent).not.toContain('contenido del comercio');
   });
 
   it('permite cerrar la sesión', async () => {

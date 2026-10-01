@@ -1,7 +1,9 @@
 <div role="group" [attr.aria-labelledby]="headingId()">
   <div class="header">
     <!-- Fuera del párrafo que nombra el grupo: si no, el nombre de la fila empezaría por "Seleccionar". -->
-    <mat-checkbox [checked]="selected()" [aria-label]="'Seleccionar ' + label()" (change)="selectedChange.emit($event.checked)" />
+    @if (selectable()) {
+      <mat-checkbox [checked]="selected()" [aria-label]="'Seleccionar ' + label()" (change)="selectedChange.emit($event.checked)" />
+    }
     <p class="label" [id]="headingId()">
       {{ label() }}
       @if (incomplete()) {
@@ -59,6 +61,24 @@
         <mat-error>{{ error.message }}</mat-error>
       }
     </mat-form-field>
+
+    @if (canReadCost()) {
+      <mat-form-field subscriptSizing="dynamic" floatLabel="always">
+        <mat-label>Costo ({{ currency() }})</mat-label>
+        <input
+          matInput
+          inputmode="decimal"
+          autocomplete="off"
+          [placeholder]="cost() === undefined ? 'Cargando…' : 'Sin costo'"
+          [formField]="rowForm.cost"
+          (blur)="commit('cost')"
+          (keydown.enter)="commit('cost')"
+        />
+        @if (rowForm.cost().errors()[0]; as error) {
+          <mat-error>{{ error.message }}</mat-error>
+        }
+      </mat-form-field>
+    }
 
     <mat-form-field subscriptSizing="dynamic" floatLabel="always">
       <mat-label>Existencias</mat-label>

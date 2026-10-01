@@ -32,10 +32,11 @@
   @if (variants.error()) {
     <ui-error-state heading="No pudimos cargar las variantes" (retry)="variants.reload()" />
   } @else if (variants.hasValue() && currency(); as money) {
-    <section aria-labelledby="estado">
+    <!-- Sin catalog.write, el estado se lee en el encabezado y las opciones en las variantes (T079). -->
+    <section *appHasPermission="'catalog.write'" aria-labelledby="estado">
       <app-status-control [tenantId]="current.tenantId" [product]="current" [variants]="variants.value()" />
     </section>
-    <section aria-labelledby="opciones">
+    <section *appHasPermission="'catalog.write'" aria-labelledby="opciones">
       <app-options-editor [tenantId]="current.tenantId" [product]="current" [variants]="variants.value()" />
     </section>
     <section aria-labelledby="variantes">

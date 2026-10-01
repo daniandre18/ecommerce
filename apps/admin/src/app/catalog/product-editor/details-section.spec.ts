@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { CATALOG_COMMANDS } from '../../core/client';
-import { fakeCatalogCommands, product, T1 } from '../../../testing/fakes';
+import { fakeCatalogCommands, product, provideAccess, READ_ONLY_ACCESS, T1, useAccess } from '../../../testing/fakes';
 import { settle } from '../../../testing/settle';
 import { DetailsSection } from './details-section';
 
@@ -10,7 +10,7 @@ describe('DetailsSection', () => {
   beforeEach(() => {
     commands = fakeCatalogCommands();
     commands.updateProductDetails.mockResolvedValue({ ok: true, data: { version: 3 } });
-    TestBed.configureTestingModule({ imports: [DetailsSection], providers: [{ provide: CATALOG_COMMANDS, useValue: commands }] });
+    TestBed.configureTestingModule({ imports: [DetailsSection], providers: [provideAccess(), { provide: CATALOG_COMMANDS, useValue: commands }] });
   });
 
   async function render() {
@@ -56,5 +56,14 @@ describe('DetailsSection', () => {
     await save();
     expect(root.querySelector('[role="alert"]')?.textContent).toContain('Alguien más');
     expect(name()?.value).toBe('Remera');
+  });
+
+  // T079: sin catalog.write se leen, pero no se editan ni se ofrece guardar.
+  it('sin permiso para escribir el catálogo, nombre y descripción se leen pero no se editan', async () => {
+    useAccess(READ_ONLY_ACCESS);
+    const { root, name } = await render();
+    expect(name()?.value).toBe('Camiseta');
+    expect(name()?.readOnly).toBe(true);
+    expect(root.querySelector('textarea')?.readOnly).toBe(true);
   });
 });

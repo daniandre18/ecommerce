@@ -4,7 +4,7 @@ import { provideRouter, Router, withComponentInputBinding } from '@angular/route
 import { RouterTestingHarness } from '@angular/router/testing';
 import { of } from 'rxjs';
 import { CATALOG_QUERIES } from '../../core/client';
-import { FakeCatalogQueries, product, T1 } from '../../../testing/fakes';
+import { FakeCatalogQueries, product, provideAccess, READ_ONLY_ACCESS, T1, useAccess } from '../../../testing/fakes';
 import { settle } from '../../../testing/settle';
 import { CreateProductDialog } from '../create-product/create-product-dialog';
 import { PAGE_SIZE, ProductList } from './product-list';
@@ -28,6 +28,7 @@ describe('ProductList', () => {
         ),
         { provide: CATALOG_QUERIES, useValue: queries },
         { provide: MatDialog, useValue: dialog },
+        provideAccess(),
       ],
     });
   });
@@ -90,6 +91,18 @@ describe('ProductList', () => {
 
     button('Crear producto')?.click();
     expect(dialog.open).toHaveBeenCalledWith(CreateProductDialog, expect.objectContaining({ data: { tenantId: T1 } }));
+  });
+
+  // T079: sin catalog.write no se ofrece crear; el listado se ve igual.
+  it('sin permiso para escribir el catálogo, no ofrece crear', async () => {
+    useAccess(READ_ONLY_ACCESS);
+    const { root, button } = await open();
+    queries.productList.emit([]);
+    await settle();
+    expect(root.querySelector('ui-empty-state')?.textContent).toContain('Todavía no hay productos');
+    expect(root.querySelector('ui-empty-state')?.textContent).not.toContain('Creá el primero');
+    expect(button('Crear producto')).toBeUndefined();
+    expect(button('Nuevo producto')).toBeUndefined();
   });
 
   it('después de crear, abre el editor del producto nuevo para armar sus variantes', async () => {

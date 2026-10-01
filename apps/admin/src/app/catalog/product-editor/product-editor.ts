@@ -13,6 +13,7 @@ import {
 } from '@ecommerce/domain';
 import { EmptyState, ErrorState, Skeleton } from '@ecommerce/ui';
 import { CATALOG_COMMANDS, CATALOG_QUERIES } from '../../core/client';
+import { HasPermission } from '../../shared/directives/has-permission.directive';
 import { liveResource } from '../../shared/live-resource';
 import { CURRENT_TENANT } from '../../tenant/current-tenant';
 import { ImageUpload } from '../image-upload/image-upload';
@@ -31,7 +32,19 @@ const STATUS_LABELS: Record<Product['status'], string> = { draft: 'Borrador', ac
 /** Un producto: sus datos, sus opciones de variación y una fila por variante (T055, T056). */
 @Component({
   selector: 'app-product-editor',
-  imports: [RouterLink, MatButton, Skeleton, ErrorState, EmptyState, DetailsSection, ImageUpload, StatusControl, OptionsEditor, VariantTable],
+  imports: [
+    RouterLink,
+    MatButton,
+    Skeleton,
+    ErrorState,
+    EmptyState,
+    HasPermission,
+    DetailsSection,
+    ImageUpload,
+    StatusControl,
+    OptionsEditor,
+    VariantTable,
+  ],
   templateUrl: './product-editor.html',
   styleUrl: './product-editor.scss',
 })

@@ -6,7 +6,9 @@
       <li>
         <app-storage-image [storagePath]="image.storagePath" [alt]="image.alt" />
         <span class="alt">{{ image.alt }}</span>
-        <button matButton type="button" [attr.aria-label]="'Quitar la imagen «' + image.alt + '»'" (click)="remove(i)">Quitar</button>
+        @if (canWrite()) {
+          <button matButton type="button" [attr.aria-label]="'Quitar la imagen «' + image.alt + '»'" (click)="remove(i)">Quitar</button>
+        }
       </li>
     }
   </ul>
@@ -36,7 +38,7 @@
       </button>
     </div>
   </form>
-} @else {
+} @else if (canWrite()) {
   <input #file type="file" hidden [accept]="accept" (change)="choose(file)" />
   <button matButton="outlined" type="button" (click)="file.click()">Agregar imagen</button>
 }

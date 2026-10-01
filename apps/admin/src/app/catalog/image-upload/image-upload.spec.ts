@@ -2,7 +2,7 @@ import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { TestBed } from '@angular/core/testing';
 import type { ImageRef } from '@ecommerce/domain';
 import { IMAGE_STORAGE } from '../../core/client';
-import { FakeImageStorage, T1 } from '../../../testing/fakes';
+import { FakeImageStorage, provideAccess, READ_ONLY_ACCESS, T1, useAccess } from '../../../testing/fakes';
 import { settle } from '../../../testing/settle';
 import { ImageUpload } from './image-upload';
 
@@ -27,6 +27,7 @@ describe('ImageUpload', () => {
     TestBed.configureTestingModule({
       imports: [ImageUpload],
       providers: [
+        provideAccess(),
         { provide: IMAGE_STORAGE, useValue: storage },
         { provide: LiveAnnouncer, useValue: announcer },
       ],
@@ -132,5 +133,14 @@ describe('ImageUpload', () => {
     button('Quitar la imagen «Frente»')?.click();
     await settle();
     expect(save).toHaveBeenCalledWith([{ ...existing[1], position: 0 }]);
+  });
+
+  it('sin permiso para escribir el catálogo, las imágenes se ven pero no se agregan ni se quitan', async () => {
+    useAccess(READ_ONLY_ACCESS);
+    const { root, button } = await render();
+    expect(root.querySelectorAll('li img')).toHaveLength(2);
+    expect(button('Agregar imagen')).toBeUndefined();
+    expect(button('Quitar la imagen «Frente»')).toBeUndefined();
+    expect(root.querySelector('input[type="file"]')).toBeNull();
   });
 });
