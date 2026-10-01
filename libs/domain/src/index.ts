@@ -6,6 +6,7 @@ export * from './value-objects/sku';
 export * from './result';
 export * from './entities/tenant';
 export * from './entities/membership';
+export * from './entities/invitation';
 export * from './entities/role';
 export * from './entities/audit-entry';
 export * from './entities/product';

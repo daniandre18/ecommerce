@@ -2,6 +2,7 @@ import type { TransactionScope, UnitOfWork } from '@ecommerce/application';
 import type { TenantId } from '@ecommerce/domain';
 import type { Firestore, Transaction } from 'firebase-admin/firestore';
 import { auditLogRepository } from './repositories/audit-log.repository';
+import { invitationRepository } from './repositories/invitation.repository';
 import {
   productRepository,
   skuIndexRepository,
@@ -18,6 +19,7 @@ function transactionScope(t: Transaction, paths: TenantPaths): TransactionScope 
     tenant: tenantRepository(t, paths),
     audit: auditLogRepository(t, paths),
     members: membershipRepository(t, paths),
+    invitations: invitationRepository(t, paths),
     roles: roleRepository(t, paths),
     products: productRepository(t, paths),
     variants: variantRepository(t, paths),

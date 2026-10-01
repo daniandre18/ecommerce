@@ -231,42 +231,59 @@ membresía y de propiedad. Estas funciones, que antes no tocaban la bitácora, a
 entrada `type: 'role.changed'` **dentro de la misma transacción**, con la misma regla de
 atomicidad. Es el evento de mayor riesgo interno de la feature, y pasa a ser inborrable.
 
-Todas exigen `isOwner` en el comercio indicado. No existe permiso delegable que las habilite
-(FR-014).
+Todas exigen `isOwner` en el comercio indicado —salvo `acceptInvitation`, que exige solo una
+sesión iniciada—. No existe permiso delegable que las habilite (FR-014). Como escriben bitácora,
+cualquier falla inesperada se informa como `audit-write-failed`, igual que precios y existencias.
 
 ### `inviteCollaborator`
 
 ```typescript
 Request  { tenantId; requestId: string; email: string; roleId: RoleId }
-Response { invitationId: InvitationId }
+Response { invitationId: InvitationId; token: string }   // token = `${tenantId}/${invitationId}`
 ```
 
-Sin tope de cantidad (FR-006). Si el correo ya es miembro **de este** comercio →
-`invalid-argument`. Que tenga cuenta en otro comercio es irrelevante y **ya no se oculta**: la
-revisión de alcance eliminó esa obligación (FR-005).
+Sin tope de cantidad (FR-006). El correo se guarda normalizado (sin espacios, en minúsculas). Si
+ya es miembro **de este** comercio y su membresía no está dada de baja → `invalid-argument`. Que
+tenga cuenta en otro comercio es irrelevante y **ya no se oculta**: la revisión de alcance eliminó
+esa obligación (FR-005). Si ya hay una invitación pendiente para ese correo, se **renueva** (nuevo
+rol, 14 días más) en lugar de crear otra. El rol `owner` no se asigna por invitación: el traspaso
+es la única vía. Escribe bitácora `invitation.sent`.
+
+El `token` es lo que viaja en el enlace (`/invitacion/{tenantId}/{invitationId}`). No es un
+secreto: aceptar exige además que el correo de la sesión coincida con el invitado.
 
 ### `acceptInvitation`
 
 ```typescript
-Request  { invitationToken: string }
+Request  { invitationToken: string }      // `${tenantId}/${invitationId}`
 Response { tenantId: TenantId; roleId: RoleId }
 ```
 
-Única función que no recibe `tenantId`: lo deduce del token de invitación. Crea la `Membership` de
-ese comercio; si la persona ya tiene cuenta, **le suma una membresía** en lugar de crear una cuenta
-nueva (FR-005). Rechaza invitaciones caducadas o revocadas. Escribe bitácora (alta de membresía,
-FR-031a).
+Única función que no recibe `tenantId`: lo deduce del token de invitación, antes de la guarda; un
+token sin esa forma se rechaza como `invalid-argument` sin leer nada. No exige membresía —quien
+acepta todavía no la tiene— sino una sesión cuyo correo coincida con el invitado; si no coincide →
+`invalid-argument` con `reason: 'email-mismatch'`. Crea la `Membership` de ese comercio con el rol
+de la invitación, o reactiva una dada de baja; si la persona ya tiene cuenta, **le suma una
+membresía** en lugar de crear una cuenta nueva (FR-005). Rechaza invitaciones caducadas, revocadas
+o ya aceptadas (`reason`: `expired`, `revoked`, `accepted`), y a quien ya es miembro activo
+(`reason: 'already-member'`). Escribe bitácora (alta de membresía,
+FR-031a) con la persona invitada como autora.
 
 ### `revokeInvitation`, `createRole`, `updateRole`, `deleteRole`, `assignRole`
 
 ```typescript
-createRole  Request { tenantId; requestId; name: string }      // nace sin permisos (FR-009)
+revokeInvitation  Request { tenantId; invitationId }          // revocar dos veces no falla
+createRole  Request { tenantId; requestId; name: string; copyFrom?: RoleId }
+            Response { roleId }       // nace sin permisos (FR-009), o con los de `copyFrom`
 updateRole  Request { tenantId; roleId; name?; permissions?: Permission[] }
 deleteRole  Request { tenantId; roleId }                       // falla si memberCount > 0 (FR-013)
-assignRole  Request { tenantId; uid: Uid; roleId: RoleId }
+assignRole  Request { tenantId; uid: Uid; roleId: RoleId }     // no sobre el Propietario
 ```
 
 Todas escriben bitácora con el conjunto de permisos anterior y el resultante (FR-031, FR-031a).
+El nombre de un rol es único en el comercio sin distinguir mayúsculas ni espacios. Un permiso que
+no existe en el catálogo cerrado → `invalid-argument`. `deleteRole` con miembros devuelve
+`details.memberCount`.
 
 `updateRole` sobre el rol `owner` → `permission-denied`: es indeleble e ineditable (FR-016).
 Cambiar `permissions` **no** toca tokens: rige en la operación siguiente porque los permisos se

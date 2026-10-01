@@ -47,6 +47,19 @@ export class JsonObject {
     return value;
   }
 
+  boolean(key: string): boolean {
+    const value = this.data[key];
+    if (typeof value !== 'boolean') reject(this.field(key), 'se esperaba verdadero o falso');
+    return value;
+  }
+
+  /** Una lista de textos. Qué valores valen lo decide el dominio, que rechaza los desconocidos. */
+  strings(key: string): string[] {
+    const value = this.data[key];
+    if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) reject(this.field(key), 'se esperaba una lista de textos');
+    return [...(value as string[])];
+  }
+
   integer(key: string): number {
     const value = this.data[key];
     if (typeof value !== 'number' || !Number.isSafeInteger(value)) reject(this.field(key), 'se esperaba un número entero');

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { batchId, productId, tenantId, uid, variantId, type AuditEntryId } from '../value-objects/ids';
 import { money } from '../value-objects/money';
 import { stockQuantity, stockUndefined } from '../value-objects/stock-level';
-import { buildAuditEntries, type AuditedChange } from './build-audit-entries';
+import { buildAuditEntries, buildTeamAuditEntry, type AuditedChange } from './build-audit-entries';
 
 const ACTOR = { tenantId: tenantId('t1'), uid: uid('ana'), name: 'Ana Pérez' };
 const AT = new Date('2026-09-30T12:00:00Z');
@@ -64,5 +64,30 @@ describe('buildAuditEntries', () => {
 
   it('sin cambios no hay entradas', () => {
     expect(build([])).toEqual([]);
+  });
+});
+
+// FR-031a: los cambios de rol, permisos, membresía y propiedad también quedan, con antes y después.
+describe('buildTeamAuditEntry', () => {
+  it('arma una entrada role.changed con el actor copiado y lo anterior y lo resultante', () => {
+    const entry = buildTeamAuditEntry(
+      { tenantId: tenantId('t1'), uid: uid('owner'), name: 'Dueña' },
+      { change: 'role.updated', entity: { kind: 'role', id: 'r1' }, before: { permissions: ['catalog.read'] }, after: { permissions: [] } },
+      { at: new Date('2026-09-30T12:00:00Z'), id: 'e1' as AuditEntryId },
+    );
+    expect(entry).toEqual({
+      id: 'e1',
+      tenantId: 't1',
+      actorUid: 'owner',
+      actorName: 'Dueña',
+      actorKind: 'member',
+      at: new Date('2026-09-30T12:00:00Z'),
+      batchId: null,
+      entity: { kind: 'role', id: 'r1' },
+      type: 'role.changed',
+      change: 'role.updated',
+      before: { permissions: ['catalog.read'] },
+      after: { permissions: [] },
+    });
   });
 });

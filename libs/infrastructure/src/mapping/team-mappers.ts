@@ -1,7 +1,10 @@
 import {
+  invitationId,
   roleId,
   tenantId,
   uid,
+  type Invitation,
+  type InvitationStatus,
   type Membership,
   type MembershipStatus,
   type Permission,
@@ -66,5 +69,32 @@ export function roleToDoc(r: Role): DocumentData {
     editable: r.editable,
     memberCount: r.memberCount,
     createdAt: r.createdAt,
+  };
+}
+
+export function invitationFromDoc(id: string, tid: string, d: DocumentData): Invitation {
+  return {
+    id: invitationId(id),
+    tenantId: tenantId(tid),
+    email: String(d['email']),
+    roleId: roleId(String(d['roleId'])),
+    status: d['status'] as InvitationStatus,
+    createdAt: toDate(d['createdAt']),
+    expiresAt: toDate(d['expiresAt']),
+    acceptedAt: toDateOrNull(d['acceptedAt']),
+    createdBy: uid(String(d['createdBy'])),
+  };
+}
+
+/** Campos persistidos, enumerados a propósito. `id` y `tenantId` están en la ruta. */
+export function invitationToDoc(i: Invitation): DocumentData {
+  return {
+    email: i.email,
+    roleId: i.roleId,
+    status: i.status,
+    createdAt: i.createdAt,
+    expiresAt: i.expiresAt,
+    acceptedAt: i.acceptedAt,
+    createdBy: i.createdBy,
   };
 }

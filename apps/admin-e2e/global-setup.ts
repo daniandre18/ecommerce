@@ -20,6 +20,15 @@ const CALLABLES = [
   'setVariantPrice',
   'setVariantCost',
   'setVariantStock',
+  'createRole',
+  'updateRole',
+  'deleteRole',
+  'inviteCollaborator',
+  'revokeInvitation',
+  'acceptInvitation',
+  'assignRole',
+  'setMembershipEnabled',
+  'transferOwnership',
 ];
 
 /**

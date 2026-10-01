@@ -1,6 +1,8 @@
 import type {
   AuditEntry,
   AuditEventType,
+  Invitation,
+  InvitationId,
   Membership,
   Money,
   Product,
@@ -46,7 +48,16 @@ export interface AuditLogQuery {
 export interface MembershipRepository {
   /** Dentro del comercio del contexto. */
   findByUid(uid: Uid): Promise<Membership | null>;
+  /** Dentro del comercio del contexto; el correo, normalizado. Para no invitar a quien ya es miembro. */
+  findByEmail(email: string): Promise<Membership | null>;
   save(membership: Membership): Promise<void>;
+}
+
+export interface InvitationRepository {
+  findById(id: InvitationId): Promise<Invitation | null>;
+  /** La pendiente para ese correo, si hay: invitar de nuevo la reenvía en vez de duplicarla. */
+  findPendingByEmail(email: string): Promise<Invitation | null>;
+  save(invitation: Invitation): Promise<void>;
 }
 
 export interface RoleRepository {
@@ -70,6 +81,8 @@ export interface VariantCostsRepository {
 /** El comercio de la unidad de trabajo. */
 export interface TenantRepository {
   get(): Promise<Tenant | null>;
+  /** Solo lo cambia el traspaso de propiedad (FR-011). */
+  save(tenant: Tenant): Promise<void>;
 }
 
 /**

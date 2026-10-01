@@ -31,6 +31,11 @@ export type CallableResult<O> = CommandResult<O, EnvelopeErrorCode>;
 export interface CallableOptions {
   /** El caso de uso escribe bitácora en la misma transacción que el cambio (FR-030, FR-033). */
   readonly writesAudit?: boolean;
+  /**
+   * De dónde sale el comercio, si no del campo `tenantId`. Solo para aceptar una invitación: el
+   * comercio viene en el enlace. Lo que devuelva igual pasa por la verificación de la guarda.
+   */
+  readonly tenantFrom?: (data: unknown) => unknown;
 }
 
 const NOT_APPLIED = 'La operación no pudo completarse y no se aplicó ningún cambio';
@@ -53,7 +58,8 @@ export function callableFactory(deps: CallableDependencies) {
     return onCall({ enforceAppCheck: true }, async (request): Promise<CallableResult<O>> => {
       try {
         // Se parsea después de autorizar: a quien no puede operar no se le dice qué está mal en su pedido.
-        const data = await guarded(request, { operation, requires: UseCase.requires }, deps, (tx, ctx) =>
+        const tenanted = options.tenantFrom ? { ...request, data: { ...(request.data as object), tenantId: options.tenantFrom(request.data) } } : request;
+        const data = await guarded(tenanted, { operation, requires: UseCase.requires }, deps, (tx, ctx) =>
           useCase.execute(tx, ctx, parse(request.data)),
         );
         return { ok: true, data };

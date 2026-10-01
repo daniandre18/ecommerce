@@ -14,7 +14,7 @@ import type { StockLevel } from '../value-objects/stock-level';
 export type AuditEventType = 'price.changed' | 'stock.adjusted' | 'role.changed' | 'platform.action';
 
 export interface AuditEntity {
-  readonly kind: 'variant' | 'product' | 'role' | 'membership' | 'tenant';
+  readonly kind: 'variant' | 'product' | 'role' | 'membership' | 'invitation' | 'tenant';
   readonly id: string;
   readonly productId?: ProductId;
 }
@@ -45,9 +45,13 @@ export type RoleChangeKind =
   | 'membership.added'
   | 'membership.disabled'
   | 'membership.reactivated'
-  | 'ownership.transferred';
+  | 'ownership.transferred'
+  | 'invitation.sent'
+  | 'invitation.revoked';
 
 export interface RoleSnapshot {
+  readonly uid?: string;
+  readonly email?: string;
   readonly roleId?: string;
   readonly roleName?: string;
   readonly permissions?: readonly Permission[];

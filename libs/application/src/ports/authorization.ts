@@ -15,13 +15,19 @@ export class NotAMemberError extends PermissionDeniedError {
   override readonly name = 'NotAMemberError';
 }
 
-/** Lo que exige una operación: un permiso concreto o ser Propietario del comercio. */
+/**
+ * Lo que exige una operación: un permiso concreto, ser Propietario del comercio, o solo una cuenta
+ * con sesión. Esto último es únicamente para aceptar una invitación: quien acepta todavía no es
+ * miembro, y el caso de uso verifica que la invitación sea para su correo.
+ */
 export type Requirement =
   | { readonly kind: 'permission'; readonly permission: Permission }
-  | { readonly kind: 'owner' };
+  | { readonly kind: 'owner' }
+  | { readonly kind: 'account' };
 
 export const requirePermission = (permission: Permission): Requirement => ({ kind: 'permission', permission });
 export const requireOwner = (): Requirement => ({ kind: 'owner' });
+export const requireAccount = (): Requirement => ({ kind: 'account' });
 
 /**
  * Default-deny: lanza `PermissionDeniedError` salvo concesión explícita. Recibe el `TransactionScope`

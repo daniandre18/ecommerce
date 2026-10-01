@@ -26,7 +26,10 @@ async function allowed(permissions: readonly Permission[], requires: Requirement
   const authz = new RoleBasedAuthorizationService();
   const context: OperationContext = { ...ctx, actorUid: uid('ana') };
   try {
-    await uow.run((tx) => (requires.kind === 'owner' ? authz.assertOwner(tx, context) : authz.assert(tx, context, requires.permission)));
+    await uow.run(async (tx) => {
+      if (requires.kind === 'owner') await authz.assertOwner(tx, context);
+      else if (requires.kind === 'permission') await authz.assert(tx, context, requires.permission);
+    });
     return true;
   } catch (error) {
     if (error instanceof PermissionDeniedError) return false;

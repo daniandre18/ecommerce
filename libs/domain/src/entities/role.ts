@@ -64,6 +64,14 @@ export function createCatalogRole(tenantId: TenantId, at: Date): Role {
   });
 }
 
+/**
+ * Los roles con los que nace todo comercio (T070): Propietario, indeleble y no editable, y Catálogo
+ * con exactamente sus tres permisos, sin precios y sin costo (FR-016).
+ */
+export function presetRoles(tenantId: TenantId, at: Date): readonly Role[] {
+  return [createOwnerRole(tenantId, at), createCatalogRole(tenantId, at)];
+}
+
 /** Un rol propio nace sin ningún permiso (FR-009). */
 export function createCustomRole(id: RoleId, tenantId: TenantId, name: string, at: Date): Role {
   return Object.freeze({
