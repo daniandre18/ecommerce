@@ -3,6 +3,7 @@ import { formatMoneyInput, formatStockInput, parseMoneyInput, parseStockInput } 
 
 const USD = 'USD' as CurrencyCode;
 const CLP = 'CLP' as CurrencyCode;
+const COP = 'COP' as CurrencyCode;
 
 describe('importes escritos por una persona', () => {
   it.each([
@@ -21,6 +22,27 @@ describe('importes escritos por una persona', () => {
     expect(parseMoneyInput('1500,5', CLP)).toEqual({ ok: false, message: 'Esta moneda no lleva decimales' });
   });
 
+  // En pesos colombianos "52.000" es cincuenta y dos mil: sin decimales, punto y coma agrupan miles.
+  it.each([
+    ['52.000', 52000],
+    ['1.250.000', 1250000],
+    ['52,000', 52000],
+    ['52000', 52000],
+    ['500', 500],
+  ])('en una moneda sin decimales, "%s" son %i', (text, amount) => {
+    expect(parseMoneyInput(text, COP)).toEqual({ ok: true, value: money(amount, 'COP') });
+  });
+
+  it('en una moneda sin decimales, un separador que no agrupa de a tres es un decimal, y se rechaza', () => {
+    expect(parseMoneyInput('52.5', COP)).toEqual({ ok: false, message: 'Esta moneda no lleva decimales' });
+    expect(parseMoneyInput('1.25.000', COP).ok).toBe(false);
+  });
+
+  it('en una moneda con decimales, el punto sigue siendo decimal: "1.500" son 1,50', () => {
+    expect(parseMoneyInput('1.500', USD)).toEqual({ ok: false, message: 'Usá hasta 2 decimales' });
+    expect(parseMoneyInput('1.50', USD)).toEqual({ ok: true, value: money(150, 'USD') });
+  });
+
   it('vacío es "sin importe"', () => {
     expect(parseMoneyInput('  ', USD)).toEqual({ ok: true, value: null });
   });
@@ -32,13 +54,18 @@ describe('importes escritos por una persona', () => {
   it('se muestra con coma decimal y todos los decimales de la moneda', () => {
     expect(formatMoneyInput(money(12990, 'USD'))).toBe('129,90');
     expect(formatMoneyInput(money(5, 'USD'))).toBe('0,05');
-    expect(formatMoneyInput(money(1500, 'CLP'))).toBe('1500');
+    expect(formatMoneyInput(money(1500, 'CLP'))).toBe('1.500');
+    expect(formatMoneyInput(money(1250000, 'COP'))).toBe('1.250.000');
+    expect(formatMoneyInput(money(500, 'COP'))).toBe('500');
     expect(formatMoneyInput(null)).toBe('');
   });
 
-  it('ida y vuelta da lo mismo', () => {
-    const shown = formatMoneyInput(money(123456, 'USD'));
-    expect(parseMoneyInput(shown, USD)).toEqual({ ok: true, value: money(123456, 'USD') });
+  it.each([
+    [123456, USD],
+    [1250000, COP],
+  ])('ida y vuelta da lo mismo: %i %s', (amount, currency) => {
+    const shown = formatMoneyInput(money(amount, currency));
+    expect(parseMoneyInput(shown, currency)).toEqual({ ok: true, value: money(amount, currency) });
   });
 });
 
