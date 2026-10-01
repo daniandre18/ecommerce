@@ -6,7 +6,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { PERMISSIONS, type Role } from '@ecommerce/domain';
 import { of } from 'rxjs';
 import { TEAM_COMMANDS, TEAM_QUERIES } from '../../core/client';
-import { CATALOG_ACCESS, fakeTeamCommands, FakeTeamQueries, presetRolesOfT1, provideAccess, T1, useAccess } from '../../../testing/fakes';
+import { CATALOG_ACCESS, customRole, fakeTeamCommands, FakeTeamQueries, presetRolesOfT1, provideAccess, T1, useAccess } from '../../../testing/fakes';
 import { settle } from '../../../testing/settle';
 import { PERMISSION_LABELS } from './permission-labels';
 import { RoleEditor } from './role-editor';
@@ -17,7 +17,7 @@ describe('RoleEditor', () => {
   let commands: ReturnType<typeof fakeTeamCommands>;
   const dialog = { open: vi.fn() };
   const announcer = { announce: vi.fn(async () => undefined) };
-  const empty: Role = { ...presetRolesOfT1()[1]!, id: 'deposito' as Role['id'], name: 'Depósito', preset: null, permissions: [], memberCount: 0 };
+  const empty: Role = customRole('deposito', 'Depósito');
 
   beforeEach(() => {
     queries = new FakeTeamQueries();

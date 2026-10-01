@@ -118,8 +118,9 @@ comercio tiene exactamente un Propietario (FR-011); una versión anterior de est
 
 ### Historia 3 — Bitácora
 
-1. Como Propietaria, filtrar la bitácora por producto, por persona, por rango de fechas y **por
-   tipo de evento** (FR-034).
+1. Como Propietaria, abrir **Bitácora** en el encabezado y filtrar por persona, por rango de fechas
+   y **por tipo de evento** (FR-034). Para filtrar por producto, entrar al producto y seguir **Ver
+   sus cambios en la bitácora**. Los filtros quedan en la dirección: se pueden compartir.
 2. Verificar que cada cambio de precio y stock tiene responsable, momento, tipo, entidad, valor
    anterior y valor nuevo (FR-031).
 3. **Nuevo (FR-031a)**: cambiar los permisos de un rol, reasignar a alguien y dar de baja a otra
@@ -130,7 +131,8 @@ comercio tiene exactamente un Propietario (FR-011); una versión anterior de est
 5. **Prueba de FR-033 en ambos sentidos**: la suite de integración inyecta un fallo en la escritura
    de bitácora y comprueba que el precio no cambia; y después inyecta un fallo en la escritura de
    la variante y comprueba que **no queda entrada** de ese cambio.
-6. Como `catalogo@t1.test`, leer la bitácora → denegado.
+6. Como `catalogo@t1.test`, leer la bitácora → denegado, y el encabezado ni la ofrece. Tampoco la lee
+   un rol con "Ver la bitácora": incluye costos (ver `contracts/firestore-rules.md`).
 
 ### Historia 4 — Móvil y accesibilidad
 

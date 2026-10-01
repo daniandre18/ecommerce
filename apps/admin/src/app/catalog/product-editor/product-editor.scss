@@ -20,6 +20,12 @@ h1 {
   color: var(--mat-sys-on-surface-variant);
 }
 
+.history {
+  display: inline-block;
+  min-height: 24px;
+  margin-top: 4px;
+}
+
 section {
   padding: 16px;
   border-radius: 12px;

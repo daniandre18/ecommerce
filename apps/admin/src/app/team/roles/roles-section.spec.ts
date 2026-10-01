@@ -2,14 +2,14 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import type { Role } from '@ecommerce/domain';
 import { TEAM_COMMANDS } from '../../core/client';
-import { fakeTeamCommands, presetRolesOfT1, T1 } from '../../../testing/fakes';
+import { customRole, fakeTeamCommands, presetRolesOfT1, T1 } from '../../../testing/fakes';
 import { settle } from '../../../testing/settle';
 import { RolesSection } from './roles-section';
 
 // T077 — los roles del comercio y la creación de uno propio (FR-009).
 describe('RolesSection', () => {
   let commands: ReturnType<typeof fakeTeamCommands>;
-  const precios: Role = { ...presetRolesOfT1()[1]!, id: 'precios' as Role['id'], name: 'Precios', preset: null, permissions: ['variant.price.write'], memberCount: 1 };
+  const precios: Role = customRole('precios', 'Precios', { permissions: ['variant.price.write'], memberCount: 1 });
 
   beforeEach(() => {
     commands = fakeTeamCommands();

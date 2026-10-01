@@ -2,7 +2,7 @@ import type { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 
 // Todo lo de un comercio cuelga de /t/{tenantId}/…: el comercio activo es la ruta, no un estado
-// escondido, y cambiar de comercio es navegar (T075). La bitácora se suma con la Historia 3.
+// escondido, y cambiar de comercio es navegar (T075).
 // El enlace de una invitación (`/invitation/…`) exige sesión, pero no membresía: la crea al aceptar.
 export const routes: Routes = [
   { path: 'login', title: 'Iniciar sesión', loadComponent: () => import('./auth/login/login').then((m) => m.Login) },
@@ -38,6 +38,7 @@ export const routes: Routes = [
             loadComponent: () => import('./catalog/product-editor/product-editor').then((m) => m.ProductEditor),
           },
           { path: 'team', title: 'Equipo', loadComponent: () => import('./team/team-page').then((m) => m.TeamPage) },
+          { path: 'audit', title: 'Bitácora', loadComponent: () => import('./audit/audit-log/audit-log').then((m) => m.AuditLog) },
           {
             path: 'team/roles/:roleId',
             title: 'Rol',

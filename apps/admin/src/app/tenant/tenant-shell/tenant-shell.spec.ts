@@ -99,7 +99,7 @@ describe('TenantShell', () => {
     expect(price()).toBe('no cambia precios');
   });
 
-  it('ofrece el catálogo a todos y el equipo solo al Propietario', async () => {
+  it('ofrece el catálogo a todos, y el equipo y la bitácora solo al Propietario', async () => {
     const root = await open();
     const links = () => [...root.querySelectorAll('nav[aria-label="Secciones"] a')].map((a) => [a.textContent?.trim(), a.getAttribute('href')]);
     directory.accesses[0]?.emit(CATALOG_ACCESS);
@@ -110,6 +110,7 @@ describe('TenantShell', () => {
     expect(links()).toEqual([
       ['Catálogo', '/t/t1/catalog'],
       ['Equipo', '/t/t1/team'],
+      ['Bitácora', '/t/t1/audit'],
     ]);
   });
 
