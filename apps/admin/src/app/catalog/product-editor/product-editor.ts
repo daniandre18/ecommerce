@@ -15,6 +15,7 @@ import { EmptyState, ErrorState, Skeleton } from '@ecommerce/ui';
 import { CATALOG_COMMANDS, CATALOG_QUERIES } from '../../core/client';
 import { HasPermission } from '../../shared/directives/has-permission.directive';
 import { liveResource } from '../../shared/live-resource';
+import { CURRENT_ACCESS } from '../../tenant/current-access';
 import { CURRENT_TENANT } from '../../tenant/current-tenant';
 import { ImageUpload } from '../image-upload/image-upload';
 import { VariantTable } from '../variant-table/variant-table';
@@ -55,6 +56,7 @@ export class ProductEditor {
   private readonly queries = inject(CATALOG_QUERIES);
   private readonly commands = inject(CATALOG_COMMANDS);
   private readonly tenant = inject(CURRENT_TENANT);
+  protected readonly access = inject(CURRENT_ACCESS);
 
   private readonly ids = computed(() => parseIds(this.tenantId(), this.productId()));
   protected readonly product = liveResource<Product | null, Ids>({
@@ -68,6 +70,7 @@ export class ProductEditor {
 
   protected readonly currency = computed(() => this.tenant()?.currency);
   protected readonly catalogLink = computed(() => ['/t', this.tenantId(), 'catalog']);
+  protected readonly auditLink = computed(() => ['/t', this.tenantId(), 'audit']);
   protected readonly missing = computed(() => this.ids() === undefined || (this.product.hasValue() && this.product.value() === null));
 
   /** Las imágenes del producto se guardan con su versión vigente, como el resto de sus datos. */

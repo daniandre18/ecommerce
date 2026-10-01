@@ -1,4 +1,8 @@
 import type {
+  AuditCursor,
+  AuditFilter,
+  AuditPage,
+  AuditQueries,
   CatalogCommands,
   CatalogQueries,
   ImageStorage,
@@ -324,7 +328,50 @@ export const presetRolesOfT1 = (counts: { owner?: number; catalog?: number } = {
   { ...createCatalogRole(T1, AT), memberCount: counts.catalog ?? 0 },
 ];
 
+/** Un rol propio de t1: sin permisos y sin personas, salvo que se diga otra cosa. */
+export const customRole = (id: string, name: string, overrides: Partial<Role> = {}): Role => ({
+  ...createCatalogRole(T1, AT),
+  id: id as Role['id'],
+  name,
+  preset: null,
+  permissions: [],
+  memberCount: 0,
+  ...overrides,
+});
+
+/** El único elemento de una lista; si no hay exactamente uno, la prueba está mal armada. */
+export function only<T>(items: readonly T[]): T {
+  const [item] = items;
+  if (items.length !== 1 || item === undefined) throw new Error(`Se esperaba un elemento y hay ${items.length}`);
+  return item;
+}
+
 export const invitation = (id: string, email: string, overrides: Partial<Invitation> = {}): Invitation => ({
   ...createInvitation({ id: invitationId(id), tenantId: T1, email, roleId: 'catalog' as Role['id'], createdBy: uid('owner'), at: AT }),
   ...overrides,
 });
+
+/** Una página pedida a la bitácora; la prueba decide cuándo y con qué responde. */
+export interface AuditRequest {
+  readonly tenantId: TenantId;
+  readonly filter: AuditFilter;
+  readonly after?: AuditCursor;
+  respond(page: AuditPage): void;
+  fail(error: unknown): void;
+}
+
+export class FakeAuditQueries implements AuditQueries {
+  readonly requests: AuditRequest[] = [];
+
+  listEntries(id: TenantId, filter: AuditFilter, page: { readonly limit: number; readonly after?: AuditCursor }): Promise<AuditPage> {
+    return new Promise((resolve, reject) => {
+      this.requests.push({ tenantId: id, filter, ...(page.after ? { after: page.after } : {}), respond: resolve, fail: reject });
+    });
+  }
+
+  get last(): AuditRequest {
+    const last = this.requests.at(-1);
+    if (!last) throw new Error('No se pidió ninguna página de la bitácora');
+    return last;
+  }
+}

@@ -14,6 +14,10 @@
       · Archivado
     }
   </p>
+  <!-- La bitácora es del Propietario (FR-034): desde acá se llega a la historia de este producto. -->
+  @if (access()?.isOwner) {
+    <a class="history" [routerLink]="auditLink()" [queryParams]="{ product: current.id }">Ver sus cambios en la bitácora</a>
+  }
 
   <section aria-labelledby="datos">
     <app-details-section [tenantId]="current.tenantId" [product]="current" />

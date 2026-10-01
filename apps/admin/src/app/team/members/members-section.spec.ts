@@ -5,7 +5,7 @@ import type { Membership } from '@ecommerce/domain';
 import { of } from 'rxjs';
 import { TEAM_COMMANDS } from '../../core/client';
 import { ConfirmDialog } from '../../shared/confirm-dialog';
-import { fakeTeamCommands, member, presetRolesOfT1, T1 } from '../../../testing/fakes';
+import { customRole, fakeTeamCommands, member, presetRolesOfT1, T1 } from '../../../testing/fakes';
 import { settle } from '../../../testing/settle';
 import { MembersSection } from './members-section';
 import { TransferOwnershipDialog } from './transfer-ownership-dialog';
@@ -75,7 +75,7 @@ describe('MembersSection', () => {
     const fixture = TestBed.createComponent(MembersSection);
     fixture.componentRef.setInput('tenantId', T1);
     fixture.componentRef.setInput('members', [owner, member('ana', 'Ana', 'catalog')]);
-    fixture.componentRef.setInput('roles', [...presetRolesOfT1(), { ...presetRolesOfT1()[1]!, id: 'precios', name: 'Precios', preset: null }]);
+    fixture.componentRef.setInput('roles', [...presetRolesOfT1(), customRole('precios', 'Precios')]);
     await settle();
     const select = (fixture.nativeElement as HTMLElement).querySelector('select');
     if (!select) throw new Error('No hay selector de rol');
