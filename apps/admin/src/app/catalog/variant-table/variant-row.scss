@@ -1,0 +1,31 @@
+:host {
+  display: block;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 8px;
+  font: var(--mat-sys-title-medium);
+  overflow-wrap: anywhere;
+}
+
+.incomplete {
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-error);
+}
+
+/* A 360 px quedan dos columnas: ninguna vista exige desplazamiento horizontal (FR-038). */
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+mat-form-field {
+  min-width: 0;
+}

@@ -1,5 +1,5 @@
 import type { CatalogQueries, ProductListQuery, Unsubscribe, Watcher } from '@ecommerce/application';
-import { normalizeName, type Product, type Tenant, type TenantId } from '@ecommerce/domain';
+import { normalizeName, type Product, type ProductId, type Tenant, type TenantId, type Variant } from '@ecommerce/domain';
 import {
   collection,
   doc,
@@ -12,7 +12,7 @@ import {
   type Query,
   type QueryConstraint,
 } from 'firebase/firestore';
-import { productFromDoc, tenantFromDoc } from '../mapping/catalog-mappers';
+import { productFromDoc, tenantFromDoc, variantFromDoc } from '../mapping/catalog-mappers';
 
 /** Cierre de la búsqueda por prefijo: cualquier texto que empiece por el prefijo queda antes. */
 const PREFIX_END = '';
@@ -33,6 +33,23 @@ export class FirestoreCatalogQueries implements CatalogQueries {
     return onSnapshot(
       productList(this.db, tenantId, request),
       (snapshot) => deliver(watcher, () => snapshot.docs.map((d) => productFromDoc(d.id, tenantId, d.data()))),
+      (error) => watcher.error(error),
+    );
+  }
+
+  watchProduct(tenantId: TenantId, productId: ProductId, watcher: Watcher<Product | null>): Unsubscribe {
+    return onSnapshot(
+      doc(this.db, 'tenants', tenantId, 'products', productId),
+      (snapshot) => deliver(watcher, () => (snapshot.exists() ? productFromDoc(snapshot.id, tenantId, snapshot.data()) : null)),
+      (error) => watcher.error(error),
+    );
+  }
+
+  watchVariants(tenantId: TenantId, productId: ProductId, watcher: Watcher<readonly Variant[]>): Unsubscribe {
+    const live = query(collection(this.db, 'tenants', tenantId, 'products', productId, 'variants'), where('archived', '==', false));
+    return onSnapshot(
+      live,
+      (snapshot) => deliver(watcher, () => snapshot.docs.map((d) => variantFromDoc(d.id, tenantId, productId, d.data()))),
       (error) => watcher.error(error),
     );
   }

@@ -1,0 +1,96 @@
+<h2 id="opciones">Opciones de variación</h2>
+<p class="hint">Talla, color, capacidad: lo que el producto necesite. Hasta {{ maxOptions }} opciones y 100 combinaciones.</p>
+
+<form novalidate (submit)="$event.preventDefault(); save()">
+  @for (option of optionsForm.options; track $index; let i = $index) {
+    <fieldset>
+      <legend>{{ draft().options[i]?.name || 'Opción nueva' }}</legend>
+
+      <mat-form-field>
+        <mat-label>Nombre de la opción</mat-label>
+        <input matInput autocomplete="off" [id]="'opcion-' + draft().options[i]?.id" [formField]="option.name" />
+        @if (option.name().errors()[0]; as error) {
+          <mat-error>{{ error.message }}</mat-error>
+        }
+      </mat-form-field>
+
+      <ol>
+        @for (value of option.values; track $index; let j = $index; let first = $first; let last = $last) {
+          <li>
+            <mat-form-field subscriptSizing="dynamic">
+              <mat-label>Valor {{ j + 1 }}</mat-label>
+              <input
+                matInput
+                autocomplete="off"
+                [id]="'valor-' + draft().options[i]?.values[j]?.id"
+                [formField]="value.label"
+              />
+              @if (value.label().errors()[0]; as error) {
+                <mat-error>{{ error.message }}</mat-error>
+              }
+            </mat-form-field>
+            <span class="value-actions">
+              <button
+                matButton
+                type="button"
+                [id]="'subir-' + draft().options[i]?.values[j]?.id"
+                [disabled]="first"
+                [attr.aria-label]="'Subir «' + labelOf(draft().options[i], j) + '»'"
+                (click)="moveValue(i, j, -1)"
+              >
+                ↑
+              </button>
+              <button
+                matButton
+                type="button"
+                [id]="'bajar-' + draft().options[i]?.values[j]?.id"
+                [disabled]="last"
+                [attr.aria-label]="'Bajar «' + labelOf(draft().options[i], j) + '»'"
+                (click)="moveValue(i, j, 1)"
+              >
+                ↓
+              </button>
+              <button
+                matButton
+                type="button"
+                [attr.aria-label]="'Quitar «' + labelOf(draft().options[i], j) + '»'"
+                (click)="removeValue(i, j)"
+              >
+                Quitar
+              </button>
+            </span>
+          </li>
+        }
+      </ol>
+
+      <div class="option-actions">
+        <button matButton type="button" [attr.aria-label]="'Agregar valor a «' + nameOf(draft().options[i]) + '»'" (click)="addValue(i)">
+          Agregar valor
+        </button>
+        <button matButton type="button" [attr.aria-label]="'Quitar la opción «' + nameOf(draft().options[i]) + '»'" (click)="removeOption(i)">
+          Quitar opción
+        </button>
+      </div>
+    </fieldset>
+  }
+
+  <button matButton="outlined" type="button" [disabled]="draft().options.length >= maxOptions" (click)="addOption()">
+    Agregar opción
+  </button>
+
+  <p class="count" [class.over]="overLimit()" aria-live="polite">
+    {{ combinations() === 1 ? '1 combinación' : combinations() + ' combinaciones' }}
+    @if (overLimit()) {
+      — supera el máximo
+    }
+  </p>
+
+  <div role="alert" class="failure">{{ failure() }}</div>
+
+  @if (dirty()) {
+    <div class="save-actions">
+      <button matButton type="button" (click)="discard()">Descartar cambios</button>
+      <button matButton="filled" type="submit" [disabled]="optionsForm().submitting()">Guardar opciones</button>
+    </div>
+  }
+</form>

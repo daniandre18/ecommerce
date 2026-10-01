@@ -6,11 +6,13 @@ import { ErrorState } from '@ecommerce/ui';
 import { SignOut } from '../../auth/sign-out';
 import { CATALOG_QUERIES } from '../../core/client';
 import { liveResource } from '../../shared/live-resource';
+import { CURRENT_TENANT } from '../current-tenant';
 
 /** El marco de todo lo que pasa dentro de un comercio: `/t/{tenantId}/…`. */
 @Component({
   selector: 'app-tenant-shell',
   imports: [RouterOutlet, MatButton, ErrorState],
+  providers: [{ provide: CURRENT_TENANT, useFactory: () => inject(TenantShell).current }],
   template: `
     <header>
       <p class="tenant">{{ name() }}</p>
@@ -56,8 +58,10 @@ export class TenantShell {
     subscribe: (id, watcher) => this.queries.watchTenant(id, watcher),
   });
 
+  /** El comercio, para las vistas hijas (`CURRENT_TENANT`). */
+  readonly current = computed(() => (this.tenant.hasValue() ? (this.tenant.value() ?? undefined) : undefined));
   /** Mientras carga, el nombre queda vacío y no empuja nada: el encabezado ya tiene su alto. */
-  protected readonly name = computed(() => (this.tenant.hasValue() ? (this.tenant.value()?.name ?? '') : ''));
+  protected readonly name = computed(() => this.current()?.name ?? '');
   protected readonly noAccess = computed(
     () => this.id() === undefined || this.tenant.error() !== undefined || (this.tenant.hasValue() && this.tenant.value() === null),
   );

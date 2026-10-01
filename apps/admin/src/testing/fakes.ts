@@ -16,8 +16,10 @@ import {
   type CurrencyCode,
   type PlatformOperatorId,
   type Product,
+  type ProductId,
   type Tenant,
   type TenantId,
+  type Variant,
 } from '@ecommerce/domain';
 
 const AT = new Date('2026-09-30T12:00:00Z');
@@ -72,6 +74,8 @@ export class Subscription<T, P = unknown> {
 export class FakeCatalogQueries implements CatalogQueries {
   readonly tenants: Subscription<Tenant | null, TenantId>[] = [];
   readonly productLists: Subscription<readonly Product[], { tenantId: TenantId; query: ProductListQuery }>[] = [];
+  readonly products: Subscription<Product | null, { tenantId: TenantId; productId: ProductId }>[] = [];
+  readonly variantLists: Subscription<readonly Variant[], { tenantId: TenantId; productId: ProductId }>[] = [];
 
   watchTenant(id: TenantId, watcher: Watcher<Tenant | null>): Unsubscribe {
     return this.open(this.tenants, new Subscription(id, watcher));
@@ -79,6 +83,14 @@ export class FakeCatalogQueries implements CatalogQueries {
 
   watchProducts(id: TenantId, query: ProductListQuery, watcher: Watcher<readonly Product[]>): Unsubscribe {
     return this.open(this.productLists, new Subscription({ tenantId: id, query }, watcher));
+  }
+
+  watchProduct(id: TenantId, productId: ProductId, watcher: Watcher<Product | null>): Unsubscribe {
+    return this.open(this.products, new Subscription({ tenantId: id, productId }, watcher));
+  }
+
+  watchVariants(id: TenantId, productId: ProductId, watcher: Watcher<readonly Variant[]>): Unsubscribe {
+    return this.open(this.variantLists, new Subscription({ tenantId: id, productId }, watcher));
   }
 
   /** La suscripción abierta más reciente al listado. */

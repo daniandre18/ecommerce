@@ -25,6 +25,11 @@ export const routes: Routes = [
             title: 'Catálogo',
             loadComponent: () => import('./catalog/product-list/product-list').then((m) => m.ProductList),
           },
+          {
+            path: 'catalog/:productId',
+            title: 'Producto',
+            loadComponent: () => import('./catalog/product-editor/product-editor').then((m) => m.ProductEditor),
+          },
         ],
       },
     ],

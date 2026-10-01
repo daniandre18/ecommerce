@@ -1,4 +1,4 @@
-import type { Product, ProductStatus, Tenant, TenantId } from '@ecommerce/domain';
+import type { Product, ProductId, ProductStatus, Tenant, TenantId, Variant } from '@ecommerce/domain';
 
 /** Corta la suscripción. Llamarla dos veces no hace nada. */
 export type Unsubscribe = () => void;
@@ -29,4 +29,8 @@ export interface CatalogQueries {
    * por nombre. No lee variantes: se leen al abrir el producto.
    */
   watchProducts(tenantId: TenantId, query: ProductListQuery, watcher: Watcher<readonly Product[]>): Unsubscribe;
+  /** Un producto. `null` si no existe. */
+  watchProduct(tenantId: TenantId, productId: ProductId, watcher: Watcher<Product | null>): Unsubscribe;
+  /** Las variantes en circulación de un producto, sin orden: el orden lo dan sus opciones. */
+  watchVariants(tenantId: TenantId, productId: ProductId, watcher: Watcher<readonly Variant[]>): Unsubscribe;
 }

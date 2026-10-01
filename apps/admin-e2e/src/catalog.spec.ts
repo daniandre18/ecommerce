@@ -29,7 +29,7 @@ test.describe('catálogo', () => {
   });
 
   // La creación pasa por la callable, con App Check y la guarda, y vuelve por la lectura en tiempo real.
-  test('paso 2: crea un producto, que aparece en el listado en borrador y con su variante implícita', async ({ page }) => {
+  test('paso 2: crea un producto, abre su editor, y en el listado aparece en borrador con su variante implícita', async ({ page }) => {
     await page.goto('/t/t1/catalog');
     await signIn(page, OWNER);
 
@@ -39,6 +39,11 @@ test.describe('catálogo', () => {
     await dialog.getByLabel('Nombre').fill(name);
     await dialog.getByRole('button', { name: 'Crear' }).click();
     await expect(dialog).toBeHidden();
+
+    // Lo siguiente con un producto nuevo es armar sus variantes: se abre su editor.
+    await expect(page).toHaveURL(/\/t\/t1\/catalog\/[^/]+$/);
+    await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
+    await page.getByRole('link', { name: '← Catálogo' }).click();
 
     const row = page.getByRole('listitem').filter({ hasText: name });
     await expect(row).toContainText('Borrador · 1 variante');

@@ -1,0 +1,69 @@
+import { signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
+import { createIncompleteVariant, productId, variantId, type Tenant } from '@ecommerce/domain';
+import { CATALOG_COMMANDS, CATALOG_QUERIES } from '../../core/client';
+import { CURRENT_TENANT } from '../../tenant/current-tenant';
+import { fakeCatalogCommands, FakeCatalogQueries, product, T1, tenant } from '../../../testing/fakes';
+import { settle } from '../../../testing/settle';
+import { ProductEditor } from './product-editor';
+
+describe('ProductEditor', () => {
+  let queries: FakeCatalogQueries;
+  const current = signal<Tenant | undefined>(tenant());
+
+  beforeEach(() => {
+    queries = new FakeCatalogQueries();
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([{ path: 't/:tenantId/catalog/:productId', component: ProductEditor }], withComponentInputBinding()),
+        { provide: CATALOG_QUERIES, useValue: queries },
+        { provide: CATALOG_COMMANDS, useValue: fakeCatalogCommands() },
+        { provide: CURRENT_TENANT, useValue: current },
+      ],
+    });
+  });
+
+  async function open() {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/t/t1/catalog/p1');
+    await settle();
+    return harness.routeNativeElement as HTMLElement;
+  }
+
+  it('escucha el producto y sus variantes de la ruta, y muestra un esqueleto mientras llegan', async () => {
+    const root = await open();
+    expect(queries.products.map((s) => s.params)).toEqual([{ tenantId: T1, productId: 'p1' }]);
+    expect(queries.variantLists.map((s) => s.params)).toEqual([{ tenantId: T1, productId: 'p1' }]);
+    expect(root.querySelector('ui-skeleton')).not.toBeNull();
+  });
+
+  it('con el producto y sus variantes, muestra los datos, las opciones y la tabla', async () => {
+    const root = await open();
+    queries.products[0]?.emit(product('p1', 'Camiseta'));
+    queries.variantLists[0]?.emit([{ ...createIncompleteVariant({ id: variantId('v1'), tenantId: T1, productId: productId('p1'), optionValues: {} }), version: 1 }]);
+    await settle();
+    expect(root.querySelector('h1')?.textContent).toContain('Camiseta');
+    expect([...root.querySelectorAll('h2')].map((h) => h.textContent?.trim())).toEqual(['Datos', 'Opciones de variación', 'Variantes (1)']);
+    expect(root.querySelector('[role="group"]')?.textContent).toContain('Única');
+  });
+
+  it('un producto que no existe lo dice y ofrece volver al catálogo', async () => {
+    const root = await open();
+    queries.products[0]?.emit(null);
+    await settle();
+    expect(root.querySelector('ui-empty-state')?.textContent).toContain('Este producto no existe');
+    expect(root.querySelector('ui-empty-state a')?.getAttribute('href')).toBe('/t/t1/catalog');
+  });
+
+  it('si falla la lectura, lo dice y el reintento vuelve a pedir', async () => {
+    const root = await open();
+    queries.products[0]?.fail(new Error('sin red'));
+    await settle();
+    expect(root.querySelector('[role="alert"]')?.textContent).toContain('No pudimos cargar el producto');
+    root.querySelector<HTMLButtonElement>('[role="alert"] button')?.click();
+    await settle();
+    expect(queries.products).toHaveLength(2);
+  });
+});

@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import type { ProductListQuery } from '@ecommerce/application';
 import { tenantId, type Product, type ProductStatus, type TenantId } from '@ecommerce/domain';
 import { EmptyState, ErrorState, Skeleton } from '@ecommerce/ui';
@@ -24,7 +25,7 @@ type StatusFilter = ProductStatus | 'all';
  */
 @Component({
   selector: 'app-product-list',
-  imports: [FormField, MatFormField, MatLabel, MatInput, MatButton, Skeleton, ErrorState, EmptyState],
+  imports: [RouterLink, FormField, MatFormField, MatLabel, MatInput, MatButton, Skeleton, ErrorState, EmptyState],
   template: `
     <div class="head">
       <h1>Catálogo</h1>
@@ -64,11 +65,13 @@ type StatusFilter = ProductStatus | 'all';
         <ul [attr.aria-busy]="products.isLoading()">
           @for (product of list; track product.id) {
             <li>
-              <span class="name">{{ product.name }}</span>
-              <span class="meta">{{ statusLabel(product) }} · {{ variantsLabel(product) }}</span>
-              @if (product.hasIncompleteVariants) {
-                <span class="incomplete">Variantes sin SKU</span>
-              }
+              <a [routerLink]="product.id">
+                <span class="name">{{ product.name }}</span>
+                <span class="meta">{{ statusLabel(product) }} · {{ variantsLabel(product) }}</span>
+                @if (product.hasIncompleteVariants) {
+                  <span class="incomplete">Variantes sin SKU</span>
+                }
+              </a>
             </li>
           }
         </ul>
@@ -111,15 +114,24 @@ type StatusFilter = ProductStatus | 'all';
       padding: 0;
     }
 
-    /* El alto de la fila es el del esqueleto: nada salta cuando llegan los datos (SC-009). */
     li {
+      border-bottom: 1px solid var(--mat-sys-outline-variant);
+    }
+
+    /* El alto de la fila es el del esqueleto: nada salta cuando llegan los datos (SC-009). */
+    a {
       display: flex;
       flex-direction: column;
       justify-content: center;
       min-height: 72px;
       box-sizing: border-box;
       padding: 8px 4px;
-      border-bottom: 1px solid var(--mat-sys-outline-variant);
+      color: inherit;
+      text-decoration: none;
+    }
+
+    a:hover .name {
+      text-decoration: underline;
     }
 
     .name {
@@ -148,6 +160,8 @@ export class ProductList {
   private readonly queries = inject(CATALOG_QUERIES);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly filters = signal<{ search: string; status: StatusFilter }>({ search: '', status: 'all' });
   protected readonly filterForm = form(this.filters, (path) => {
@@ -201,7 +215,10 @@ export class ProductList {
       .open<CreateProductDialog, CreateProductData, CreatedProduct>(CreateProductDialog, { data, width: 'min(560px, 100vw - 32px)' })
       .afterClosed()
       .subscribe((created) => {
-        if (created) this.snackBar.open(`Creaste «${created.name}»`, undefined, { duration: 4000 });
+        if (!created) return;
+        this.snackBar.open(`Creaste «${created.name}»`, undefined, { duration: 4000 });
+        // Lo siguiente que se hace con un producto nuevo es armar sus variantes.
+        void this.router.navigate([created.productId], { relativeTo: this.route });
       });
   }
 }
