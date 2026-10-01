@@ -1,6 +1,7 @@
 import type { TransactionScope } from '@ecommerce/application';
 import { activateMembership, inviteMembership, roleId, RoleNotDeletableError, tenantId, uid } from '@ecommerce/domain';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { clearFirestoreEmulator } from '../testing/emulator';
 import { firestore } from './firestore';
 import { roleChangedEntry } from './testing/fixtures';
 import { FirestoreUnitOfWork } from './unit-of-work';
@@ -8,12 +9,6 @@ import { FirestoreUnitOfWork } from './unit-of-work';
 const db = firestore();
 const T1 = tenantId('t1');
 const AT = new Date('2026-09-30T12:00:00Z');
-
-async function clearEmulator(): Promise<void> {
-  const host = process.env['FIRESTORE_EMULATOR_HOST'];
-  if (!host) throw new Error('FIRESTORE_EMULATOR_HOST no definido: correr con firebase emulators:exec');
-  await fetch(`http://${host}/emulator/v1/projects/demo-ecommerce/databases/(default)/documents`, { method: 'DELETE' });
-}
 
 const ana = () =>
   activateMembership(
@@ -38,7 +33,7 @@ describe('FirestoreUnitOfWork contra el emulador', () => {
   const uow = new FirestoreUnitOfWork(db, T1);
 
   beforeEach(async () => {
-    await clearEmulator();
+    await clearFirestoreEmulator();
     await uow.run(async (tx) => tx.members.save(ana()));
   });
 

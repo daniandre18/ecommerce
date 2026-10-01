@@ -33,6 +33,9 @@
       ],
       "@ecommerce/application/testing": [
         "./libs/application/src/testing/in-memory.ts"
+      ],
+      "@ecommerce/infrastructure/testing": [
+        "./libs/infrastructure/src/testing/emulator.ts"
       ]
     }
   },
