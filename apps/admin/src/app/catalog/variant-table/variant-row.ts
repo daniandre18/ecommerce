@@ -1,6 +1,7 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
-import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
+import { Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { form, FormField, validate } from '@angular/forms/signals';
+import { MatCheckbox } from '@angular/material/checkbox';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import type { CommandFailure, CommandResult } from '@ecommerce/application';
@@ -47,7 +48,7 @@ function fieldsOf(variant: Variant): Fields {
  */
 @Component({
   selector: 'app-variant-row',
-  imports: [FormField, MatFormField, MatLabel, MatError, MatInput],
+  imports: [FormField, MatCheckbox, MatFormField, MatLabel, MatError, MatInput],
   templateUrl: './variant-row.html',
   styleUrl: './variant-row.scss',
 })
@@ -59,6 +60,9 @@ export class VariantRow {
   readonly currency = input.required<CurrencyCode>();
   /** Para nombrar la variante que ocupa un SKU. */
   readonly labelOf = input.required<(id: VariantId) => string | undefined>();
+  /** Para la edición masiva (T058). */
+  readonly selected = input(false);
+  readonly selectedChange = output<boolean>();
 
   private readonly commands = inject(CATALOG_COMMANDS);
   private readonly announcer = inject(LiveAnnouncer);

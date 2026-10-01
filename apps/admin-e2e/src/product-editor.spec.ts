@@ -39,7 +39,7 @@ async function enter(row: Locator, field: RegExp, value: string) {
   await input.press('Tab');
 }
 
-// Historia 1, pasos 2 a 5 y 7 de quickstart.md: el editor de variantes de punta a punta.
+// Historia 1, pasos 2 a 8 de quickstart.md: el editor de variantes de punta a punta.
 test('las variantes se arman de a una opción y lo cargado no se pierde (FR-017, FR-018, FR-024, FR-029)', async ({ page }) => {
   const run = `${test.info().project.name}-${Date.now()}`;
   await createProduct(page, `Remera ${run}`);
@@ -57,15 +57,17 @@ test('las variantes se arman de a una opción y lo cargado no se pierde (FR-017,
   });
 
   await test.step('4. SKU, precio y existencias en ambas', async () => {
-    for (const [label, price, stock] of [
-      ['Rojo', '10', '3'],
-      ['Amarillo', '12,5', '0'],
+    for (const [label, price, saved, stock] of [
+      ['Rojo', '10', '10,00', '3'],
+      ['Amarillo', '12,5', '12,50', '0'],
     ] as const) {
       const row = variant(page, label);
       await enter(row, /^SKU/, `${label}-${run}`);
       await enter(row, /^Precio \(/, price);
       await enter(row, /^Existencias/, stock);
+      // Guardado y confirmado: el importe vuelve en su forma canónica.
       await expect(row).not.toContainText('Falta el SKU');
+      await expect(row.getByLabel(/^Precio \(/)).toHaveValue(saved);
     }
   });
 
@@ -88,12 +90,69 @@ test('las variantes se arman de a una opción y lo cargado no se pierde (FR-017,
     await expect(created.getByLabel(/^Existencias/)).toHaveAttribute('placeholder', 'Sin definir');
   });
 
+  await test.step('6. activar con variantes sin SKU se impide diciendo cuáles; completas, se activa', async () => {
+    const status = page.getByRole('radiogroup', { name: 'Estado' });
+    await status.getByRole('radio', { name: /^Activo/ }).check();
+    const blocked = page.getByRole('alert').filter({ hasText: 'completá el SKU de' });
+    await expect(blocked).toContainText('Rojo / M');
+    await expect(blocked).toContainText('Amarillo / M');
+    await expect(page.getByRole('button', { name: 'Cambiar estado' })).toBeDisabled();
+
+    for (const label of ['Rojo / M', 'Amarillo / M']) {
+      await enter(variant(page, label), /^SKU/, `${label.replace(' / ', '-')}-${run}`);
+      await expect(variant(page, label)).not.toContainText('Falta el SKU');
+    }
+    await expect(blocked).toBeHidden();
+    await page.getByRole('button', { name: 'Cambiar estado' }).click();
+    await expect(page.locator('app-product-editor p.status')).toHaveText('Activo');
+
+    await status.getByRole('radio', { name: /^No listado/ }).check();
+    await page.getByRole('button', { name: 'Cambiar estado' }).click();
+    await expect(page.locator('app-product-editor p.status')).toHaveText('No listado');
+  });
+
   await test.step('7. un SKU que ya usa otra variante se rechaza señalando cuál', async () => {
     const row = variant(page, 'Rojo / M');
     await enter(row, /^SKU/, `rojo-${run}`);
     await expect(row).toContainText('Ese SKU ya lo usa la variante Rojo / S');
   });
+
+  await test.step('8. el mismo precio a todas en una acción, con una entrada de bitácora por variante', async () => {
+    await page.getByRole('checkbox', { name: 'Seleccionar todas las variantes' }).check();
+    const bulk = page.locator('app-bulk-edit');
+    await expect(bulk).toContainText('4 variantes seleccionadas');
+    await bulk.getByLabel('Campo').selectOption('price');
+    await bulk.getByLabel('Valor para todas').fill('25');
+    await bulk.getByRole('button', { name: 'Aplicar a 4 variantes' }).click();
+
+    for (const label of ['Rojo / S', 'Rojo / M', 'Amarillo / S', 'Amarillo / M']) {
+      await expect(variant(page, label).getByLabel(/^Precio \(/)).toHaveValue('25,00');
+    }
+    const productId = page.url().split('/').at(-1) ?? '';
+    const batches = await priceBatches(productId);
+    expect([...batches.values()].filter((entries) => entries === 4)).toHaveLength(1);
+  });
 });
+
+/**
+ * Entradas de bitácora de cambios de precio de un producto, agrupadas por lote. Se leen del
+ * emulador como administrador: la bitácora todavía no tiene vista (Historia 3).
+ */
+async function priceBatches(productId: string): Promise<Map<string, number>> {
+  const response = await fetch('http://127.0.0.1:8080/v1/projects/demo-ecommerce/databases/(default)/documents/tenants/t1/auditLog?pageSize=1000', {
+    headers: { Authorization: 'Bearer owner' },
+  });
+  type Field = { stringValue?: string; mapValue?: { fields: Record<string, Field> } };
+  const { documents = [] } = (await response.json()) as { documents?: { fields: Record<string, Field> }[] };
+  const batches = new Map<string, number>();
+  for (const { fields } of documents) {
+    const entityProduct = fields['entity']?.mapValue?.fields['productId']?.stringValue;
+    if (fields['type']?.stringValue !== 'price.changed' || entityProduct !== productId) continue;
+    const batch = fields['batchId']?.stringValue ?? '';
+    batches.set(batch, (batches.get(batch) ?? 0) + 1);
+  }
+  return batches;
+}
 
 // Paso 9 (FR-025): los topes se avisan antes de enviar y no se crea nada.
 test('topes: hasta 5 opciones y 100 combinaciones, sin crear nada', async ({ page }) => {

@@ -45,7 +45,7 @@ describe('ProductEditor', () => {
     queries.variantLists[0]?.emit([{ ...createIncompleteVariant({ id: variantId('v1'), tenantId: T1, productId: productId('p1'), optionValues: {} }), version: 1 }]);
     await settle();
     expect(root.querySelector('h1')?.textContent).toContain('Camiseta');
-    expect([...root.querySelectorAll('h2')].map((h) => h.textContent?.trim())).toEqual(['Datos', 'Opciones de variación', 'Variantes (1)']);
+    expect([...root.querySelectorAll('h2')].map((h) => h.textContent?.trim())).toEqual(['Datos', 'Estado', 'Opciones de variación', 'Variantes (1)']);
     expect(root.querySelector('[role="group"]')?.textContent).toContain('Única');
   });
 

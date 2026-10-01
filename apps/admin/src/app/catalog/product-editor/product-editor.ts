@@ -9,6 +9,7 @@ import { CURRENT_TENANT } from '../../tenant/current-tenant';
 import { VariantTable } from '../variant-table/variant-table';
 import { DetailsSection } from './details-section';
 import { OptionsEditor } from './options-editor/options-editor';
+import { StatusControl } from './status-control/status-control';
 
 interface Ids {
   readonly tenantId: TenantId;
@@ -20,7 +21,7 @@ const STATUS_LABELS: Record<Product['status'], string> = { draft: 'Borrador', ac
 /** Un producto: sus datos, sus opciones de variación y una fila por variante (T055, T056). */
 @Component({
   selector: 'app-product-editor',
-  imports: [RouterLink, MatButton, Skeleton, ErrorState, EmptyState, DetailsSection, OptionsEditor, VariantTable],
+  imports: [RouterLink, MatButton, Skeleton, ErrorState, EmptyState, DetailsSection, StatusControl, OptionsEditor, VariantTable],
   templateUrl: './product-editor.html',
   styleUrl: './product-editor.scss',
 })

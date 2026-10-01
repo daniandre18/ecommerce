@@ -1,0 +1,38 @@
+:host {
+  display: block;
+}
+
+h2 {
+  margin: 0 0 8px;
+  font: var(--mat-sys-title-large);
+}
+
+mat-radio-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.hint {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.blocked {
+  color: var(--mat-sys-error);
+}
+
+.blocked:empty {
+  display: none;
+}
+
+.blocked p,
+.blocked ul {
+  margin: 8px 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
