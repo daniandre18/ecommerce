@@ -23,6 +23,7 @@ import {
   type VariationOption,
 } from '@ecommerce/domain';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { clearFirestoreEmulator } from '../testing/emulator';
 import { firestore } from './firestore';
 import { FirestoreUnitOfWork } from './unit-of-work';
 
@@ -42,12 +43,6 @@ const color: VariationOption = {
   ],
 };
 
-async function clearEmulator(): Promise<void> {
-  const host = process.env['FIRESTORE_EMULATOR_HOST'];
-  if (!host) throw new Error('FIRESTORE_EMULATOR_HOST no definido: correr con firebase emulators:exec');
-  await fetch(`http://${host}/emulator/v1/projects/demo-ecommerce/databases/(default)/documents`, { method: 'DELETE' });
-}
-
 interface UseCase<I, O> {
   execute(tx: TransactionScope, ctx: OperationContext, input: I): Promise<O>;
 }
@@ -65,7 +60,7 @@ describe('catálogo sobre Firestore', () => {
   let amarillo: VariantId;
 
   beforeEach(async () => {
-    await clearEmulator();
+    await clearFirestoreEmulator();
     n = 0;
     await db.doc('tenants/t1').set({ name: 'Uno', ownerUid: 'owner', currency: 'USD', createdAt: NOW, createdBy: 'seed', status: 'active' });
     ({ productId: pid } = await run(new CreateProduct(deps), { name: 'Camiseta', description: '' }));
