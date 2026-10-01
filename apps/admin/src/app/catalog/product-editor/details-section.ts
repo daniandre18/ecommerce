@@ -1,5 +1,5 @@
 import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
-import { form, FormField, submit, validate } from '@angular/forms/signals';
+import { form, FormField, readonly, submit, validate } from '@angular/forms/signals';
 import { MatButton } from '@angular/material/button';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
@@ -8,6 +8,7 @@ import type { Product, TenantId } from '@ecommerce/domain';
 import { CATALOG_COMMANDS } from '../../core/client';
 import { commandErrorMessage } from '../../shared/command-errors';
 import { keepUnsaved } from '../../shared/keep-unsaved';
+import { injectCan } from '../../tenant/current-access';
 
 interface Details {
   name: string;
@@ -16,7 +17,7 @@ interface Details {
 
 const detailsOf = (product: Product): Details => ({ name: product.name, description: product.description });
 
-/** Nombre y descripción del producto. */
+/** Nombre y descripción del producto. Sin `catalog.write` se leen pero no se editan (T079). */
 @Component({
   selector: 'app-details-section',
   imports: [FormField, MatFormField, MatLabel, MatError, MatInput, MatButton],
@@ -74,6 +75,7 @@ export class DetailsSection {
 
   private readonly commands = inject(CATALOG_COMMANDS);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly canWrite = injectCan('catalog.write');
 
   private readonly stored = computed(() => detailsOf(this.product()));
   /** Lo escrito y sin guardar no se pisa cuando llega otra versión del producto. */
@@ -82,6 +84,7 @@ export class DetailsSection {
     computation: keepUnsaved,
   });
   protected readonly detailsForm = form(this.draft, (path) => {
+    readonly(path, { when: () => !this.canWrite() });
     validate(path.name, ({ value }) => (value().trim() === '' ? { kind: 'required', message: 'El producto necesita un nombre' } : undefined));
   });
   protected readonly dirty = computed(() => {

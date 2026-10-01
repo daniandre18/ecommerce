@@ -1,30 +1,32 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
-import { Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
-import { form, FormField, validate } from '@angular/forms/signals';
+import { Component, computed, inject, Injector, input, linkedSignal, output, signal } from '@angular/core';
+import { form, FormField, readonly, validate } from '@angular/forms/signals';
 import { MatButton } from '@angular/material/button';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import type { CommandFailure, CommandResult } from '@ecommerce/application';
-import { isVariantComplete, type CurrencyCode, type ProductId, type TenantId, type Variant, type VariantId } from '@ecommerce/domain';
+import { isVariantComplete, type CurrencyCode, type Money, type ProductId, type TenantId, type Variant, type VariantId } from '@ecommerce/domain';
 import { CATALOG_COMMANDS } from '../../core/client';
 import { commandErrorMessage } from '../../shared/command-errors';
 import { keepUnsaved } from '../../shared/keep-unsaved';
+import { injectCan } from '../../tenant/current-access';
 import { formatMoneyInput, formatStockInput, parseMoneyInput, parseStockInput } from '../shared/amount-input';
 import { VariantImagesDialog, type VariantImagesData } from './variant-images-dialog';
 
-type Field = 'sku' | 'price' | 'compareAtPrice' | 'stock';
+type Field = 'sku' | 'price' | 'compareAtPrice' | 'stock' | 'cost';
 type Fields = Record<Field, string>;
 
-const FIELD_NAMES: Record<Field, string> = { sku: 'SKU', price: 'Precio', compareAtPrice: 'Precio tachado', stock: 'Existencias' };
+const FIELD_NAMES: Record<Field, string> = { sku: 'SKU', price: 'Precio', compareAtPrice: 'Precio tachado', stock: 'Existencias', cost: 'Costo' };
 
 function canonicalText(field: Field, text: string, currency: CurrencyCode): string {
   switch (field) {
     case 'sku':
       return text.trim();
     case 'price':
-    case 'compareAtPrice': {
+    case 'compareAtPrice':
+    case 'cost': {
       const parsed = parseMoneyInput(text, currency);
       return parsed.ok ? formatMoneyInput(parsed.value) : text;
     }
@@ -35,19 +37,21 @@ function canonicalText(field: Field, text: string, currency: CurrencyCode): stri
   }
 }
 
-function fieldsOf(variant: Variant): Fields {
+function fieldsOf(variant: Variant, cost: Money | null | undefined): Fields {
   return {
     sku: variant.sku?.raw ?? '',
     price: formatMoneyInput(variant.price),
     compareAtPrice: formatMoneyInput(variant.compareAtPrice),
     stock: formatStockInput(variant.stock),
+    cost: formatMoneyInput(cost ?? null),
   };
 }
 
 /**
  * Una variante, editable en línea (T056). Cada campo se guarda solo, al salir de él o con Enter,
  * con su propia orden: el SKU, los importes y las existencias tienen permisos distintos y los
- * importes y las existencias dejan su entrada en la bitácora.
+ * importes y las existencias dejan su entrada en la bitácora. Cada campo se edita solo con su
+ * permiso y el costo ni se muestra sin `variant.cost.read` (T078, T079); el resto se lee igual.
  */
 @Component({
   selector: 'app-variant-row',
@@ -63,18 +67,31 @@ export class VariantRow {
   readonly currency = input.required<CurrencyCode>();
   /** Para nombrar la variante que ocupa un SKU. */
   readonly labelOf = input.required<(id: VariantId) => string | undefined>();
-  /** Para la edición masiva (T058). */
+  /**
+   * El costo de adquisición, que vive aparte (FR-015): `undefined` mientras carga, `null` si no
+   * tiene. La tabla solo lo pide con `variant.cost.read`.
+   */
+  readonly cost = input<Money | null | undefined>(undefined);
+  /** Para la edición masiva (T058); sin permiso para ninguno de sus campos no se ofrece. */
+  readonly selectable = input(true);
   readonly selected = input(false);
   readonly selectedChange = output<boolean>();
 
   private readonly commands = inject(CATALOG_COMMANDS);
   private readonly announcer = inject(LiveAnnouncer);
   private readonly dialog = inject(MatDialog);
+  private readonly injector = inject(Injector);
+
+  private readonly canWriteCatalog = injectCan('catalog.write');
+  private readonly canWritePrice = injectCan('variant.price.write');
+  private readonly canWriteStock = injectCan('variant.stock.write');
+  private readonly canWriteCost = injectCan('variant.cost.write');
+  protected readonly canReadCost = injectCan('variant.cost.read');
 
   protected readonly incomplete = computed(() => !isVariantComplete(this.variant()));
   protected readonly headingId = computed(() => `variante-${this.variant().id}`);
 
-  private readonly stored = computed(() => fieldsOf(this.variant()));
+  private readonly stored = computed(() => fieldsOf(this.variant(), this.cost()));
   /** Lo escrito y todavía sin guardar se conserva; el resto sigue a lo que llega del servidor. */
   protected readonly draft = linkedSignal<Fields, Fields>({
     source: this.stored,
@@ -85,6 +102,11 @@ export class VariantRow {
   private readonly rejections = signal<Partial<Record<Field, { readonly value: string; readonly message: string }>>>({});
 
   protected readonly rowForm = form(this.draft, (path) => {
+    readonly(path.sku, { when: () => !this.canWriteCatalog() });
+    readonly(path.price, { when: () => !this.canWritePrice() });
+    readonly(path.compareAtPrice, { when: () => !this.canWritePrice() });
+    readonly(path.stock, { when: () => !this.canWriteStock() });
+    readonly(path.cost, { when: () => !this.canWriteCost() || this.cost() === undefined });
     validate(path.sku, ({ value }) =>
       value().trim() === '' && this.stored().sku !== '' ? { kind: 'required', message: 'El SKU no se puede quitar' } : this.rejection('sku', value()),
     );
@@ -102,6 +124,12 @@ export class VariantRow {
       const parsed = parseStockInput(value());
       return parsed.ok ? this.rejection('stock', value()) : { kind: 'format', message: parsed.message };
     });
+    validate(path.cost, ({ value }) => {
+      const parsed = parseMoneyInput(value(), this.currency());
+      if (!parsed.ok) return { kind: 'format', message: parsed.message };
+      if (parsed.value === null && this.stored().cost !== '') return { kind: 'required', message: 'El costo no se puede quitar' };
+      return this.rejection('cost', value());
+    });
   });
 
   /** La versión que dejó la última orden de esta fila, hasta que el servidor confirme una mayor. */
@@ -113,7 +141,8 @@ export class VariantRow {
 
   protected openImages(): void {
     const data: VariantImagesData = { tenantId: this.tenantId(), productId: this.productId(), label: this.label(), variant: this.variant };
-    this.dialog.open(VariantImagesDialog, { data, width: 'min(560px, 100vw - 32px)' });
+    // Con el inyector de la fila, el diálogo ve el acceso del comercio (CURRENT_ACCESS) que da su marco.
+    this.dialog.open(VariantImagesDialog, { data, width: 'min(560px, 100vw - 32px)', injector: this.injector });
   }
 
   protected commit(field: Field): void {
@@ -128,7 +157,8 @@ export class VariantRow {
     this.sent[field] = text;
     const result = await this.send(field, text);
     if (result.ok) {
-      this.knownVersion.set(result.version ?? this.knownVersion() + 1);
+      // El costo vive en otro documento: no cambia la versión de la variante.
+      if (field !== 'cost') this.knownVersion.set(result.version ?? this.knownVersion() + 1);
       this.markSaved(field, text);
       void this.announcer.announce(`${FIELD_NAMES[field]} de ${this.label()} guardado`);
     } else {
@@ -170,6 +200,12 @@ export class VariantRow {
         const { productId, ...change } = ids;
         return settled(await this.commands.setVariantStock(this.tenantId(), { productId, changes: [{ ...change, stock: parsed.value }] }));
       }
+      case 'cost': {
+        const parsed = parseMoneyInput(text, this.currency());
+        if (!parsed.ok || parsed.value === null) throw new Error('Costo inválido después de validar');
+        const changes = [{ variantId: this.variant().id, cost: parsed.value }];
+        return settled(await this.commands.setVariantCost(this.tenantId(), { productId: this.productId(), changes }));
+      }
     }
   }
 
@@ -202,6 +238,8 @@ export class VariantRow {
         return this.rowForm.compareAtPrice();
       case 'stock':
         return this.rowForm.stock();
+      case 'cost':
+        return this.rowForm.cost();
     }
   }
 }

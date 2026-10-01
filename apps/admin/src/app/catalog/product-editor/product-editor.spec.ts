@@ -5,7 +5,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { createIncompleteVariant, productId, variantId, type Tenant } from '@ecommerce/domain';
 import { CATALOG_COMMANDS, CATALOG_QUERIES, IMAGE_STORAGE } from '../../core/client';
 import { CURRENT_TENANT } from '../../tenant/current-tenant';
-import { fakeCatalogCommands, FakeCatalogQueries, FakeImageStorage, product, T1, tenant } from '../../../testing/fakes';
+import { fakeCatalogCommands, FakeCatalogQueries, FakeImageStorage, product, provideAccess, READ_ONLY_ACCESS, T1, tenant, useAccess } from '../../../testing/fakes';
 import { settle } from '../../../testing/settle';
 import { ProductEditor } from './product-editor';
 
@@ -17,6 +17,7 @@ describe('ProductEditor', () => {
     queries = new FakeCatalogQueries();
     TestBed.configureTestingModule({
       providers: [
+        provideAccess(),
         provideRouter([{ path: 't/:tenantId/catalog/:productId', component: ProductEditor }], withComponentInputBinding()),
         { provide: CATALOG_QUERIES, useValue: queries },
         { provide: CATALOG_COMMANDS, useValue: fakeCatalogCommands() },
@@ -49,6 +50,16 @@ describe('ProductEditor', () => {
     expect([...root.querySelectorAll('h2')].map((h) => h.textContent?.trim())).toEqual(['Datos', 'Estado', 'Opciones de variación', 'Variantes (1)']);
     expect(root.querySelector('h3')?.textContent?.trim()).toBe('Imágenes del producto');
     expect(root.querySelector('[role="group"]')?.textContent).toContain('Única');
+  });
+
+  // T079: sin catalog.write no se ofrecen el estado ni las opciones; los datos y las variantes, sí.
+  it('sin permiso para escribir el catálogo, no ofrece cambiar el estado ni las opciones', async () => {
+    useAccess(READ_ONLY_ACCESS);
+    const root = await open();
+    queries.products[0]?.emit(product('p1', 'Camiseta'));
+    queries.variantLists[0]?.emit([{ ...createIncompleteVariant({ id: variantId('v1'), tenantId: T1, productId: productId('p1'), optionValues: {} }), version: 1 }]);
+    await settle();
+    expect([...root.querySelectorAll('h2')].map((h) => h.textContent?.trim())).toEqual(['Datos', 'Variantes (1)']);
   });
 
   it('un producto que no existe lo dice y ofrece volver al catálogo', async () => {

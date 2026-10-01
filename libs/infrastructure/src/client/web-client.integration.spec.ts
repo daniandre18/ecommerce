@@ -2,7 +2,9 @@ import type { ProductListQuery, TenantAccess, Watcher } from '@ecommerce/applica
 import {
   activateMembership,
   createIncompleteVariant,
+  createCatalogRole,
   inviteMembership,
+  money,
   optionId,
   normalizeName,
   productId,
@@ -11,9 +13,12 @@ import {
   uid,
   valueId,
   variantId,
+  type MemberAccess,
+  type Money,
   type Product,
   type ProductStatus,
   type Variant,
+  type VariantId,
 } from '@ecommerce/domain';
 import { deleteApp, initializeApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
@@ -98,6 +103,7 @@ describe('cliente web contra los emuladores', () => {
       await new FirestoreUnitOfWork(db, tenantId(id)).run(async (tx) => {
         const invited = inviteMembership({ uid: uid(OWNER.uid), tenantId: tenantId(id), roleId: roleId('catalog'), displayName: 'Dueña', email: OWNER.email, at: AT });
         await tx.members.save(status === 'active' ? activateMembership(invited, AT) : invited);
+        await tx.roles.save(createCatalogRole(tenantId(id), AT));
       });
     }
     await new FirestoreUnitOfWork(db, T1).run(async (tx) => {
@@ -119,6 +125,7 @@ describe('cliente web contra los emuladores', () => {
       ]) {
         await tx.products.save(p);
       }
+      await tx.costs.setMany(productId('p1'), { [variantId('v-viva')]: money(1200, 'USD') });
     });
   });
 
@@ -156,6 +163,23 @@ describe('cliente web contra los emuladores', () => {
         { tenantId: 't2', name: 'Comercio Dos', isOwner: false },
         { tenantId: 't1', name: 'Comercio Uno', isOwner: true },
       ]);
+    });
+
+    // T079: lo que el panel ofrece en cada comercio sale de la membresía y su rol, como en el servidor.
+    it.each<[string, MemberAccess | null]>([
+      ['t1', { isOwner: true, permissions: [] }],
+      ['t2', { isOwner: false, permissions: ['catalog.read', 'catalog.write', 'variant.stock.write'] }],
+      ['t3', null],
+      ['t9', null],
+    ])('el acceso de la cuenta en %s', async (id, expected) => {
+      const directory = new FirestoreTenantDirectory(webDb);
+      await expect(first<MemberAccess | null>((watcher) => directory.watchAccess(tenantId(id), uid(OWNER.uid), watcher))).resolves.toEqual(expected);
+    });
+
+    it('los costos de un producto, por variante; sin documento, ninguno (T078)', async () => {
+      const costs = (id: string) => first<ReadonlyMap<VariantId, Money>>((watcher) => queries.watchCosts(T1, productId(id), watcher));
+      expect([...(await costs('p1'))]).toEqual([['v-viva', money(1200, 'USD')]]);
+      expect((await costs('p3')).size).toBe(0);
     });
 
     it('el comercio llega con su nombre y su moneda', async () => {

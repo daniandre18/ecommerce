@@ -1,4 +1,5 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   createIncompleteVariant,
@@ -9,12 +10,14 @@ import {
   valueId,
   variantId,
   type CurrencyCode,
+  type MemberAccess,
   type Product,
   type Variant,
   type VariationOption,
 } from '@ecommerce/domain';
-import { CATALOG_COMMANDS } from '../../core/client';
-import { fakeCatalogCommands, product, T1 } from '../../../testing/fakes';
+import { CATALOG_COMMANDS, CATALOG_QUERIES } from '../../core/client';
+import { CURRENT_ACCESS } from '../../tenant/current-access';
+import { CATALOG_ACCESS, fakeCatalogCommands, FakeCatalogQueries, OWNER_ACCESS, product, T1 } from '../../../testing/fakes';
 import { settle } from '../../../testing/settle';
 import { VariantTable } from './variant-table';
 
@@ -37,6 +40,8 @@ const variantOf = (id: string, value: string, data: Partial<Variant> = {}): Vari
 // T056 — una fila por combinación, editable en línea (FR-018, FR-028), con anuncio accesible (FR-038a).
 describe('VariantTable', () => {
   let commands: ReturnType<typeof fakeCatalogCommands>;
+  let queries: FakeCatalogQueries;
+  const access = signal<MemberAccess | null | undefined>(OWNER_ACCESS);
   const announcer = { announce: vi.fn(async () => undefined) };
 
   beforeEach(() => {
@@ -44,10 +49,15 @@ describe('VariantTable', () => {
     commands.setVariantSku.mockResolvedValue({ ok: true, data: { version: 4, complete: true } });
     commands.setVariantPrice.mockResolvedValue({ ok: true, data: { batchId: 'b', updated: 1, auditEntryIds: ['e'] } });
     commands.setVariantStock.mockResolvedValue({ ok: true, data: { batchId: 'b', updated: 1, auditEntryIds: ['e'] } });
+    commands.setVariantCost.mockResolvedValue({ ok: true, data: { batchId: 'b', updated: 1, auditEntryIds: ['e'] } });
+    queries = new FakeCatalogQueries();
+    access.set(OWNER_ACCESS);
     announcer.announce.mockClear();
     TestBed.configureTestingModule({
       imports: [VariantTable],
       providers: [
+        { provide: CURRENT_ACCESS, useValue: access },
+        { provide: CATALOG_QUERIES, useValue: queries },
         { provide: CATALOG_COMMANDS, useValue: commands },
         { provide: LiveAnnouncer, useValue: announcer },
       ],
@@ -187,5 +197,85 @@ describe('VariantTable', () => {
     await settle();
     expect(row('Rojo').field('Precio').value).toBe('99');
     expect(row('Rojo').field('Existencias').value).toBe('7');
+  });
+
+  describe('según el rol (T078, T079)', () => {
+    const labels = (group: HTMLElement) => [...group.querySelectorAll('mat-label')].map((label) => label.textContent?.trim());
+
+    it('el Propietario ve el costo de cada variante, pedido aparte', async () => {
+      const { row } = await render([variantOf('v1', 'rojo'), variantOf('v2', 'azul')]);
+      expect(queries.costLists.map((s) => s.params)).toEqual([{ tenantId: T1, productId: 'p1' }]);
+      expect(row('Rojo').field('Costo').placeholder).toBe('Cargando…');
+      expect(row('Rojo').field('Costo').readOnly).toBe(true);
+
+      queries.costLists[0]?.emit(new Map([[variantId('v1'), money(800, 'USD')]]));
+      await settle();
+      expect(row('Rojo').field('Costo').value).toBe('8,00');
+      expect(row('Azul').field('Costo').value).toBe('');
+      expect(row('Azul').field('Costo').placeholder).toBe('Sin costo');
+    });
+
+    it('el costo se guarda con su propia orden, sin versión: vive en otro documento', async () => {
+      const { row } = await render([variantOf('v1', 'rojo')]);
+      queries.costLists[0]?.emit(new Map());
+      await settle();
+      await row('Rojo').edit('Costo', '8');
+      expect(commands.setVariantCost).toHaveBeenCalledWith(T1, { productId: 'p1', changes: [{ variantId: 'v1', cost: money(800, 'USD') }] });
+      expect(announcer.announce).toHaveBeenCalledWith('Costo de Rojo guardado');
+
+      await row('Rojo').edit('SKU', 'A');
+      expect(commands.setVariantSku).toHaveBeenCalledWith(T1, expect.objectContaining({ version: 3 }));
+    });
+
+    // FR-015: sin variant.cost.read, la columna no existe y el documento ni se pide.
+    it('el rol de Catálogo no ve el costo ni lo pide, y ve los precios sin poder cambiarlos', async () => {
+      access.set(CATALOG_ACCESS);
+      const { row } = await render([variantOf('v1', 'rojo', { price: money(12990, 'USD') })]);
+      expect(queries.costLists).toEqual([]);
+      expect(labels(row('Rojo').group)).not.toContain('Costo (USD)');
+
+      expect(row('Rojo').field('Precio').value).toBe('129,90');
+      expect(row('Rojo').field('Precio').readOnly).toBe(true);
+      expect(row('Rojo').field('Precio tachado').readOnly).toBe(true);
+      expect(row('Rojo').field('SKU').readOnly).toBe(false);
+      expect(row('Rojo').field('Existencias').readOnly).toBe(false);
+    });
+
+    it('leer el costo sin poder cambiarlo lo muestra fijo', async () => {
+      access.set({ isOwner: false, permissions: ['catalog.read', 'variant.cost.read'] });
+      const { row } = await render([variantOf('v1', 'rojo')]);
+      queries.costLists[0]?.emit(new Map([[variantId('v1'), money(800, 'USD')]]));
+      await settle();
+      expect(row('Rojo').field('Costo').value).toBe('8,00');
+      expect(row('Rojo').field('Costo').readOnly).toBe(true);
+    });
+
+    it('la edición masiva ofrece solo los campos que el rol puede cambiar', async () => {
+      access.set(CATALOG_ACCESS);
+      const { root, fixture } = await render([variantOf('v1', 'rojo'), variantOf('v2', 'azul')]);
+      root.querySelector<HTMLInputElement>('input[aria-label="Seleccionar todas las variantes"]')?.click();
+      fixture.detectChanges();
+      await settle();
+      const options = [...root.querySelectorAll('app-bulk-edit option')].map((o) => o.textContent?.trim());
+      expect(options).toEqual(['Existencias']);
+    });
+
+    it('sin permiso para precios ni existencias no hay selección ni edición masiva', async () => {
+      access.set({ isOwner: false, permissions: ['catalog.read'] });
+      const { root, row } = await render([variantOf('v1', 'rojo'), variantOf('v2', 'azul')]);
+      expect(root.querySelector('mat-checkbox')).toBeNull();
+      expect(row('Rojo').field('SKU').readOnly).toBe(true);
+    });
+
+    it('si el rol gana el permiso de costo, la columna aparece sin recargar', async () => {
+      access.set(CATALOG_ACCESS);
+      const { row } = await render([variantOf('v1', 'rojo')]);
+      expect(queries.costLists).toEqual([]);
+
+      access.set({ ...CATALOG_ACCESS, permissions: [...CATALOG_ACCESS.permissions, 'variant.cost.read'] });
+      await settle();
+      expect(queries.costLists).toHaveLength(1);
+      expect(labels(row('Rojo').group)).toContain('Costo (USD)');
+    });
   });
 });

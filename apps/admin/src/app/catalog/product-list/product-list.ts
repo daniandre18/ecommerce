@@ -10,7 +10,9 @@ import type { ProductListQuery } from '@ecommerce/application';
 import { tenantId, type Product, type ProductStatus, type TenantId } from '@ecommerce/domain';
 import { EmptyState, ErrorState, Skeleton } from '@ecommerce/ui';
 import { CATALOG_QUERIES } from '../../core/client';
+import { HasPermission } from '../../shared/directives/has-permission.directive';
 import { liveResource } from '../../shared/live-resource';
+import { injectCan } from '../../tenant/current-access';
 import { CreateProductDialog, type CreatedProduct, type CreateProductData } from '../create-product/create-product-dialog';
 
 export const PAGE_SIZE = 25;
@@ -25,11 +27,11 @@ type StatusFilter = ProductStatus | 'all';
  */
 @Component({
   selector: 'app-product-list',
-  imports: [RouterLink, FormField, MatFormField, MatLabel, MatInput, MatButton, Skeleton, ErrorState, EmptyState],
+  imports: [RouterLink, FormField, MatFormField, MatLabel, MatInput, MatButton, Skeleton, ErrorState, EmptyState, HasPermission],
   template: `
     <div class="head">
       <h1>Catálogo</h1>
-      <button matButton="filled" type="button" (click)="create()">Nuevo producto</button>
+      <button *appHasPermission="'catalog.write'" matButton="filled" type="button" (click)="create()">Nuevo producto</button>
     </div>
 
     <div class="filters">
@@ -57,8 +59,8 @@ type StatusFilter = ProductStatus | 'all';
             <button matButton type="button" (click)="clearFilters()">Quitar filtros</button>
           </ui-empty-state>
         } @else {
-          <ui-empty-state heading="Todavía no hay productos" message="Creá el primero para empezar a armar tu catálogo.">
-            <button matButton="filled" type="button" (click)="create()">Crear producto</button>
+          <ui-empty-state heading="Todavía no hay productos" [message]="canWrite() ? 'Creá el primero para empezar a armar tu catálogo.' : ''">
+            <button *appHasPermission="'catalog.write'" matButton="filled" type="button" (click)="create()">Crear producto</button>
           </ui-empty-state>
         }
       } @else {
@@ -162,6 +164,7 @@ export class ProductList {
   private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  protected readonly canWrite = injectCan('catalog.write');
 
   protected readonly filters = signal<{ search: string; status: StatusFilter }>({ search: '', status: 'all' });
   protected readonly filterForm = form(this.filters, (path) => {

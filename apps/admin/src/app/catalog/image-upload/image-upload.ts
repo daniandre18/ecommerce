@@ -9,6 +9,7 @@ import type { CommandResult, UploadFailure } from '@ecommerce/application';
 import { IMAGE_CONTENT_TYPES, MAX_IMAGE_BYTES, type ImageRef, type ProductId, type TenantId } from '@ecommerce/domain';
 import { IMAGE_STORAGE } from '../../core/client';
 import { commandErrorMessage } from '../../shared/command-errors';
+import { injectCan } from '../../tenant/current-access';
 import { StorageImage } from './storage-image';
 
 const UPLOAD_FAILURES: Record<UploadFailure, string> = {
@@ -49,6 +50,8 @@ export class ImageUpload {
   private readonly announcer = inject(LiveAnnouncer);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
+  /** Sin `catalog.write` las imágenes se ven, pero no se agregan ni se quitan (T079). */
+  protected readonly canWrite = injectCan('catalog.write');
 
   protected readonly headingId = `imagenes-${++instances}`;
   protected readonly accept = IMAGE_CONTENT_TYPES.join(',');

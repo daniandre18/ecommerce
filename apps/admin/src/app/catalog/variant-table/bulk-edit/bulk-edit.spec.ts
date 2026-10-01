@@ -11,8 +11,8 @@ import {
   type Variant,
   type VariationOption,
 } from '@ecommerce/domain';
-import { CATALOG_COMMANDS } from '../../../core/client';
-import { fakeCatalogCommands, product, T1 } from '../../../../testing/fakes';
+import { CATALOG_COMMANDS, CATALOG_QUERIES } from '../../../core/client';
+import { fakeCatalogCommands, FakeCatalogQueries, product, provideAccess, T1 } from '../../../../testing/fakes';
 import { settle } from '../../../../testing/settle';
 import { VariantTable } from '../variant-table';
 
@@ -43,6 +43,8 @@ describe('edición masiva', () => {
     TestBed.configureTestingModule({
       imports: [VariantTable],
       providers: [
+        provideAccess(),
+        { provide: CATALOG_QUERIES, useValue: new FakeCatalogQueries() },
         { provide: CATALOG_COMMANDS, useValue: commands },
         { provide: LiveAnnouncer, useValue: announcer },
       ],

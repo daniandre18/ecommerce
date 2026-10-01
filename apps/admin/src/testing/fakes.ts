@@ -13,19 +13,27 @@ import type {
   Unsubscribe,
   Watcher,
 } from '@ecommerce/application';
+import { signal, type Provider } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import {
   normalizeName,
+  PRESET_CATALOG_PERMISSIONS,
   productId,
   tenantId,
   uid,
   type CurrencyCode,
+  type MemberAccess,
+  type Money,
   type PlatformOperatorId,
   type Product,
   type ProductId,
   type Tenant,
   type TenantId,
+  type Uid,
   type Variant,
+  type VariantId,
 } from '@ecommerce/domain';
+import { CURRENT_ACCESS } from '../app/tenant/current-access';
 
 const AT = new Date('2026-09-30T12:00:00Z');
 
@@ -81,6 +89,7 @@ export class FakeCatalogQueries implements CatalogQueries {
   readonly productLists: Subscription<readonly Product[], { tenantId: TenantId; query: ProductListQuery }>[] = [];
   readonly products: Subscription<Product | null, { tenantId: TenantId; productId: ProductId }>[] = [];
   readonly variantLists: Subscription<readonly Variant[], { tenantId: TenantId; productId: ProductId }>[] = [];
+  readonly costLists: Subscription<ReadonlyMap<VariantId, Money>, { tenantId: TenantId; productId: ProductId }>[] = [];
 
   watchTenant(id: TenantId, watcher: Watcher<Tenant | null>): Unsubscribe {
     return this.open(this.tenants, new Subscription(id, watcher));
@@ -96,6 +105,10 @@ export class FakeCatalogQueries implements CatalogQueries {
 
   watchVariants(id: TenantId, productId: ProductId, watcher: Watcher<readonly Variant[]>): Unsubscribe {
     return this.open(this.variantLists, new Subscription({ tenantId: id, productId }, watcher));
+  }
+
+  watchCosts(id: TenantId, productId: ProductId, watcher: Watcher<ReadonlyMap<VariantId, Money>>): Unsubscribe {
+    return this.open(this.costLists, new Subscription({ tenantId: id, productId }, watcher));
   }
 
   /** La suscripción abierta más reciente al listado. */
@@ -185,10 +198,19 @@ export class FakeImageStorage implements ImageStorage {
 /** Los comercios de la cuenta, controlados por la prueba. */
 export class FakeTenantDirectory implements TenantDirectory {
   readonly subscriptions: Subscription<readonly TenantAccess[], string>[] = [];
+  readonly accesses: Subscription<MemberAccess | null, { tenantId: TenantId; uid: Uid }>[] = [];
 
   watchTenantsOf(uid: string, watcher: Watcher<readonly TenantAccess[]>): Unsubscribe {
     const subscription = new Subscription<readonly TenantAccess[], string>(uid, watcher);
     this.subscriptions.push(subscription);
+    return () => {
+      subscription.closed = true;
+    };
+  }
+
+  watchAccess(id: TenantId, uid: Uid, watcher: Watcher<MemberAccess | null>): Unsubscribe {
+    const subscription = new Subscription<MemberAccess | null, { tenantId: TenantId; uid: Uid }>({ tenantId: id, uid }, watcher);
+    this.accesses.push(subscription);
     return () => {
       subscription.closed = true;
     };
@@ -202,3 +224,19 @@ export class FakeTenantDirectory implements TenantDirectory {
 }
 
 export const access = (id: string, name: string, isOwner = false): TenantAccess => ({ tenantId: tenantId(id), name, isOwner });
+
+export const OWNER_ACCESS: MemberAccess = { isOwner: true, permissions: [] };
+/** El rol de Catálogo predefinido: sin precios y sin costo (FR-016). */
+export const CATALOG_ACCESS: MemberAccess = { isOwner: false, permissions: PRESET_CATALOG_PERMISSIONS };
+/** Solo lectura del catálogo: lo mínimo para entrar a verlo. */
+export const READ_ONLY_ACCESS: MemberAccess = { isOwner: false, permissions: ['catalog.read'] };
+
+/** El acceso que el marco del comercio da a sus vistas. Por omisión, el del Propietario. */
+export function provideAccess(access: MemberAccess | null | undefined = OWNER_ACCESS): Provider {
+  return { provide: CURRENT_ACCESS, useValue: signal(access) };
+}
+
+/** Otro acceso para una prueba puntual. Se llama antes de crear el componente. */
+export function useAccess(access: MemberAccess | null | undefined): void {
+  TestBed.overrideProvider(CURRENT_ACCESS, { useValue: signal(access) });
+}

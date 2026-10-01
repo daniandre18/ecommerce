@@ -20,6 +20,7 @@ import {
   type StockLevel,
   type Tenant,
   type Variant,
+  type VariantId,
   type VariationOption,
 } from '@ecommerce/domain';
 import { toDate, type DocumentData } from './document';
@@ -165,6 +166,16 @@ function moneyFromDoc(value: unknown): Money | null {
   if (value == null) return null;
   const { amount, currency } = value as { amount: number; currency: string };
   return money(amount, currency);
+}
+
+/** `private/costs`: un mapa de variante a importe. Sin documento, ninguna variante tiene costo. */
+export function variantCostsFromDoc(d: DocumentData | undefined): ReadonlyMap<VariantId, Money> {
+  const costs = (d?.['costs'] ?? {}) as Record<string, unknown>;
+  const entries = Object.entries(costs).flatMap(([id, value]) => {
+    const amount = moneyFromDoc(value);
+    return amount ? [[variantId(id), amount] as const] : [];
+  });
+  return new Map(entries);
 }
 
 const moneyToDoc = (value: Money | null) => value && { amount: value.amount, currency: value.currency };

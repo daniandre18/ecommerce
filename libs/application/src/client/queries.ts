@@ -1,4 +1,4 @@
-import type { Product, ProductId, ProductStatus, Tenant, TenantId, Variant } from '@ecommerce/domain';
+import type { Money, Product, ProductId, ProductStatus, Tenant, TenantId, Variant, VariantId } from '@ecommerce/domain';
 
 /** Corta la suscripción. Llamarla dos veces no hace nada. */
 export type Unsubscribe = () => void;
@@ -33,4 +33,10 @@ export interface CatalogQueries {
   watchProduct(tenantId: TenantId, productId: ProductId, watcher: Watcher<Product | null>): Unsubscribe;
   /** Las variantes en circulación de un producto, sin orden: el orden lo dan sus opciones. */
   watchVariants(tenantId: TenantId, productId: ProductId, watcher: Watcher<readonly Variant[]>): Unsubscribe;
+  /**
+   * El costo de adquisición de cada variante que lo tiene cargado. Vive en un documento aparte que
+   * solo leen el Propietario y quien tenga `variant.cost.read` (FR-015): el panel no lo pide sin
+   * ese permiso, y si lo pidiera, la lectura llegaría como error.
+   */
+  watchCosts(tenantId: TenantId, productId: ProductId, watcher: Watcher<ReadonlyMap<VariantId, Money>>): Unsubscribe;
 }
