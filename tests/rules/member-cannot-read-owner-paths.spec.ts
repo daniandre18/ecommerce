@@ -1,5 +1,5 @@
 import { assertFails, assertSucceeds, type RulesTestEnvironment } from '@firebase/rules-unit-testing';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 import { createRulesEnv, db, seed, USERS } from './env';
 
@@ -35,6 +35,15 @@ describe('un colaborador activo no lee las rutas reservadas al Propietario', () 
     ['membresía de otra persona', 'tenants/t1/members/owner1'],
   ])('no lee %s (%s)', async (_label, path) => {
     await assertFails(getDoc(doc(catalog(), path)));
+  });
+
+  // Caso 34 (T065): con `hasPermission` en la regla del costo, un permiso de precios no la abre.
+  it('caso 34: un rol con variant.price.write y sin variant.cost.read no lee el costo', async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(db(ctx), 'tenants/t1/roles/precios'), { permissions: ['catalog.read', 'variant.price.write'] });
+      await setDoc(doc(db(ctx), 'tenants/t1/members/pricer1'), { uid: 'pricer1', status: 'active', roleId: 'precios', isOwner: false });
+    });
+    await assertFails(getDoc(doc(db(env.authenticatedContext('pricer1')), 'tenants/t1/products/p1/private/costs')));
   });
 
   it('sí lee su propia membresía', async () => {

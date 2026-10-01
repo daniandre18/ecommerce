@@ -51,7 +51,7 @@ export const USERS = {
   outsider: 'outsider',
 } as const;
 
-const membership = (uid: string, m: { status: 'active' | 'invited'; roleId: string; isOwner?: boolean }) => ({
+export const membership = (uid: string, m: { status: 'active' | 'invited' | 'disabled'; roleId: string; isOwner?: boolean }) => ({
   uid,
   status: m.status,
   roleId: m.roleId,
@@ -90,5 +90,12 @@ export async function seed(env: RulesTestEnvironment): Promise<void> {
       await put(`tenants/${t}/config/billing`, { plan: 'x' });
       await put(`tenants/${t}/auditLog/e1`, { type: 'price.changed', actorUid: 'owner1' });
     }
+  });
+}
+
+/** Para el escenario de una sola prueba: documentos extra —un rol, una membresía—, sin reglas. */
+export async function seedExtra(env: RulesTestEnvironment, docs: Record<string, Record<string, unknown>>): Promise<void> {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    for (const [path, data] of Object.entries(docs)) await setDoc(doc(db(ctx), path), data);
   });
 }
