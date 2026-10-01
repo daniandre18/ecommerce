@@ -5,8 +5,10 @@ export const MAX_OPTIONS = 5;
 /** Tope de combinaciones por producto (FR-025). */
 export const MAX_COMBINATIONS = 100;
 
-/** Estado de publicación (FR-023a). Independiente de `archived`. */
-export type ProductStatus = 'draft' | 'active' | 'unlisted';
+/** Estados de publicación (FR-023a). Independientes de `archived`. */
+export const PRODUCT_STATUSES = ['draft', 'active', 'unlisted'] as const;
+
+export type ProductStatus = (typeof PRODUCT_STATUSES)[number];
 
 export interface ImageRef {
   readonly storagePath: string;

@@ -45,6 +45,18 @@ type ErrorCode =
   | 'invalid-argument';
 ```
 
+**Transporte de los códigos** (fijado en T051): los que corta la guarda antes del caso de uso
+—`unauthenticated`, `failed-precondition` (App Check) y `permission-denied`— viajan como
+`HttpsError`, con el mismo mensaje para "no sos miembro" y "no tenés el permiso". Los de reglas de
+negocio viajan en la envoltura `{ ok: false }`. El adaptador del cliente normaliza ambos al mismo
+`Result`. La entrada se valida **después** de autorizar: a quien no puede operar no se le dice qué
+está mal en su pedido.
+
+**`audit-write-failed`**: en una función que escribe bitácora, cualquier falla no prevista de la
+transacción. Como el cambio y su entrada se confirman juntos, el código garantiza lo que la interfaz
+necesita decir: no se aplicó nada. La causa queda en el log de la plataforma. En las demás
+funciones, una falla no prevista llega como `internal`.
+
 **Idempotencia**: las funciones que crean reciben un `requestId` (UUID del cliente) que se guarda
 en el documento creado. Un reintento con el mismo `requestId` devuelve el resultado original en
 lugar de duplicar.
@@ -60,8 +72,8 @@ Todas reciben `tenantId` además de los parámetros listados.
 ### `createProduct`
 
 ```typescript
-Request  { tenantId: TenantId; requestId: string; name: string; description: string }
-Response { productId: ProductId }
+Request  { tenantId: TenantId; requestId: string; name: string; description?: string }
+Response { productId: ProductId; variantId: VariantId }   // productId === requestId
 ```
 
 Permiso: `catalog.write`. Crea el producto en `status: 'draft'` con una variante implícita
@@ -70,7 +82,8 @@ Permiso: `catalog.write`. Crea el producto en `status: 'draft'` con una variante
 ### `updateProductDetails`
 
 ```typescript
-Request  { tenantId; productId; version: number; name?; description?; images?: ImageRef[] }
+Request  { tenantId; productId; version: number; name?; description?;
+           images?: Array<{ storagePath: string; alt: string }> }   // la posición es el orden
 Response { version: number }
 ```
 
@@ -85,6 +98,7 @@ Request  {
   tenantId; productId; version: number;
   // Los ids de opciones y valores NUEVOS los propone el cliente (UUID): las asignaciones de la misma
   // llamada tienen que poder referirse a ellos. El servidor los valida como únicos (FR-022).
+  // La posición de cada opción y de cada valor es su lugar en la lista.
   options: Array<{ id: OptionId; name: string;
                    values: Array<{ id: ValueId; label: string }> }>;
   // obligatorio al agregar una opción a un producto con variantes existentes (FR-024)
@@ -95,6 +109,7 @@ Response {
   created: VariantId[];      // combinaciones nuevas, incompletas
   preserved: VariantId[];    // variantes existentes, intactas
   archived: VariantId[];     // afectadas por quitar un valor (FR-026)
+  discarded: VariantId[];    // combinaciones que desaparecen sin haber tenido datos
 }
 ```
 
@@ -153,7 +168,7 @@ Permiso: `catalog.write`. Archiva; **nunca** borra. Marca la entrada de `skuInde
 Request  {
   tenantId; productId; requestId: string;
   changes: Array<{ variantId: VariantId; version: number;
-                   price?: Money; compareAtPrice?: Money }>;  // 1..100
+                   price?: Money; compareAtPrice?: Money | null }>;  // 1..100; null quita el tachado
 }
 Response { batchId: BatchId; updated: number; auditEntryIds: AuditEntryId[] }
 ```

@@ -1,4 +1,5 @@
 import { auth, firestore } from '@ecommerce/infrastructure';
+import { clearFirestoreEmulator } from '@ecommerce/infrastructure/testing';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { ACCOUNTS, seed } from './seed';
 
@@ -10,6 +11,7 @@ const role = async (tenant: string, id: string) => (await db.doc(`tenants/${tena
 // T031 — el escenario de quickstart.md, contra los emuladores de Auth y Firestore.
 describe('sembrador', () => {
   beforeAll(async () => {
+    await clearFirestoreEmulator(); // el escenario de quickstart.md parte de un emulador vacío
     await seed();
     await seed(); // idempotente: la segunda corrida no duplica ni rompe nada
   });
