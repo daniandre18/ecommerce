@@ -27,30 +27,32 @@ import { TransferOwnershipDialog, type TransferOwnershipData } from './transfer-
     }
     <ul>
       @for (member of sorted(); track member.uid) {
-        <li role="group" [attr.aria-label]="member.displayName">
-          <div class="who">
-            <span class="name">{{ member.displayName }}</span>
-            <span class="email">{{ member.email }}</span>
-            <span class="meta">{{ member.isOwner ? 'Propietario' : nameOf(member.roleId) }} · {{ statusOf(member) }}</span>
-          </div>
-          @if (!member.isOwner) {
-            <div class="actions">
-              @if (member.status === 'active') {
-                <mat-form-field subscriptSizing="dynamic">
-                  <mat-label>Rol</mat-label>
-                  <select matNativeControl [attr.aria-label]="'Rol de ' + member.displayName" (change)="assign(member, $any($event.target))">
-                    @for (role of assignable(); track role.id) {
-                      <option [value]="role.id" [selected]="role.id === member.roleId">{{ role.name }}</option>
-                    }
-                  </select>
-                </mat-form-field>
-                <button matButton type="button" (click)="disable(member)">Dar de baja</button>
-                <button matButton type="button" (click)="transfer(member)">Hacer Propietario</button>
-              } @else {
-                <button matButton type="button" (click)="enable(member)">Reactivar</button>
-              }
+        <li>
+          <div class="row" role="group" [attr.aria-label]="member.displayName">
+            <div class="who">
+              <span class="name">{{ member.displayName }}</span>
+              <span class="email">{{ member.email }}</span>
+              <span class="meta">{{ member.isOwner ? 'Propietario' : nameOf(member.roleId) }} · {{ statusOf(member) }}</span>
             </div>
-          }
+            @if (!member.isOwner) {
+              <div class="actions">
+                @if (member.status === 'active') {
+                  <mat-form-field subscriptSizing="dynamic">
+                    <mat-label>Rol</mat-label>
+                    <select matNativeControl [attr.aria-label]="'Rol de ' + member.displayName" (change)="assign(member, $any($event.target))">
+                      @for (role of assignable(); track role.id) {
+                        <option [value]="role.id" [selected]="role.id === member.roleId">{{ role.name }}</option>
+                      }
+                    </select>
+                  </mat-form-field>
+                  <button matButton type="button" (click)="disable(member)">Dar de baja</button>
+                  <button matButton type="button" (click)="transfer(member)">Hacer Propietario</button>
+                } @else {
+                  <button matButton type="button" (click)="enable(member)">Reactivar</button>
+                }
+              </div>
+            }
+          </div>
         </li>
       }
     </ul>
@@ -63,7 +65,7 @@ import { TransferOwnershipDialog, type TransferOwnershipData } from './transfer-
       list-style: none;
     }
 
-    li {
+    .row {
       display: flex;
       flex-wrap: wrap;
       align-items: center;

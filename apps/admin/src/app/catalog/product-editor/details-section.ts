@@ -8,6 +8,7 @@ import type { Product, TenantId } from '@ecommerce/domain';
 import { CATALOG_COMMANDS } from '../../core/client';
 import { commandErrorMessage } from '../../shared/command-errors';
 import { keepUnsaved } from '../../shared/keep-unsaved';
+import { trackUnsaved } from '../../shared/pending-changes/pending-changes';
 import { injectCan } from '../../tenant/current-access';
 
 interface Details {
@@ -92,6 +93,10 @@ export class DetailsSection {
     return draft.name !== stored.name || draft.description !== stored.description;
   });
   protected readonly failure = signal('');
+
+  constructor() {
+    trackUnsaved(() => this.dirty());
+  }
 
   protected discard(): void {
     this.draft.set(this.stored());

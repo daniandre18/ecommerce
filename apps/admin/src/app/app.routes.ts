@@ -1,5 +1,6 @@
 import type { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
+import { confirmUnsaved } from './shared/pending-changes/pending-changes';
 
 // Todo lo de un comercio cuelga de /t/{tenantId}/…: el comercio activo es la ruta, no un estado
 // escondido, y cambiar de comercio es navegar (T075).
@@ -36,6 +37,7 @@ export const routes: Routes = [
             path: 'catalog/:productId',
             title: 'Producto',
             loadComponent: () => import('./catalog/product-editor/product-editor').then((m) => m.ProductEditor),
+            canDeactivate: [confirmUnsaved],
           },
           { path: 'team', title: 'Equipo', loadComponent: () => import('./team/team-page').then((m) => m.TeamPage) },
           { path: 'audit', title: 'Bitácora', loadComponent: () => import('./audit/audit-log/audit-log').then((m) => m.AuditLog) },
@@ -43,6 +45,7 @@ export const routes: Routes = [
             path: 'team/roles/:roleId',
             title: 'Rol',
             loadComponent: () => import('./team/role-editor/role-editor').then((m) => m.RoleEditor),
+            canDeactivate: [confirmUnsaved],
           },
         ],
       },

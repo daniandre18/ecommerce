@@ -14,6 +14,7 @@ import { TEAM_COMMANDS, TEAM_QUERIES } from '../../core/client';
 import { commandErrorMessage } from '../../shared/command-errors';
 import { ConfirmDialog, type ConfirmData } from '../../shared/confirm-dialog';
 import { keepUnsaved } from '../../shared/keep-unsaved';
+import { trackUnsaved } from '../../shared/pending-changes/pending-changes';
 import { liveResource } from '../../shared/live-resource';
 import { CURRENT_ACCESS } from '../../tenant/current-access';
 import { PERMISSION_GROUPS, PERMISSION_LABELS } from './permission-labels';
@@ -100,9 +101,11 @@ interface Draft {
     }
   `,
   styles: `
+    /* Zona táctil de 48 px, como los botones de Material (T095). */
     .back {
-      display: inline-block;
-      margin-bottom: 8px;
+      display: inline-flex;
+      align-items: center;
+      min-height: 48px;
     }
 
     h1 {
@@ -195,6 +198,10 @@ export class RoleEditor {
     return draft.name.trim() !== stored.name || draft.permissions !== stored.permissions;
   });
   protected readonly failure = signal('');
+
+  constructor() {
+    trackUnsaved(() => this.role()?.editable === true && this.dirty());
+  }
 
   protected has(permission: Permission): boolean {
     return permissionsOf(this.draft().permissions).includes(permission);
