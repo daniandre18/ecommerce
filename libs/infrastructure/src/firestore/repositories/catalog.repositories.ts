@@ -12,7 +12,7 @@ import {
   tenantFromDoc,
   variantFromDoc,
   variantToDoc,
-} from '../catalog-mappers';
+} from '../../mapping/catalog-mappers';
 import type { TenantPaths } from '../tenant-paths';
 
 export function tenantRepository(t: Transaction, paths: TenantPaths): TenantRepository {

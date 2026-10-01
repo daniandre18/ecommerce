@@ -22,8 +22,7 @@ import {
   type Variant,
   type VariationOption,
 } from '@ecommerce/domain';
-import type { DocumentData } from 'firebase-admin/firestore';
-import { toDate } from './mappers';
+import { toDate, type DocumentData } from './document';
 
 // Lectura: los datos se reconstruyen con las factorías del dominio, así un documento corrupto falla
 // fuerte en lugar de colarse como un valor inválido. Escritura: cada campo se enumera, así un campo

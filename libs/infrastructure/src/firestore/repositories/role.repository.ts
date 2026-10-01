@@ -1,7 +1,7 @@
 import type { RoleRepository } from '@ecommerce/application';
 import { assertCanDeleteRole } from '@ecommerce/domain';
 import type { Transaction } from 'firebase-admin/firestore';
-import { roleFromDoc, roleToDoc } from '../mappers';
+import { roleFromDoc, roleToDoc } from '../../mapping/team-mappers';
 import type { TenantPaths } from '../tenant-paths';
 
 export function roleRepository(t: Transaction, paths: TenantPaths): RoleRepository {
