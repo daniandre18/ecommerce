@@ -1,0 +1,66 @@
+<div role="group" [attr.aria-labelledby]="headingId()">
+  <p class="label" [id]="headingId()">
+    {{ label() }}
+    @if (incomplete()) {
+      <span class="incomplete">Falta el SKU</span>
+    }
+  </p>
+
+  <div class="fields">
+    <mat-form-field subscriptSizing="dynamic" floatLabel="always">
+      <mat-label>SKU</mat-label>
+      <input matInput autocomplete="off" placeholder="Sin SKU" [formField]="rowForm.sku" (blur)="commit('sku')" (keydown.enter)="commit('sku')" />
+      @if (rowForm.sku().errors()[0]; as error) {
+        <mat-error>{{ error.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field subscriptSizing="dynamic" floatLabel="always">
+      <mat-label>Precio ({{ currency() }})</mat-label>
+      <input
+        matInput
+        inputmode="decimal"
+        autocomplete="off"
+        placeholder="Sin precio"
+        [formField]="rowForm.price"
+        (blur)="commit('price')"
+        (keydown.enter)="commit('price')"
+      />
+      @if (rowForm.price().errors()[0]; as error) {
+        <mat-error>{{ error.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field subscriptSizing="dynamic" floatLabel="always">
+      <mat-label>Precio tachado ({{ currency() }})</mat-label>
+      <input
+        matInput
+        inputmode="decimal"
+        autocomplete="off"
+        placeholder="Sin tachado"
+        [formField]="rowForm.compareAtPrice"
+        (blur)="commit('compareAtPrice')"
+        (keydown.enter)="commit('compareAtPrice')"
+      />
+      @if (rowForm.compareAtPrice().errors()[0]; as error) {
+        <mat-error>{{ error.message }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field subscriptSizing="dynamic" floatLabel="always">
+      <mat-label>Existencias</mat-label>
+      <input
+        matInput
+        inputmode="numeric"
+        autocomplete="off"
+        placeholder="Sin definir"
+        [formField]="rowForm.stock"
+        (blur)="commit('stock')"
+        (keydown.enter)="commit('stock')"
+      />
+      @if (rowForm.stock().errors()[0]; as error) {
+        <mat-error>{{ error.message }}</mat-error>
+      }
+    </mat-form-field>
+  </div>
+</div>

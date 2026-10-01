@@ -1,0 +1,36 @@
+<a class="back" [routerLink]="catalogLink()">← Catálogo</a>
+
+@if (product.error()) {
+  <ui-error-state heading="No pudimos cargar el producto" (retry)="product.reload(); variants.reload()" />
+} @else if (missing()) {
+  <ui-empty-state heading="Este producto no existe" message="Puede que el enlace esté mal escrito.">
+    <a matButton [routerLink]="catalogLink()">Volver al catálogo</a>
+  </ui-empty-state>
+} @else if (product.hasValue() && product.value(); as current) {
+  <h1>{{ current.name }}</h1>
+  <p class="status">
+    {{ statusLabel(current) }}
+    @if (current.archived) {
+      · Archivado
+    }
+  </p>
+
+  <section aria-labelledby="datos">
+    <app-details-section [tenantId]="current.tenantId" [product]="current" />
+  </section>
+
+  @if (variants.error()) {
+    <ui-error-state heading="No pudimos cargar las variantes" (retry)="variants.reload()" />
+  } @else if (variants.hasValue() && currency(); as money) {
+    <section aria-labelledby="opciones">
+      <app-options-editor [tenantId]="current.tenantId" [product]="current" [variants]="variants.value()" />
+    </section>
+    <section aria-labelledby="variantes">
+      <app-variant-table [tenantId]="current.tenantId" [product]="current" [variants]="variants.value()" [currency]="money" />
+    </section>
+  } @else {
+    <ui-skeleton rows="3" rowHeight="120px" label="Cargando las variantes…" />
+  }
+} @else {
+  <ui-skeleton rows="4" rowHeight="72px" label="Cargando el producto…" />
+}

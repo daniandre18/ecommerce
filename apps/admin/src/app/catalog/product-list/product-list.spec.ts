@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideRouter, Router, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { of } from 'rxjs';
 import { CATALOG_QUERIES } from '../../core/client';
@@ -19,7 +19,13 @@ describe('ProductList', () => {
     dialog.open.mockReset().mockReturnValue({ afterClosed: () => of(undefined) });
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([{ path: 't/:tenantId/catalog', component: ProductList }], withComponentInputBinding()),
+        provideRouter(
+          [
+            { path: 't/:tenantId/catalog', component: ProductList },
+            { path: 't/:tenantId/catalog/:productId', component: ProductList },
+          ],
+          withComponentInputBinding(),
+        ),
         { provide: CATALOG_QUERIES, useValue: queries },
         { provide: MatDialog, useValue: dialog },
       ],
@@ -55,12 +61,13 @@ describe('ProductList', () => {
     ]);
     await settle();
 
-    const items = [...root.querySelectorAll('li')].map((li) => [...li.children].map((part) => part.textContent?.trim()));
+    const items = [...root.querySelectorAll('li a')].map((link) => [...link.children].map((part) => part.textContent?.trim()));
     expect(items).toEqual([
       ['Camiseta', 'Activo · 4 variantes'],
       ['Taza', 'Borrador · 1 variante', 'Variantes sin SKU'],
     ]);
     expect(root.querySelector('ui-skeleton')).toBeNull();
+    expect(root.querySelector('li a')?.getAttribute('href')).toBe('/t/t1/catalog/p1');
   });
 
   it('si falla, lo dice y el reintento vuelve a pedir', async () => {
@@ -83,6 +90,15 @@ describe('ProductList', () => {
 
     button('Crear producto')?.click();
     expect(dialog.open).toHaveBeenCalledWith(CreateProductDialog, expect.objectContaining({ data: { tenantId: T1 } }));
+  });
+
+  it('después de crear, abre el editor del producto nuevo para armar sus variantes', async () => {
+    dialog.open.mockReturnValue({ afterClosed: () => of({ productId: 'p9', variantId: 'v9', name: 'Taza' }) });
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
+    const { button } = await open();
+    button('Nuevo producto')?.click();
+    await settle();
+    expect(navigate).toHaveBeenCalledWith(['p9'], expect.objectContaining({ relativeTo: expect.anything() }));
   });
 
   it('busca por nombre después de una pausa al escribir', async () => {

@@ -1,14 +1,19 @@
 import type { ProductListQuery, Watcher } from '@ecommerce/application';
 import {
   activateMembership,
+  createIncompleteVariant,
   inviteMembership,
+  optionId,
   normalizeName,
   productId,
   roleId,
   tenantId,
   uid,
+  valueId,
+  variantId,
   type Product,
   type ProductStatus,
+  type Variant,
 } from '@ecommerce/domain';
 import { deleteApp, initializeApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
@@ -87,8 +92,16 @@ describe('cliente web contra los emuladores', () => {
     await new FirestoreUnitOfWork(db, T1).run(async (tx) => {
       const invited = inviteMembership({ uid: uid(OWNER.uid), tenantId: T1, roleId: roleId('owner'), displayName: 'Dueña', email: OWNER.email, at: AT });
       await tx.members.save({ ...activateMembership(invited, AT), isOwner: true });
+      const color = { id: optionId('color'), name: 'Color', position: 0, values: [{ id: valueId('rojo'), label: 'Rojo', position: 0 }] };
+      const variant = (id: string, archived: boolean) => ({
+        ...createIncompleteVariant({ id: variantId(id), tenantId: T1, productId: productId('p1'), optionValues: { [color.id]: color.values[0]!.id } }),
+        archived,
+        version: 1,
+      });
+      await tx.variants.save(variant('v-viva', false));
+      await tx.variants.save(variant('v-archivada', true));
       for (const p of [
-        product('p1', 'Camiseta', 1),
+        product('p1', 'Camiseta', 1, { options: [color] }),
         product('p2', 'Café con leche', 3, { status: 'active' }),
         product('p3', 'Taza', 2),
         product('p4', 'Cafetera vieja', 4, { archived: true }),
@@ -147,6 +160,17 @@ describe('cliente web contra los emuladores', () => {
 
     it('respeta el tope pedido', async () => {
       await expect(names({ limit: 2 })).resolves.toEqual(['Café con leche', 'Taza']);
+    });
+
+    it('un producto llega con sus opciones; uno que no existe, como null', async () => {
+      const found = await first<Product | null>((watcher) => queries.watchProduct(T1, productId('p1'), watcher));
+      expect(found?.options.map((o) => o.values.map((v) => v.label))).toEqual([['Rojo']]);
+      await expect(first<Product | null>((watcher) => queries.watchProduct(T1, productId('no-existe'), watcher))).resolves.toBeNull();
+    });
+
+    it('las variantes llegan sin las archivadas, con existencias sin definir y no en cero', async () => {
+      const variants = await first<readonly Variant[]>((watcher) => queries.watchVariants(T1, productId('p1'), watcher));
+      expect(variants.map((v) => [v.id, v.stock])).toEqual([['v-viva', { kind: 'undefined' }]]);
     });
   });
 

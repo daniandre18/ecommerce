@@ -26,7 +26,11 @@ const CALLABLES = [
  * después de levantar los emuladores (`webServer`), con el mismo sembrador que usa una persona.
  */
 export default async function globalSetup(): Promise<void> {
-  await fetch(`http://${FIRESTORE}/emulator/v1/projects/demo-ecommerce/databases/(default)/documents`, { method: 'DELETE' });
+  // Con E2E_KEEP_DATA=1 se reusan los emuladores de una sesión en curso sin borrarle lo cargado: las
+  // pruebas solo agregan productos con nombres únicos, y el sembrador es idempotente.
+  if (process.env['E2E_KEEP_DATA'] !== '1') {
+    await fetch(`http://${FIRESTORE}/emulator/v1/projects/demo-ecommerce/databases/(default)/documents`, { method: 'DELETE' });
+  }
   execFileSync('npx', ['nx', 'run', 'tools:seed', '--skip-nx-cache'], {
     cwd: ROOT,
     stdio: 'inherit',

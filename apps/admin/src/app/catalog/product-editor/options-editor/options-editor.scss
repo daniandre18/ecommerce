@@ -1,0 +1,78 @@
+:host {
+  display: block;
+}
+
+h2 {
+  margin: 0;
+  font: var(--mat-sys-title-large);
+}
+
+.hint {
+  margin: 4px 0 16px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+fieldset {
+  margin: 0 0 16px;
+  padding: 8px 12px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  min-width: 0;
+}
+
+legend {
+  padding: 0 4px;
+  font: var(--mat-sys-title-medium);
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+li mat-form-field {
+  flex: 1 1 160px;
+}
+
+.value-actions,
+.option-actions,
+.save-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.value-actions button {
+  min-width: 44px;
+}
+
+.count {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.count.over,
+.failure {
+  color: var(--mat-sys-error);
+}
+
+.failure:empty {
+  display: none;
+}
+
+.save-actions {
+  justify-content: flex-end;
+}
