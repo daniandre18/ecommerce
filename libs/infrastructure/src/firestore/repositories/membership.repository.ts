@@ -1,6 +1,6 @@
 import type { MembershipRepository } from '@ecommerce/application';
 import type { Transaction } from 'firebase-admin/firestore';
-import { membershipFromDoc, membershipToDoc } from '../mappers';
+import { membershipFromDoc, membershipToDoc } from '../../mapping/team-mappers';
 import type { TenantPaths } from '../tenant-paths';
 
 export function membershipRepository(t: Transaction, paths: TenantPaths): MembershipRepository {

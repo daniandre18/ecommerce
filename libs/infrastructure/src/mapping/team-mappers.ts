@@ -7,17 +7,7 @@ import {
   type Permission,
   type Role,
 } from '@ecommerce/domain';
-import { Timestamp, type DocumentData } from 'firebase-admin/firestore';
-
-export function toDate(value: unknown): Date {
-  if (value instanceof Timestamp) return value.toDate();
-  if (value instanceof Date) return value;
-  throw new TypeError(`Se esperaba una marca de tiempo; se recibió ${String(value)}`);
-}
-
-export function toDateOrNull(value: unknown): Date | null {
-  return value == null ? null : toDate(value);
-}
+import { toDate, toDateOrNull, type DocumentData } from './document';
 
 export function membershipFromDoc(id: string, tid: string, d: DocumentData): Membership {
   return {
