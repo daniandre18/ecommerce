@@ -58,8 +58,8 @@ test('las variantes se arman de a una opción y lo cargado no se pierde (FR-017,
 
   await test.step('4. SKU, precio y existencias en ambas', async () => {
     for (const [label, price, saved, stock] of [
-      ['Rojo', '10', '10,00', '3'],
-      ['Amarillo', '12,5', '12,50', '0'],
+      ['Rojo', '45000', '45.000', '3'],
+      ['Amarillo', '52.500', '52.500', '0'],
     ] as const) {
       const row = variant(page, label);
       await enter(row, /^SKU/, `${label}-${run}`);
@@ -81,7 +81,7 @@ test('las variantes se arman de a una opción y lo cargado no se pierde (FR-017,
     await expect(page.getByRole('heading', { name: 'Variantes (4)' })).toBeVisible();
     const kept = variant(page, 'Rojo / S');
     await expect(kept.getByLabel(/^SKU/)).toHaveValue(`Rojo-${run}`);
-    await expect(kept.getByLabel(/^Precio \(/)).toHaveValue('10,00');
+    await expect(kept.getByLabel(/^Precio \(/)).toHaveValue('45.000');
     await expect(kept.getByLabel(/^Existencias/)).toHaveValue('3');
 
     const created = variant(page, 'Rojo / M');
@@ -122,11 +122,11 @@ test('las variantes se arman de a una opción y lo cargado no se pierde (FR-017,
     const bulk = page.locator('app-bulk-edit');
     await expect(bulk).toContainText('4 variantes seleccionadas');
     await bulk.getByLabel('Campo').selectOption('price');
-    await bulk.getByLabel('Valor para todas').fill('25');
+    await bulk.getByLabel('Valor para todas').fill('60.000');
     await bulk.getByRole('button', { name: 'Aplicar a 4 variantes' }).click();
 
     for (const label of ['Rojo / S', 'Rojo / M', 'Amarillo / S', 'Amarillo / M']) {
-      await expect(variant(page, label).getByLabel(/^Precio \(/)).toHaveValue('25,00');
+      await expect(variant(page, label).getByLabel(/^Precio \(/)).toHaveValue('60.000');
     }
     const productId = page.url().split('/').at(-1) ?? '';
     const batches = await priceBatches(productId);

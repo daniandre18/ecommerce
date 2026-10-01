@@ -22,6 +22,12 @@ describe('sembrador', () => {
     }
   });
 
+  it('los comercios operan en pesos colombianos', async () => {
+    for (const tenant of ['t1', 't2']) {
+      expect((await db.doc(`tenants/${tenant}`).get()).get('currency')).toBe('COP');
+    }
+  });
+
   it('cada comercio tiene exactamente un Propietario (FR-011)', async () => {
     for (const tenant of ['t1', 't2']) {
       const owners = await db.collection(`tenants/${tenant}/members`).where('isOwner', '==', true).get();

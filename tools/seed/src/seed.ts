@@ -108,7 +108,8 @@ async function seedTenant(tenant: SeedTenant): Promise<void> {
   await firestore().doc(`tenants/${tenant.id}`).set({
     name: tenant.name,
     ownerUid: tenant.owner.uid,
-    currency: 'USD',
+    // Pesos colombianos: sin decimales, como se cobran en la práctica.
+    currency: 'COP',
     createdAt: AT,
     createdBy: 'seed',
     status: 'active',

@@ -37,6 +37,9 @@ comercio de una lista llega con la Historia 2 (T075).
 
 `npx nx run tools:seed` crea el escenario mínimo:
 
+Los dos comercios operan en pesos colombianos (COP), sin decimales: un precio se escribe "52.000"
+o "52000".
+
 Todas las cuentas usan la contraseña `test-1234`, que solo existe en los emuladores: el sembrador
 se niega a correr contra un proyecto que no sea `demo-*`.
 
