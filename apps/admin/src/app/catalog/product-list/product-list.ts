@@ -86,12 +86,14 @@ type StatusFilter = ProductStatus | 'all';
     }
   `,
   styles: `
+    /* El alto del botón, reservado: aparece cuando llega el acceso y no empuja los filtros. */
     .head {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
+      min-height: 48px;
     }
 
     h1 {

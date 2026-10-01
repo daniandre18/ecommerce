@@ -74,17 +74,30 @@ describe('AuditLog', () => {
     return { root, button, select };
   }
 
+  /** Llegan las membresías y los productos que la bitácora nombra. */
+  async function nameEverything() {
+    // Primero, que la vista llegue a pedirlos.
+    await settle();
+    for (const members of team.members) members.emit([member('ana', 'Ana', 'catalog'), member('beto', 'Beto', 'catalog')]);
+    for (const read of catalog.products) read.emit(product('p1', 'Camiseta', { options: [color] }));
+    for (const read of catalog.variantLists) {
+      read.emit([{ ...createIncompleteVariant({ id: variantId('v1'), tenantId: T1, productId: productId('p1'), optionValues: { [color.id]: valueId('rojo') } }), version: 1 }]);
+    }
+    await settle();
+  }
+
   it('mientras llega la primera página muestra un esqueleto, y después cada entrada con sus nombres', async () => {
     const { root } = await open();
     expect(audit.requests.map((r) => r.filter)).toEqual([{}]);
     expect(root.querySelector('ui-skeleton')).not.toBeNull();
 
-    team.members[0]?.emit([member('ana', 'Ana', 'catalog'), member('beto', 'Beto', 'catalog')]);
     audit.last.respond(page([priceChange('e2', 'beto', 52000), priceChange('e1', 'ana', 50000)]));
     await settle();
-    catalog.products[0]?.emit(product('p1', 'Camiseta', { options: [color] }));
-    catalog.variantLists[0]?.emit([{ ...createIncompleteVariant({ id: variantId('v1'), tenantId: T1, productId: productId('p1'), optionValues: { [color.id]: valueId('rojo') } }), version: 1 }]);
-    await settle();
+    // Sin los nombres, la lista todavía no se muestra: al llegar, las entradas cambiarían de alto.
+    expect(root.querySelector('app-entry-detail')).toBeNull();
+    expect(root.querySelector('ui-skeleton')).not.toBeNull();
+
+    await nameEverything();
 
     const [first] = root.querySelectorAll('app-entry-detail');
     expect(first?.querySelector('.what')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Cambio de precio · Camiseta · Rojo');
@@ -128,14 +141,14 @@ describe('AuditLog', () => {
   it('sin entradas y sin filtros, dice que todavía no hay cambios', async () => {
     const { root } = await open();
     audit.last.respond(page([]));
-    await settle();
+    await nameEverything();
     expect(root.querySelector('ui-empty-state')?.textContent).toContain('Todavía no hay cambios registrados');
   });
 
   it('sin resultados con filtros, lo distingue de "no hay" y ofrece quitarlos', async () => {
     const { root, button } = await open('/t/t1/audit?type=role.changed');
     audit.last.respond(page([]));
-    await settle();
+    await nameEverything();
     expect(root.querySelector('ui-empty-state')?.textContent).toContain('Ninguna entrada coincide con los filtros');
     button('Quitar filtros')?.click();
     await settle();
@@ -155,7 +168,7 @@ describe('AuditLog', () => {
   it('con más entradas ofrece cargar más, desde donde terminó la página, sin perder lo que ya se ve', async () => {
     const { root, button } = await open();
     audit.last.respond(page([priceChange('e3', 'ana', 3), priceChange('e2', 'ana', 2)], true));
-    await settle();
+    await nameEverything();
     button('Cargar más')?.click();
     await settle();
     expect(audit.last.after).toEqual({ at: AT, id: 'e2' });

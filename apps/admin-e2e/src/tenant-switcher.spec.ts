@@ -13,7 +13,9 @@ test.describe('los comercios de la cuenta', () => {
     await signIn(page, 'owner@t1.test');
     await expect(page).toHaveURL(/\/t\/t1\/catalog$/);
     await expect(page.locator('header')).toContainText('Comercio Uno');
-    await expect(page.getByRole('link', { name: 'Cambiar de comercio' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Cuenta' }).click();
+    await expect(page.getByRole('menuitem', { name: 'Cerrar sesión' })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: 'Cambiar de comercio' })).toHaveCount(0);
   });
 
   test('con varios, elige de la lista y cambia desde el encabezado', async ({ page }) => {
@@ -26,7 +28,8 @@ test.describe('los comercios de la cuenta', () => {
     await expect(page).toHaveURL(/\/t\/t2\/catalog$/);
     await expect(page.locator('header')).toContainText('Comercio Dos');
 
-    await page.getByRole('link', { name: 'Cambiar de comercio' }).click();
+    await page.getByRole('button', { name: 'Cuenta' }).click();
+    await page.getByRole('menuitem', { name: 'Cambiar de comercio' }).click();
     await page.getByRole('link', { name: /Comercio Uno/ }).click();
     await expect(page).toHaveURL(/\/t\/t1\/catalog$/);
     await expect(page.locator('header')).toContainText('Comercio Uno');

@@ -1,3 +1,4 @@
+import { OverlayContainer } from '@angular/cdk/overlay';
 import { Component, inject } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
@@ -37,6 +38,14 @@ describe('TenantShell', () => {
     });
   });
 
+  /** Abre el menú de la cuenta; sus opciones se dibujan en la capa superpuesta, fuera del marco. */
+  async function accountMenu(root: HTMLElement) {
+    [...root.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Cuenta')?.click();
+    await settle();
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    return (name: string) => [...overlay.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((item) => item.textContent?.trim() === name);
+  }
+
   async function open(url = '/t/t1') {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(url);
@@ -75,13 +84,13 @@ describe('TenantShell', () => {
   // T075: cambiar de comercio es navegar; con uno solo, no se ofrece.
   it('ofrece cambiar de comercio solo si la cuenta tiene más de uno', async () => {
     const root = await open();
-    const link = () => [...root.querySelectorAll('a')].find((a) => a.textContent?.includes('Cambiar de comercio'));
     directory.open.emit([access('t1', 'Comercio Uno', true)]);
     await settle();
-    expect(link()).toBeUndefined();
+    const item = await accountMenu(root);
+    expect(item('Cambiar de comercio')).toBeUndefined();
     directory.open.emit([access('t1', 'Comercio Uno', true), access('t2', 'Comercio Dos')]);
     await settle();
-    expect(link()?.getAttribute('href')).toBe('/');
+    expect(item('Cambiar de comercio')?.getAttribute('href')).toBe('/');
   });
 
   // T079: las vistas leen del marco qué puede hacer la cuenta en este comercio, al día con su rol.
@@ -123,9 +132,9 @@ describe('TenantShell', () => {
     expect(root.textContent).not.toContain('contenido del comercio');
   });
 
-  it('permite cerrar la sesión', async () => {
+  it('permite cerrar la sesión desde el menú de la cuenta', async () => {
     const root = await open();
-    [...root.querySelectorAll('button')].find((b) => b.textContent?.includes('Cerrar sesión'))?.click();
+    (await accountMenu(root))('Cerrar sesión')?.click();
     expect(signOut.run).toHaveBeenCalled();
   });
 });
