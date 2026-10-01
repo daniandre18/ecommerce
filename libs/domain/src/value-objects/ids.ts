@@ -44,3 +44,4 @@ export const optionId = (value: string) => identifier<OptionId>(value, 'OptionId
 export const valueId = (value: string) => identifier<ValueId>(value, 'ValueId');
 export const batchId = (value: string) => identifier<BatchId>(value, 'BatchId');
 export const invitationId = (value: string) => identifier<InvitationId>(value, 'InvitationId');
+export const auditEntryId = (value: string) => identifier<AuditEntryId>(value, 'AuditEntryId');

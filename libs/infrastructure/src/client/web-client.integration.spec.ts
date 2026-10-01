@@ -1,6 +1,10 @@
-import type { ProductListQuery, TenantAccess, Watcher } from '@ecommerce/application';
+import type { AuditCursor, AuditFilter, ProductListQuery, TenantAccess, Watcher } from '@ecommerce/application';
 import {
   activateMembership,
+  auditEntryId,
+  batchId,
+  buildAuditEntries,
+  buildTeamAuditEntry,
   createIncompleteVariant,
   createCatalogRole,
   createInvitation,
@@ -17,6 +21,7 @@ import {
   uid,
   valueId,
   variantId,
+  type AuditEntry,
   type Invitation,
   type MemberAccess,
   type Membership,
@@ -38,6 +43,7 @@ import { FirestoreUnitOfWork } from '../firestore/unit-of-work';
 import { clearFirestoreEmulator } from '../testing/emulator';
 import { FirebaseImageStorage } from './firebase-image-storage';
 import { FirebaseSession } from './firebase-session';
+import { FirestoreAuditQueries } from './firestore-audit-queries';
 import { FirestoreCatalogQueries } from './firestore-catalog-queries';
 import { FirestoreTeamQueries } from './firestore-team-queries';
 import { FirestoreTenantDirectory } from './firestore-tenant-directory';
@@ -56,6 +62,31 @@ function emulatorHost(variable: string): string {
 async function ensureAccount(account: typeof OWNER): Promise<void> {
   await adminAuth().getUser(account.uid).catch(() => adminAuth().createUser(account));
 }
+
+const minute = (m: number) => new Date(AT.getTime() + m * 60_000);
+const by = (name: string) => ({ tenantId: T1, uid: uid(name), name });
+const changes = (p: string, at: number, ids: string[], who: string, batch: string | null = null): AuditEntry[] => {
+  const queue = [...ids];
+  return buildAuditEntries(
+    by(who),
+    ids.map((id) => ({ type: 'price.changed' as const, field: 'price' as const, productId: productId(p), variantId: variantId(`v-${id}`), before: null, after: money(100, 'USD') })),
+    { batchId: batch ? batchId(batch) : null, at: minute(at), newEntryId: () => auditEntryId(queue.shift() ?? 'x') },
+  );
+};
+/**
+ * La bitácora de t1, de la más vieja a la más nueva. `e-a` y `e-b` son una edición masiva: mismo
+ * instante, y el cursor tiene que desempatarlas sin saltear ni repetir.
+ */
+const AUDIT: AuditEntry[] = [
+  ...changes('p1', 1, ['e-a', 'e-b'], 'ana', 'b1'),
+  ...buildAuditEntries(by('beto'), [{ type: 'stock.adjusted', productId: productId('p1'), variantId: variantId('v-c'), before: { kind: 'undefined' }, after: { kind: 'quantity', value: 3 } }], {
+    batchId: null,
+    at: minute(2),
+    newEntryId: () => auditEntryId('e-c'),
+  }),
+  buildTeamAuditEntry(by('cli-owner'), { change: 'role.assigned', entity: { kind: 'membership', id: 'ana' }, before: { roleId: 'catalog' }, after: { roleId: 'precios' } }, { at: minute(3), id: auditEntryId('e-d') }),
+  ...changes('p3', 4, ['e-e'], 'beto'),
+];
 
 const product = (id: string, name: string, minute: number, overrides: Partial<Product> = {}): Product => ({
   id: productId(id),
@@ -138,6 +169,7 @@ describe('cliente web contra los emuladores', () => {
       const invite = (id: string, email: string) => createInvitation({ id: invitationId(id), tenantId: T1, email, roleId: roleId('catalog'), createdBy: uid(OWNER.uid), at: AT });
       await tx.invitations.save(invite('i-pendiente', 'pendiente@t1.test'));
       await tx.invitations.save(revokeInvitation(invite('i-revocada', 'revocada@t1.test')));
+      await tx.audit.append(AUDIT);
     });
   });
 
@@ -203,6 +235,39 @@ describe('cliente web contra los emuladores', () => {
       expect(roles.map((r) => r.id).sort()).toEqual(['catalog', 'owner']);
       const invitations = await first<readonly Invitation[]>((watcher) => team.watchInvitations(T1, watcher));
       expect(invitations.map((i) => [i.id, i.email, i.status])).toEqual([['i-pendiente', 'pendiente@t1.test', 'pending']]);
+    });
+
+    // T084 — la bitácora por páginas y con filtros (FR-034), de la más nueva a la más vieja.
+    describe('bitácora', () => {
+      const audit = new FirestoreAuditQueries(webDb);
+      const ids = async (filter: AuditFilter) => (await audit.listEntries(T1, filter, { limit: 10 })).entries.map((e) => e.id);
+
+      it('se recorre por cursor sin saltear ni repetir, también dentro de una edición masiva', async () => {
+        const seen: string[] = [];
+        let after: AuditCursor | undefined;
+        for (let pages = 0; pages < 10; pages++) {
+          const page = await audit.listEntries(T1, {}, { limit: 2, ...(after ? { after } : {}) });
+          seen.push(...page.entries.map((e) => e.id));
+          if (!page.next) break;
+          after = page.next;
+        }
+        expect(seen).toEqual(['e-e', 'e-d', 'e-c', 'e-b', 'e-a']);
+      });
+
+      it.each<[string, AuditFilter, string[]]>([
+        ['por persona', { actorUid: 'beto' }, ['e-e', 'e-c']],
+        ['por producto', { productId: productId('p1') }, ['e-c', 'e-b', 'e-a']],
+        ['por tipo de evento', { type: 'role.changed' }, ['e-d']],
+        ['por rango de fechas', { from: minute(2), to: minute(4) }, ['e-d', 'e-c']],
+        ['combinando persona y producto', { actorUid: 'beto', productId: productId('p1') }, ['e-c']],
+      ])('filtra %s', async (_label, filter, expected) => {
+        await expect(ids(filter)).resolves.toEqual(expected);
+      });
+
+      it('cada entrada llega con su tipo, su responsable y sus valores', async () => {
+        const [entry] = (await audit.listEntries(T1, { type: 'stock.adjusted' }, { limit: 1 })).entries;
+        expect(entry).toEqual(expect.objectContaining({ actorUid: 'beto', actorName: 'beto', at: minute(2), before: { kind: 'undefined' }, after: { kind: 'quantity', value: 3 } }));
+      });
     });
 
     it('el comercio llega con su nombre y su moneda', async () => {
