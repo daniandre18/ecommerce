@@ -5,6 +5,11 @@
   "projectType": "application",
   "tags": ["layer:presentation"],
   "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/functions"],
+      "options": { "command": "tsx apps/functions/build.mts" }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": { "command": "vitest run --config apps/functions/vite.config.mts" }

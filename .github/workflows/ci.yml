@@ -39,6 +39,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-workspace
       - run: npx nx run-many -t typecheck --skip-nx-cache
+      # El empaquetado resuelve los alias del monorepo por su cuenta: si falla acá, falla el despliegue.
+      - run: npx nx run-many -t build --projects=functions --skip-nx-cache
 
   # Dominio puro y casos de uso, sin emuladores: motor de variantes, dinero entero, autorización.
   unit:
@@ -73,4 +75,4 @@ jobs:
       - run: >
           npx --yes firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}
           emulators:exec --only auth,firestore --project demo-ecommerce
-          "npm run test:infrastructure && npm run test:tools"
+          "npm run test:infrastructure && npm run test:functions && npm run test:tools"

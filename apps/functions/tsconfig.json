@@ -3,5 +3,5 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "vite.config.mts"]
+  "include": ["src/**/*.ts", "*.mts"]
 }

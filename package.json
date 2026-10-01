@@ -13,7 +13,8 @@
     "test:application": "vitest run --config libs/application/vite.config.mts",
     "test:rules": "vitest run --config tests/rules/vite.config.mts",
     "test:infrastructure": "vitest run --config libs/infrastructure/vite.config.mts",
-    "test:tools": "vitest run --config tools/vite.config.mts"
+    "test:tools": "vitest run --config tools/vite.config.mts",
+    "test:functions": "vitest run --config apps/functions/vite.integration.config.mts"
   },
   "devDependencies": {
     "@angular/build": "22.2.0",
@@ -26,6 +27,7 @@
     "@nx/vite": "23.2.1",
     "@playwright/test": "1.63.0",
     "@types/node": "26.6.3",
+    "esbuild": "0.28.2",
     "eslint": "10.11.0",
     "jiti": "2.7.0",
     "jsdom": "30.1.1",
