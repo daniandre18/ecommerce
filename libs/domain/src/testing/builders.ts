@@ -10,13 +10,23 @@ import { stockQuantity } from '../value-objects/stock-level';
 const optionKey = (name: string) => name.trim() || 'blank';
 const valueKey = (name: string, label: string) => `${optionKey(name)}:${label.trim()}`;
 
-/** `option('color', ['Rojo', 'Amarillo'])` → ids `color`, `color:Rojo`, `color:Amarillo`. */
+/**
+ * `option('color', ['Rojo', 'Amarillo'])` → ids `color`, `color:Rojo`, `color:Amarillo`. Una
+ * etiqueta repetida recibe un id distinto (`color:Rojo#1`), como pasaría con los UUID reales: así
+ * las pruebas de etiquetas repetidas no chocan antes con la de ids repetidos.
+ */
 export function option(name: string, labels: readonly string[], position = 0): VariationOption {
+  const used = new Set<string>();
   return {
     id: optionId(optionKey(name)),
     name,
     position,
-    values: labels.map((label, index) => ({ id: valueId(valueKey(name, label)), label, position: index })),
+    values: labels.map((label, index) => {
+      const base = valueKey(name, label);
+      const key = used.has(base) ? `${base}#${index}` : base;
+      used.add(key);
+      return { id: valueId(key), label, position: index };
+    }),
   };
 }
 

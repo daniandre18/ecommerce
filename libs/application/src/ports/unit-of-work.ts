@@ -1,21 +1,27 @@
 import type {
   AuditLogRepository,
   MembershipRepository,
+  ProductRepository,
   RoleRepository,
+  SkuIndexRepository,
+  TenantRepository,
   VariantCostsRepository,
+  VariantRepository,
 } from './repositories';
 
 /**
  * Los repositorios disponibles dentro de una transacción. Todo lo que se lee y escribe a través de
  * ellos se confirma junto o no se confirma.
- *
- * Los repositorios de producto, variante e índice de SKU se agregan en la Historia 1 (T044–T046).
  */
 export interface TransactionScope {
+  readonly tenant: TenantRepository;
   readonly audit: AuditLogRepository;
   readonly members: MembershipRepository;
   readonly roles: RoleRepository;
+  readonly products: ProductRepository;
+  readonly variants: VariantRepository;
   readonly costs: VariantCostsRepository;
+  readonly skuIndex: SkuIndexRepository;
 }
 
 /**

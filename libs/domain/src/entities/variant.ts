@@ -75,3 +75,14 @@ export function createIncompleteVariant(input: {
     version: 0,
   });
 }
+
+/** Campos de caché del producto derivados de sus variantes en circulación. */
+export interface VariantSummary {
+  readonly variantCount: number;
+  readonly hasIncompleteVariants: boolean;
+}
+
+export function summarizeVariants(variants: readonly Variant[]): VariantSummary {
+  const live = variants.filter((variant) => !variant.archived);
+  return { variantCount: live.length, hasIncompleteVariants: live.some((variant) => !isVariantComplete(variant)) };
+}
