@@ -249,8 +249,10 @@ esa obligación (FR-005). Si ya hay una invitación pendiente para ese correo, s
 rol, 14 días más) en lugar de crear otra. El rol `owner` no se asigna por invitación: el traspaso
 es la única vía. Escribe bitácora `invitation.sent`.
 
-El `token` es lo que viaja en el enlace (`/invitacion/{tenantId}/{invitationId}`). No es un
-secreto: aceptar exige además que el correo de la sesión coincida con el invitado.
+El `token` es lo que viaja en el enlace (`/invitation/{tenantId}/{invitationId}`). No es un
+secreto: aceptar exige además que el correo de la sesión coincida con el invitado. No hay correo
+saliente: el Propietario comparte el enlace desde la vista de equipo, y "reenviar" es copiarlo de
+nuevo o volver a invitar, que renueva el plazo.
 
 ### `acceptInvitation`
 

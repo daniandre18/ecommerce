@@ -1,6 +1,14 @@
-import type { Session, SessionUser, SignInFailure, SignInResult, Unsubscribe, Watcher } from '@ecommerce/application';
+import type { Session, SessionUser, SignInFailure, SignInResult, SignUpFailure, SignUpResult, Unsubscribe, Watcher } from '@ecommerce/application';
 import { uid } from '@ecommerce/domain';
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut, type Auth, type User } from 'firebase/auth';
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  updateProfile,
+  type Auth,
+  type User,
+} from 'firebase/auth';
 
 /** Correo y contraseña de Firebase Auth. */
 export class FirebaseSession implements Session {
@@ -21,6 +29,18 @@ export class FirebaseSession implements Session {
       return { ok: true, user: sessionUser(user) };
     } catch (error) {
       return { ok: false, reason: signInFailure(error) };
+    }
+  }
+
+  async signUp(input: { readonly email: string; readonly password: string; readonly displayName: string }): Promise<SignUpResult> {
+    try {
+      const { user } = await createUserWithEmailAndPassword(this.auth, input.email, input.password);
+      await updateProfile(user, { displayName: input.displayName });
+      // El token emitido al crear la cuenta todavía no trae el nombre; el servidor lo lee de ahí.
+      await user.getIdToken(true);
+      return { ok: true, user: sessionUser(user) };
+    } catch (error) {
+      return { ok: false, reason: signUpFailure(error) };
     }
   }
 
@@ -47,5 +67,21 @@ export function signInFailure(error: unknown): SignInFailure {
   if (typeof code === 'string' && INVALID_CREDENTIALS.has(code)) return 'invalid-credentials';
   if (code === 'auth/too-many-requests') return 'too-many-attempts';
   if (code !== 'auth/network-request-failed') console.error('Falla inesperada al iniciar sesión', error);
+  return 'unavailable';
+}
+
+const SIGN_UP_FAILURES: Readonly<Record<string, SignUpFailure>> = {
+  'auth/email-already-in-use': 'email-in-use',
+  'auth/invalid-email': 'invalid-email',
+  'auth/weak-password': 'weak-password',
+  'auth/too-many-requests': 'too-many-attempts',
+};
+
+/** Exportada para probarla sin Auth. Lo que no se reconoce se trata como falla de conexión, y se registra. */
+export function signUpFailure(error: unknown): SignUpFailure {
+  const code = (error as { code?: unknown } | null)?.code;
+  const known = typeof code === 'string' ? SIGN_UP_FAILURES[code] : undefined;
+  if (known) return known;
+  if (code !== 'auth/network-request-failed') console.error('Falla inesperada al crear la cuenta', error);
   return 'unavailable';
 }

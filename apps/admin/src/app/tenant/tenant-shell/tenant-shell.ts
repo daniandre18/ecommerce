@@ -1,6 +1,6 @@
 import { Component, computed, inject, input, resource } from '@angular/core';
 import { MatButton } from '@angular/material/button';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { InvalidIdentifierError, tenantId, type MemberAccess, type Tenant, type TenantId, type Uid } from '@ecommerce/domain';
 import { ErrorState } from '@ecommerce/ui';
 import { SignOut } from '../../auth/sign-out';
@@ -13,7 +13,7 @@ import { MyTenants } from '../my-tenants';
 /** El marco de todo lo que pasa dentro de un comercio: `/t/{tenantId}/…`. */
 @Component({
   selector: 'app-tenant-shell',
-  imports: [RouterOutlet, RouterLink, MatButton, ErrorState],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, MatButton, ErrorState],
   providers: [
     { provide: CURRENT_TENANT, useFactory: () => inject(TenantShell).current },
     { provide: CURRENT_ACCESS, useFactory: () => inject(TenantShell).access },
@@ -21,6 +21,13 @@ import { MyTenants } from '../my-tenants';
   template: `
     <header>
       <p class="tenant">{{ name() }}</p>
+      <nav aria-label="Secciones">
+        <a matButton routerLink="catalog" routerLinkActive="active" ariaCurrentWhenActive="page">Catálogo</a>
+        <!-- El equipo es solo del Propietario (FR-014): a otra cuenta ni se le ofrece. -->
+        @if (access()?.isOwner) {
+          <a matButton routerLink="team" routerLinkActive="active" ariaCurrentWhenActive="page">Equipo</a>
+        }
+      </nav>
       <nav aria-label="Cuenta">
         @if (canSwitch()) {
           <a matButton routerLink="/">Cambiar de comercio</a>
@@ -42,6 +49,7 @@ import { MyTenants } from '../my-tenants';
   styles: `
     header {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
@@ -53,6 +61,11 @@ import { MyTenants } from '../my-tenants';
       display: flex;
       flex-wrap: wrap;
       justify-content: flex-end;
+    }
+
+    .active {
+      text-decoration: underline;
+      text-underline-offset: 4px;
     }
 
     .tenant {

@@ -3,7 +3,11 @@ import {
   activateMembership,
   createIncompleteVariant,
   createCatalogRole,
+  createInvitation,
+  invitationId,
   inviteMembership,
+  presetRoles,
+  revokeInvitation,
   money,
   optionId,
   normalizeName,
@@ -13,10 +17,13 @@ import {
   uid,
   valueId,
   variantId,
+  type Invitation,
   type MemberAccess,
+  type Membership,
   type Money,
   type Product,
   type ProductStatus,
+  type Role,
   type Variant,
   type VariantId,
 } from '@ecommerce/domain';
@@ -32,6 +39,7 @@ import { clearFirestoreEmulator } from '../testing/emulator';
 import { FirebaseImageStorage } from './firebase-image-storage';
 import { FirebaseSession } from './firebase-session';
 import { FirestoreCatalogQueries } from './firestore-catalog-queries';
+import { FirestoreTeamQueries } from './firestore-team-queries';
 import { FirestoreTenantDirectory } from './firestore-tenant-directory';
 
 const T1 = tenantId('t1');
@@ -126,6 +134,10 @@ describe('cliente web contra los emuladores', () => {
         await tx.products.save(p);
       }
       await tx.costs.setMany(productId('p1'), { [variantId('v-viva')]: money(1200, 'USD') });
+      for (const role of presetRoles(T1, AT)) await tx.roles.save(role);
+      const invite = (id: string, email: string) => createInvitation({ id: invitationId(id), tenantId: T1, email, roleId: roleId('catalog'), createdBy: uid(OWNER.uid), at: AT });
+      await tx.invitations.save(invite('i-pendiente', 'pendiente@t1.test'));
+      await tx.invitations.save(revokeInvitation(invite('i-revocada', 'revocada@t1.test')));
     });
   });
 
@@ -180,6 +192,17 @@ describe('cliente web contra los emuladores', () => {
       const costs = (id: string) => first<ReadonlyMap<VariantId, Money>>((watcher) => queries.watchCosts(T1, productId(id), watcher));
       expect([...(await costs('p1'))]).toEqual([['v-viva', money(1200, 'USD')]]);
       expect((await costs('p3')).size).toBe(0);
+    });
+
+    // T076: lo que lee la vista de equipo del Propietario.
+    it('el equipo: membresías, roles e invitaciones pendientes, sin las revocadas', async () => {
+      const team = new FirestoreTeamQueries(webDb);
+      const members = await first<readonly Membership[]>((watcher) => team.watchMembers(T1, watcher));
+      expect(members.map((m) => [m.uid, m.isOwner, m.status])).toEqual([[OWNER.uid, true, 'active']]);
+      const roles = await first<readonly Role[]>((watcher) => team.watchRoles(T1, watcher));
+      expect(roles.map((r) => r.id).sort()).toEqual(['catalog', 'owner']);
+      const invitations = await first<readonly Invitation[]>((watcher) => team.watchInvitations(T1, watcher));
+      expect(invitations.map((i) => [i.id, i.email, i.status])).toEqual([['i-pendiente', 'pendiente@t1.test', 'pending']]);
     });
 
     it('el comercio llega con su nombre y su moneda', async () => {
@@ -272,6 +295,25 @@ describe('cliente web contra los emuladores', () => {
       await expect(first(watch)).rejects.toMatchObject({ code: 'permission-denied' });
     } finally {
       await terminate(otherDb);
+      await deleteApp(other);
+    }
+  });
+
+  // Quien llega por una invitación sin cuenta la crea, con su nombre ya en el token (T080).
+  it('crear una cuenta deja la sesión abierta con su nombre en el token; el mismo correo no se repite', async () => {
+    const other = initializeApp({ projectId: 'demo-ecommerce', apiKey: 'demo-key' }, 'navegador-nuevo');
+    const otherAuth = getAuth(other);
+    connectAuthEmulator(otherAuth, `http://${emulatorHost('FIREBASE_AUTH_EMULATOR_HOST')}`, { disableWarnings: true });
+    try {
+      const email = `nueva-${Date.now()}@t1.test`;
+      const created = await new FirebaseSession(otherAuth).signUp({ email, password: 'test-1234', displayName: 'Nueva' });
+      expect(created).toEqual({ ok: true, user: expect.objectContaining({ email, displayName: 'Nueva' }) });
+      const claims = (await otherAuth.currentUser?.getIdTokenResult())?.claims;
+      expect(claims).toEqual(expect.objectContaining({ name: 'Nueva', email }));
+
+      const again = await new FirebaseSession(otherAuth).signUp({ email, password: 'test-1234', displayName: 'Otra' });
+      expect(again).toEqual({ ok: false, reason: 'email-in-use' });
+    } finally {
       await deleteApp(other);
     }
   });

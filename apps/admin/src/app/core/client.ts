@@ -1,11 +1,13 @@
 import { InjectionToken, inject, makeEnvironmentProviders, type EnvironmentProviders } from '@angular/core';
-import type { CatalogCommands, CatalogQueries, ImageStorage, Session, TenantDirectory } from '@ecommerce/application';
+import type { CatalogCommands, CatalogQueries, ImageStorage, Session, TeamCommands, TeamQueries, TenantDirectory } from '@ecommerce/application';
 import {
   CallableCatalogCommands,
+  CallableTeamCommands,
   connectWebClient,
   FirebaseImageStorage,
   FirebaseSession,
   FirestoreCatalogQueries,
+  FirestoreTeamQueries,
   FirestoreTenantDirectory,
   type WebClient,
   type WebClientConfig,
@@ -17,6 +19,8 @@ export const CATALOG_QUERIES = new InjectionToken<CatalogQueries>('CatalogQuerie
 export const CATALOG_COMMANDS = new InjectionToken<CatalogCommands>('CatalogCommands');
 export const IMAGE_STORAGE = new InjectionToken<ImageStorage>('ImageStorage');
 export const TENANT_DIRECTORY = new InjectionToken<TenantDirectory>('TenantDirectory');
+export const TEAM_QUERIES = new InjectionToken<TeamQueries>('TeamQueries');
+export const TEAM_COMMANDS = new InjectionToken<TeamCommands>('TeamCommands');
 
 const WEB_CLIENT = new InjectionToken<WebClient>('WebClient');
 
@@ -29,5 +33,7 @@ export function provideWebClient(config: WebClientConfig): EnvironmentProviders 
     { provide: CATALOG_COMMANDS, useFactory: () => new CallableCatalogCommands(inject(WEB_CLIENT).functions) },
     { provide: IMAGE_STORAGE, useFactory: () => new FirebaseImageStorage(inject(WEB_CLIENT).storage) },
     { provide: TENANT_DIRECTORY, useFactory: () => new FirestoreTenantDirectory(inject(WEB_CLIENT).firestore) },
+    { provide: TEAM_QUERIES, useFactory: () => new FirestoreTeamQueries(inject(WEB_CLIENT).firestore) },
+    { provide: TEAM_COMMANDS, useFactory: () => new CallableTeamCommands(inject(WEB_CLIENT).functions) },
   ]);
 }
