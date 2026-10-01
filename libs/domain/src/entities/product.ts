@@ -10,6 +10,11 @@ export const PRODUCT_STATUSES = ['draft', 'active', 'unlisted'] as const;
 
 export type ProductStatus = (typeof PRODUCT_STATUSES)[number];
 
+/** Tope de peso de una imagen. `storage.rules` aplica el mismo número: si cambia, cambian los dos. */
+export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+/** Tipos de imagen admitidos; `storage.rules` admite los mismos. SVG no: puede llevar código. */
+export const IMAGE_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'] as const;
+
 export interface ImageRef {
   readonly storagePath: string;
   /** Obligatorio: WCAG 2.2 AA (FR-038a). */

@@ -9,14 +9,28 @@ import { doc, setDoc, type Firestore } from 'firebase/firestore';
 
 export const PROJECT_ID = 'demo-ecommerce';
 
+const hostAndPort = (variable: string, fallback: string) => {
+  const [host, port] = (process.env[variable] ?? fallback).split(':');
+  return { host: host ?? '127.0.0.1', port: Number(port) };
+};
+
+const firestoreConfig = () => ({
+  rules: readFileSync(resolve(import.meta.dirname, '../../firestore.rules'), 'utf8'),
+  ...hostAndPort('FIRESTORE_EMULATOR_HOST', '127.0.0.1:8080'),
+});
+
 export function createRulesEnv(): Promise<RulesTestEnvironment> {
-  const [host, port] = (process.env['FIRESTORE_EMULATOR_HOST'] ?? '127.0.0.1:8080').split(':');
+  return initializeTestEnvironment({ projectId: PROJECT_ID, firestore: firestoreConfig() });
+}
+
+/** Firestore y Storage juntos: las reglas de Storage leen membresías y roles de Firestore. */
+export function createStorageRulesEnv(): Promise<RulesTestEnvironment> {
   return initializeTestEnvironment({
     projectId: PROJECT_ID,
-    firestore: {
-      rules: readFileSync(resolve(import.meta.dirname, '../../firestore.rules'), 'utf8'),
-      host: host ?? '127.0.0.1',
-      port: Number(port ?? 8080),
+    firestore: firestoreConfig(),
+    storage: {
+      rules: readFileSync(resolve(import.meta.dirname, '../../storage.rules'), 'utf8'),
+      ...hostAndPort('FIREBASE_STORAGE_EMULATOR_HOST', '127.0.0.1:9199'),
     },
   });
 }
@@ -28,6 +42,8 @@ export const db = (ctx: RulesTestContext) => ctx.firestore() as unknown as Fires
 export const USERS = {
   owner1: 'owner1',
   catalog1: 'catalog1',
+  /** Miembro activo con un rol que solo lee el catálogo. */
+  viewer1: 'viewer1',
   invited1: 'invited1',
   owner2: 'owner2',
   outsider: 'outsider',
@@ -53,6 +69,8 @@ export async function seed(env: RulesTestEnvironment): Promise<void> {
     await put('tenants/t1/members/owner1', membership({ status: 'active', roleId: 'owner', isOwner: true }));
     await put('tenants/t1/members/catalog1', membership({ status: 'active', roleId: 'catalog' }));
     await put('tenants/t1/members/invited1', membership({ status: 'invited', roleId: 'catalog' }));
+    await put('tenants/t1/members/viewer1', membership({ status: 'active', roleId: 'lector' }));
+    await put('tenants/t1/roles/lector', { permissions: ['catalog.read'] });
     await put('tenants/t1/roles/catalog', {
       permissions: ['catalog.read', 'catalog.write', 'variant.stock.write'],
     });

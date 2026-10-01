@@ -21,6 +21,7 @@ export const {
   setProductOptions,
   setProductStatus,
   setVariantSku,
+  setVariantImages,
   archiveProduct,
   archiveVariant,
 } = catalogCallables(deps);

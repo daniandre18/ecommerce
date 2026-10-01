@@ -14,6 +14,7 @@ const CALLABLES = [
   'setProductOptions',
   'setProductStatus',
   'setVariantSku',
+  'setVariantImages',
   'archiveProduct',
   'archiveVariant',
   'setVariantPrice',

@@ -1,6 +1,9 @@
 import type {
   CatalogCommands,
   CatalogQueries,
+  ImageStorage,
+  UploadRequest,
+  UploadResult,
   ProductListQuery,
   Session,
   SessionUser,
@@ -120,6 +123,7 @@ export function fakeCatalogCommands(): Mocked<CatalogCommands> {
     setProductOptions: pending(),
     setProductStatus: pending(),
     setVariantSku: pending(),
+    setVariantImages: pending(),
     archiveProduct: pending(),
     archiveVariant: pending(),
     setVariantPrice: pending(),
@@ -158,3 +162,20 @@ export const product = (id: string, name: string, overrides: Partial<Product> = 
   version: 1,
   ...overrides,
 });
+
+/** Storage controlado por la prueba: cada subida queda registrada y devuelve lo que se le indique. */
+export class FakeImageStorage implements ImageStorage {
+  readonly uploads: UploadRequest[] = [];
+  nextUpload: UploadResult = { ok: true, storagePath: 'tenants/t1/products/p1/images/nueva.png' };
+
+  async upload(request: UploadRequest): Promise<UploadResult> {
+    this.uploads.push(request);
+    request.onProgress?.(0.5);
+    request.onProgress?.(1);
+    return this.nextUpload;
+  }
+
+  async displayUrl(storagePath: string): Promise<string> {
+    return `https://imagenes.test/${storagePath}`;
+  }
+}

@@ -4,6 +4,7 @@ import {
   type SetProductOptionsInput,
   type SetProductStatusInput,
   type SetVariantCostInput,
+  type SetVariantImagesInput,
   type SetVariantPriceInput,
   type SetVariantSkuInput,
   type SetVariantStockInput,
@@ -44,10 +45,7 @@ export function parseUpdateProductDetails(data: unknown): UpdateProductDetailsIn
     version: json.integer('version'),
     ...json.optional('name', (key) => json.string(key)),
     ...json.optional('description', (key) => json.string(key)),
-    // El orden de la lista es el orden de las imágenes.
-    ...json.optional('images', (key) =>
-      json.objects(key, (image, position) => ({ storagePath: image.string('storagePath'), alt: image.string('alt'), position })),
-    ),
+    ...json.optional('images', () => imagesOf(json)),
   };
 }
 
@@ -85,6 +83,11 @@ export function parseSetProductStatus(data: unknown): SetProductStatusInput {
 export function parseSetVariantSku(data: unknown): SetVariantSkuInput {
   const json = JsonObject.payload(data);
   return { ...variantRef(json), sku: json.string('sku') };
+}
+
+export function parseSetVariantImages(data: unknown): SetVariantImagesInput {
+  const json = JsonObject.payload(data);
+  return { ...variantRef(json), images: imagesOf(json) };
 }
 
 export function parseArchiveProduct(data: unknown): { productId: ProductId; version: number } {
@@ -128,6 +131,11 @@ export function parseSetVariantStock(data: unknown): SetVariantStockInput {
       stock: change.stock('stock'),
     })),
   };
+}
+
+/** El orden de la lista es el orden de las imágenes. */
+function imagesOf(json: JsonObject) {
+  return json.objects('images', (image, position) => ({ storagePath: image.string('storagePath'), alt: image.string('alt'), position }));
 }
 
 function variantRef(json: JsonObject) {

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { gateFailure } from './callable-catalog-commands';
+import { uploadFailure } from './firebase-image-storage';
 import { signInFailure } from './firebase-session';
 
 const firebaseError = (code: string) => Object.assign(new Error(`falla ${code}`), { code });
@@ -42,6 +43,25 @@ describe('las fallas de inicio de sesión', () => {
     expect(signInFailure(firebaseError('auth/network-request-failed'))).toBe('unavailable');
     expect(log).not.toHaveBeenCalled();
     expect(signInFailure(firebaseError('auth/internal-error'))).toBe('unavailable');
+    expect(log).toHaveBeenCalledOnce();
+  });
+});
+
+describe('las fallas al subir una imagen', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it.each([
+    ['storage/unauthorized', 'not-allowed'],
+    ['storage/unauthenticated', 'not-allowed'],
+    ['storage/canceled', 'interrupted'],
+    ['storage/retry-limit-exceeded', 'unavailable'],
+  ])('%s es %s', (code, reason) => {
+    expect(uploadFailure(firebaseError(code))).toBe(reason);
+  });
+
+  it('lo desconocido se trata como interrumpida, y queda registrado', () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    expect(uploadFailure(firebaseError('storage/unknown'))).toBe('interrupted');
     expect(log).toHaveBeenCalledOnce();
   });
 });

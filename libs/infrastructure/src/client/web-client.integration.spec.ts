@@ -18,11 +18,13 @@ import {
 import { deleteApp, initializeApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore, terminate } from 'firebase/firestore';
+import { connectStorageEmulator, getStorage } from 'firebase/storage';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { auth as adminAuth } from '../firebase-app';
 import { firestore } from '../firestore/firestore';
 import { FirestoreUnitOfWork } from '../firestore/unit-of-work';
 import { clearFirestoreEmulator } from '../testing/emulator';
+import { FirebaseImageStorage } from './firebase-image-storage';
 import { FirebaseSession } from './firebase-session';
 import { FirestoreCatalogQueries } from './firestore-catalog-queries';
 
@@ -177,6 +179,44 @@ describe('cliente web contra los emuladores', () => {
   // Otra instancia, como otro navegador: la caché local de Firestore no se separa por cuenta, así
   // que en la misma instancia el primer valor podría salir de lo que leyó la cuenta anterior. Por
   // eso el panel recarga la página al cerrar sesión.
+  describe('imágenes', () => {
+    const png = new Blob([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], { type: 'image/png' });
+    const images = () => {
+      const storage = getStorage(app, 'gs://demo-ecommerce.appspot.com');
+      const [host, port] = emulatorHost('FIREBASE_STORAGE_EMULATOR_HOST').split(':');
+      connectStorageEmulator(storage, host ?? '127.0.0.1', Number(port));
+      return new FirebaseImageStorage(storage);
+    };
+    let storage: FirebaseImageStorage;
+
+    beforeAll(async () => {
+      storage = images();
+      await session.signIn(OWNER.email, OWNER.password);
+    });
+
+    it('sube con un nombre nuevo cada vez, en la carpeta del producto, informando el avance', async () => {
+      const progress: number[] = [];
+      const [first, second] = [
+        await storage.upload({ tenantId: T1, productId: productId('p1'), file: png, onProgress: (fraction) => progress.push(fraction) }),
+        await storage.upload({ tenantId: T1, productId: productId('p1'), file: png }),
+      ];
+      expect(first).toEqual({ ok: true, storagePath: expect.stringMatching(/^tenants\/t1\/products\/p1\/images\/[0-9a-f-]+\.png$/) });
+      expect(second.ok && first.ok && second.storagePath !== first.storagePath).toBe(true);
+      expect(progress.at(-1)).toBe(1);
+    });
+
+    it('lo subido se puede mostrar', async () => {
+      const uploaded = await storage.upload({ tenantId: T1, productId: productId('p1'), file: png });
+      if (!uploaded.ok) throw new Error('No se subió');
+      await expect(storage.displayUrl(uploaded.storagePath)).resolves.toMatch(/^http/);
+    });
+
+    it('un archivo que no es imagen lo rechazan las reglas del servidor', async () => {
+      const html = new Blob(['<script></script>'], { type: 'text/html' });
+      await expect(storage.upload({ tenantId: T1, productId: productId('p1'), file: html })).resolves.toEqual({ ok: false, reason: 'not-allowed' });
+    });
+  });
+
   it('sin membresía en el comercio, la lectura llega como error y no como lista vacía', async () => {
     const other = initializeApp({ projectId: 'demo-ecommerce', apiKey: 'demo-key' }, 'otro-navegador');
     const otherAuth = getAuth(other);

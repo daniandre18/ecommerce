@@ -1,0 +1,66 @@
+:host {
+  display: block;
+}
+
+h3 {
+  margin: 0 0 8px;
+  font: var(--mat-sys-title-medium);
+}
+
+ul {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.alt {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.preview {
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+form mat-form-field {
+  flex: 1 1 200px;
+}
+
+mat-progress-bar,
+.actions {
+  flex-basis: 100%;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.failure {
+  color: var(--mat-sys-error);
+}
+
+.failure:empty {
+  display: none;
+}

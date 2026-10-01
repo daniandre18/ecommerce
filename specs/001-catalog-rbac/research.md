@@ -363,6 +363,27 @@ Vitest 5 para dominio y aplicación sin emuladores (es peer soportado por `@angu
 Emulator Suite + `@firebase/rules-unit-testing` 5 para reglas; Playwright 1.63 de extremo a
 extremo.
 
+## 10. Subida de imágenes: directo a Storage, validada por reglas (cambio en T060)
+
+**Decisión**: el panel sube cada imagen directo a Cloud Storage, a
+`tenants/{t}/products/{p}/images/{nombre-nuevo}`. `storage.rules` —que corren en el servidor—
+exigen membresía activa con `catalog.write` (o ser Propietario), tipo `image/jpeg|png|webp|avif|gif`,
+hasta 5 MB, y solo crear: una imagen subida no se reemplaza ni se borra desde el cliente. La
+referencia, con su texto alternativo obligatorio (FR-038a), se guarda aparte y solo por callable
+(`updateProductDetails` para el producto, `setVariantImages` para cada variante), que valida que la
+ruta esté bajo la carpeta del producto. El cliente sigue sin escribir en Firestore.
+
+**Por qué cambió**: el plan preveía una URL firmada de corta duración emitida por una Cloud
+Function. Firmar exige una cuenta de servicio real (`authClient.sign`), que un proyecto `demo-*` no
+tiene: ese camino no se podía probar contra los emuladores, ni en local ni en CI, y el principio X
+exige que las compuertas lo verifiquen. Las reglas de Storage hacen las mismas validaciones del lado
+del servidor y se prueban contra el emulador (`tests/rules/storage-images.spec.ts`).
+
+**Costos y límites**: cada subida cuesta dos lecturas de Firestore en las reglas (membresía y rol).
+Una imagen subida y nunca referenciada queda huérfana, igual que con la URL firmada; su limpieza
+periódica queda fuera de esta feature. Los topes (5 MB y tipos) están en dos lugares —el dominio
+para avisar antes de subir y las reglas para hacerlos cumplir—, y cambian juntos.
+
 ## Riesgos abiertos
 
 | Riesgo | Mitigación |

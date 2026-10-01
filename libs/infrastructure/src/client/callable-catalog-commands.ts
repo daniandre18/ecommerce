@@ -14,6 +14,7 @@ export class CallableCatalogCommands implements CatalogCommands {
   setProductOptions: CatalogCommands['setProductOptions'] = (tenantId, input) => this.call('setProductOptions', tenantId, input);
   setProductStatus: CatalogCommands['setProductStatus'] = (tenantId, input) => this.call('setProductStatus', tenantId, input);
   setVariantSku: CatalogCommands['setVariantSku'] = (tenantId, input) => this.call('setVariantSku', tenantId, input);
+  setVariantImages: CatalogCommands['setVariantImages'] = (tenantId, input) => this.call('setVariantImages', tenantId, input);
   archiveProduct: CatalogCommands['archiveProduct'] = (tenantId, input) => this.call('archiveProduct', tenantId, input);
   archiveVariant: CatalogCommands['archiveVariant'] = (tenantId, input) => this.call('archiveVariant', tenantId, input);
   setVariantPrice: CatalogCommands['setVariantPrice'] = (tenantId, input) => this.call('setVariantPrice', tenantId, input);

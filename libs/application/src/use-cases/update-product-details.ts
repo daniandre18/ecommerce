@@ -1,9 +1,8 @@
-import type { ImageRef, ProductId, TenantId } from '@ecommerce/domain';
-import { BusinessRuleError } from '../errors';
+import type { ImageRef, ProductId } from '@ecommerce/domain';
 import { requirePermission } from '../ports/authorization';
 import type { OperationContext } from '../ports/operation-context';
 import type { TransactionScope } from '../ports/unit-of-work';
-import { assertVersion, bumped, loadProduct, productName, type UseCaseDependencies } from './shared';
+import { assertVersion, bumped, loadProduct, productName, validImages, type UseCaseDependencies } from './shared';
 
 export interface UpdateProductDetailsInput {
   readonly productId: ProductId;
@@ -32,21 +31,4 @@ export class UpdateProductDetails {
     await tx.products.save(updated);
     return { version: updated.version };
   }
-}
-
-/**
- * Toda imagen lleva texto alternativo (FR-038a) y vive bajo la carpeta de su producto: una
- * referencia a la imagen de otro producto o de otro comercio se rechaza.
- */
-function validImages(images: readonly ImageRef[], tenantId: TenantId, productId: ProductId): ImageRef[] {
-  const folder = `tenants/${tenantId}/products/${productId}/`;
-  return images.map((image) => {
-    if (image.alt.trim() === '') {
-      throw new BusinessRuleError('invalid-argument', 'Toda imagen necesita un texto alternativo');
-    }
-    if (!image.storagePath.startsWith(folder) || image.storagePath.includes('..')) {
-      throw new BusinessRuleError('invalid-argument', 'La imagen no pertenece a este producto');
-    }
-    return { ...image, alt: image.alt.trim() };
-  });
 }

@@ -1,7 +1,9 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { form, FormField, validate } from '@angular/forms/signals';
+import { MatButton } from '@angular/material/button';
 import { MatCheckbox } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import type { CommandFailure, CommandResult } from '@ecommerce/application';
@@ -10,6 +12,7 @@ import { CATALOG_COMMANDS } from '../../core/client';
 import { commandErrorMessage } from '../../shared/command-errors';
 import { keepUnsaved } from '../../shared/keep-unsaved';
 import { formatMoneyInput, formatStockInput, parseMoneyInput, parseStockInput } from '../shared/amount-input';
+import { VariantImagesDialog, type VariantImagesData } from './variant-images-dialog';
 
 type Field = 'sku' | 'price' | 'compareAtPrice' | 'stock';
 type Fields = Record<Field, string>;
@@ -48,7 +51,7 @@ function fieldsOf(variant: Variant): Fields {
  */
 @Component({
   selector: 'app-variant-row',
-  imports: [FormField, MatCheckbox, MatFormField, MatLabel, MatError, MatInput],
+  imports: [FormField, MatCheckbox, MatButton, MatFormField, MatLabel, MatError, MatInput],
   templateUrl: './variant-row.html',
   styleUrl: './variant-row.scss',
 })
@@ -66,6 +69,7 @@ export class VariantRow {
 
   private readonly commands = inject(CATALOG_COMMANDS);
   private readonly announcer = inject(LiveAnnouncer);
+  private readonly dialog = inject(MatDialog);
 
   protected readonly incomplete = computed(() => !isVariantComplete(this.variant()));
   protected readonly headingId = computed(() => `variante-${this.variant().id}`);
@@ -106,6 +110,11 @@ export class VariantRow {
   private readonly sent: Partial<Fields> = {};
   /** Las órdenes de una fila van en fila: cada una usa la versión que dejó la anterior. */
   private queue: Promise<void> = Promise.resolve();
+
+  protected openImages(): void {
+    const data: VariantImagesData = { tenantId: this.tenantId(), productId: this.productId(), label: this.label(), variant: this.variant };
+    this.dialog.open(VariantImagesDialog, { data, width: 'min(560px, 100vw - 32px)' });
+  }
 
   protected commit(field: Field): void {
     this.queue = this.queue.then(() => this.save(field));

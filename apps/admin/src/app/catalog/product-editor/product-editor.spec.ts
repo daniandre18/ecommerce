@@ -3,9 +3,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { createIncompleteVariant, productId, variantId, type Tenant } from '@ecommerce/domain';
-import { CATALOG_COMMANDS, CATALOG_QUERIES } from '../../core/client';
+import { CATALOG_COMMANDS, CATALOG_QUERIES, IMAGE_STORAGE } from '../../core/client';
 import { CURRENT_TENANT } from '../../tenant/current-tenant';
-import { fakeCatalogCommands, FakeCatalogQueries, product, T1, tenant } from '../../../testing/fakes';
+import { fakeCatalogCommands, FakeCatalogQueries, FakeImageStorage, product, T1, tenant } from '../../../testing/fakes';
 import { settle } from '../../../testing/settle';
 import { ProductEditor } from './product-editor';
 
@@ -21,6 +21,7 @@ describe('ProductEditor', () => {
         { provide: CATALOG_QUERIES, useValue: queries },
         { provide: CATALOG_COMMANDS, useValue: fakeCatalogCommands() },
         { provide: CURRENT_TENANT, useValue: current },
+        { provide: IMAGE_STORAGE, useValue: new FakeImageStorage() },
       ],
     });
   });
@@ -46,6 +47,7 @@ describe('ProductEditor', () => {
     await settle();
     expect(root.querySelector('h1')?.textContent).toContain('Camiseta');
     expect([...root.querySelectorAll('h2')].map((h) => h.textContent?.trim())).toEqual(['Datos', 'Estado', 'Opciones de variación', 'Variantes (1)']);
+    expect(root.querySelector('h3')?.textContent?.trim()).toBe('Imágenes del producto');
     expect(root.querySelector('[role="group"]')?.textContent).toContain('Única');
   });
 

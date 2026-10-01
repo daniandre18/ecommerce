@@ -7,7 +7,7 @@ import type { WebClientConfig } from '@ecommerce/infrastructure/client';
  * guarda rechazaría.
  */
 export const environment: WebClientConfig = {
-  firebase: { projectId: '', apiKey: '', appId: '', authDomain: '' },
+  firebase: { projectId: '', apiKey: '', appId: '', authDomain: '', storageBucket: '' },
   functionsRegion: 'us-central1',
   appCheckSiteKey: '',
 };
