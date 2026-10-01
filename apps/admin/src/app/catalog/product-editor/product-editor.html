@@ -19,6 +19,16 @@
     <app-details-section [tenantId]="current.tenantId" [product]="current" />
   </section>
 
+  <section>
+    <app-image-upload
+      heading="Imágenes del producto"
+      [tenantId]="current.tenantId"
+      [productId]="current.id"
+      [images]="current.images"
+      [save]="saveProductImages"
+    />
+  </section>
+
   @if (variants.error()) {
     <ui-error-state heading="No pudimos cargar las variantes" (retry)="variants.reload()" />
   } @else if (variants.hasValue() && currency(); as money) {

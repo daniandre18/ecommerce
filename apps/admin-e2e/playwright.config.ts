@@ -34,7 +34,7 @@ export default defineConfig({
   webServer: [
     {
       // Las callable corren desde su paquete: se empaqueta antes de levantar el emulador de Functions.
-      command: 'npx nx run functions:build && firebase emulators:start --only auth,firestore,functions --project demo-ecommerce',
+      command: 'npx nx run functions:build && firebase emulators:start --only auth,firestore,functions,storage --project demo-ecommerce',
       url: 'http://127.0.0.1:4400/emulators',
       cwd: '../..',
       reuseExistingServer: !process.env['CI'],

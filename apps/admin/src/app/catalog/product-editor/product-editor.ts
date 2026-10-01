@@ -1,11 +1,21 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
-import { InvalidIdentifierError, productId, tenantId, type Product, type ProductId, type TenantId, type Variant } from '@ecommerce/domain';
+import {
+  InvalidIdentifierError,
+  productId,
+  tenantId,
+  type ImageRef,
+  type Product,
+  type ProductId,
+  type TenantId,
+  type Variant,
+} from '@ecommerce/domain';
 import { EmptyState, ErrorState, Skeleton } from '@ecommerce/ui';
-import { CATALOG_QUERIES } from '../../core/client';
+import { CATALOG_COMMANDS, CATALOG_QUERIES } from '../../core/client';
 import { liveResource } from '../../shared/live-resource';
 import { CURRENT_TENANT } from '../../tenant/current-tenant';
+import { ImageUpload } from '../image-upload/image-upload';
 import { VariantTable } from '../variant-table/variant-table';
 import { DetailsSection } from './details-section';
 import { OptionsEditor } from './options-editor/options-editor';
@@ -21,7 +31,7 @@ const STATUS_LABELS: Record<Product['status'], string> = { draft: 'Borrador', ac
 /** Un producto: sus datos, sus opciones de variación y una fila por variante (T055, T056). */
 @Component({
   selector: 'app-product-editor',
-  imports: [RouterLink, MatButton, Skeleton, ErrorState, EmptyState, DetailsSection, StatusControl, OptionsEditor, VariantTable],
+  imports: [RouterLink, MatButton, Skeleton, ErrorState, EmptyState, DetailsSection, ImageUpload, StatusControl, OptionsEditor, VariantTable],
   templateUrl: './product-editor.html',
   styleUrl: './product-editor.scss',
 })
@@ -30,6 +40,7 @@ export class ProductEditor {
   readonly productId = input.required<string>();
 
   private readonly queries = inject(CATALOG_QUERIES);
+  private readonly commands = inject(CATALOG_COMMANDS);
   private readonly tenant = inject(CURRENT_TENANT);
 
   private readonly ids = computed(() => parseIds(this.tenantId(), this.productId()));
@@ -45,6 +56,13 @@ export class ProductEditor {
   protected readonly currency = computed(() => this.tenant()?.currency);
   protected readonly catalogLink = computed(() => ['/t', this.tenantId(), 'catalog']);
   protected readonly missing = computed(() => this.ids() === undefined || (this.product.hasValue() && this.product.value() === null));
+
+  /** Las imágenes del producto se guardan con su versión vigente, como el resto de sus datos. */
+  protected readonly saveProductImages = (images: ImageRef[]) => {
+    const product = this.product.hasValue() ? this.product.value() : null;
+    if (!product) return Promise.resolve({ ok: false as const, code: 'not-found' as const, message: 'El producto no está cargado' });
+    return this.commands.updateProductDetails(product.tenantId, { productId: product.id, version: product.version, images });
+  };
 
   protected statusLabel(product: Product): string {
     return STATUS_LABELS[product.status];

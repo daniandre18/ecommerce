@@ -9,6 +9,7 @@ import type {
   SetVariantPriceInput,
   SetVariantStockInput,
 } from '../use-cases/set-variant-amounts';
+import type { SetVariantImagesInput } from '../use-cases/set-variant-images';
 import type { SetVariantSkuInput } from '../use-cases/set-variant-sku';
 import type { UpdateProductDetailsInput } from '../use-cases/update-product-details';
 
@@ -46,6 +47,7 @@ export interface CatalogCommands {
   setProductOptions(tenantId: TenantId, input: SetProductOptionsInput): Promise<CommandResult<SetProductOptionsOutput>>;
   setProductStatus(tenantId: TenantId, input: SetProductStatusInput): Promise<CommandResult<Version>>;
   setVariantSku(tenantId: TenantId, input: SetVariantSkuInput): Promise<CommandResult<Version & { readonly complete: boolean }>>;
+  setVariantImages(tenantId: TenantId, input: SetVariantImagesInput): Promise<CommandResult<Version>>;
   archiveProduct(tenantId: TenantId, input: { readonly productId: ProductId } & Version): Promise<CommandResult<Version>>;
   archiveVariant(
     tenantId: TenantId,

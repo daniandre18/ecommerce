@@ -1,8 +1,9 @@
 import { InjectionToken, inject, makeEnvironmentProviders, type EnvironmentProviders } from '@angular/core';
-import type { CatalogCommands, CatalogQueries, Session } from '@ecommerce/application';
+import type { CatalogCommands, CatalogQueries, ImageStorage, Session } from '@ecommerce/application';
 import {
   CallableCatalogCommands,
   connectWebClient,
+  FirebaseImageStorage,
   FirebaseSession,
   FirestoreCatalogQueries,
   type WebClient,
@@ -13,6 +14,7 @@ import {
 export const SESSION = new InjectionToken<Session>('Session');
 export const CATALOG_QUERIES = new InjectionToken<CatalogQueries>('CatalogQueries');
 export const CATALOG_COMMANDS = new InjectionToken<CatalogCommands>('CatalogCommands');
+export const IMAGE_STORAGE = new InjectionToken<ImageStorage>('ImageStorage');
 
 const WEB_CLIENT = new InjectionToken<WebClient>('WebClient');
 
@@ -23,5 +25,6 @@ export function provideWebClient(config: WebClientConfig): EnvironmentProviders 
     { provide: SESSION, useFactory: () => new FirebaseSession(inject(WEB_CLIENT).auth) },
     { provide: CATALOG_QUERIES, useFactory: () => new FirestoreCatalogQueries(inject(WEB_CLIENT).firestore) },
     { provide: CATALOG_COMMANDS, useFactory: () => new CallableCatalogCommands(inject(WEB_CLIENT).functions) },
+    { provide: IMAGE_STORAGE, useFactory: () => new FirebaseImageStorage(inject(WEB_CLIENT).storage) },
   ]);
 }

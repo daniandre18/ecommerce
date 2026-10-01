@@ -2,10 +2,12 @@ import {
   MAX_COMBINATIONS,
   normalizeName,
   type AuditActor,
+  type ImageRef,
   type Money,
   type Product,
   type ProductId,
   type Tenant,
+  type TenantId,
   type Variant,
   type VariantId,
 } from '@ecommerce/domain';
@@ -98,3 +100,21 @@ export const actorOf = (ctx: OperationContext): AuditActor => ({
   uid: ctx.actorUid,
   name: ctx.actorName,
 });
+
+/**
+ * Toda imagen lleva texto alternativo (FR-038a) y vive bajo la carpeta de su producto: una
+ * referencia a la imagen de otro producto o de otro comercio se rechaza. Vale igual para las
+ * imágenes del producto y para las de cada variante.
+ */
+export function validImages(images: readonly ImageRef[], tenantId: TenantId, productId: ProductId): ImageRef[] {
+  const folder = `tenants/${tenantId}/products/${productId}/`;
+  return images.map((image) => {
+    if (image.alt.trim() === '') {
+      throw new BusinessRuleError('invalid-argument', 'Toda imagen necesita un texto alternativo');
+    }
+    if (!image.storagePath.startsWith(folder) || image.storagePath.includes('..')) {
+      throw new BusinessRuleError('invalid-argument', 'La imagen no pertenece a este producto');
+    }
+    return { ...image, alt: image.alt.trim() };
+  });
+}

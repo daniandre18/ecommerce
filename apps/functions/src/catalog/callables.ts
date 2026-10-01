@@ -4,6 +4,7 @@ import {
   CreateProduct,
   SetProductOptions,
   SetProductStatus,
+  SetVariantImages,
   SetVariantSku,
   UpdateProductDetails,
 } from '@ecommerce/application';
@@ -14,6 +15,7 @@ import {
   parseCreateProduct,
   parseSetProductOptions,
   parseSetProductStatus,
+  parseSetVariantImages,
   parseSetVariantSku,
   parseUpdateProductDetails,
 } from '../bootstrap/parse';
@@ -27,6 +29,7 @@ export function catalogCallables(deps: CallableDependencies) {
     setProductOptions: defineCallable('setProductOptions', SetProductOptions, parseSetProductOptions),
     setProductStatus: defineCallable('setProductStatus', SetProductStatus, parseSetProductStatus),
     setVariantSku: defineCallable('setVariantSku', SetVariantSku, parseSetVariantSku),
+    setVariantImages: defineCallable('setVariantImages', SetVariantImages, parseSetVariantImages),
     archiveProduct: defineCallable('archiveProduct', ArchiveProduct, parseArchiveProduct),
     archiveVariant: defineCallable('archiveVariant', ArchiveVariant, parseArchiveVariant),
   };

@@ -8,6 +8,15 @@
         <span class="incomplete">Falta el SKU</span>
       }
     </p>
+    <button
+      matButton
+      type="button"
+      class="images"
+      [attr.aria-label]="'Imágenes de ' + label() + ' (' + variant().images.length + ')'"
+      (click)="openImages()"
+    >
+      Imágenes ({{ variant().images.length }})
+    </button>
   </div>
 
   <div class="fields">

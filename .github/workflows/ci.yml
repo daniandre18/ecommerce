@@ -61,7 +61,7 @@ jobs:
           firebase-tools-version: ${{ env.FIREBASE_TOOLS_VERSION }}
       - run: >
           npx --yes firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}
-          emulators:exec --only firestore --project demo-ecommerce "npm run test:rules"
+          emulators:exec --only firestore,storage --project demo-ecommerce "npm run test:rules"
 
   # Atomicidad de la bitácora en ambos sentidos (FR-030, FR-033) y sembrador, contra los emuladores.
   integration:
@@ -74,5 +74,5 @@ jobs:
           firebase-tools-version: ${{ env.FIREBASE_TOOLS_VERSION }}
       - run: >
           npx --yes firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}
-          emulators:exec --only auth,firestore --project demo-ecommerce
+          emulators:exec --only auth,firestore,storage --project demo-ecommerce
           "npm run test:infrastructure && npm run test:functions && npm run test:tools"

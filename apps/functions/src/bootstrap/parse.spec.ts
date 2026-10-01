@@ -3,6 +3,7 @@ import {
   parseCreateProduct,
   parseSetProductOptions,
   parseSetVariantPrice,
+  parseSetVariantImages,
   parseSetVariantStock,
   parseUpdateProductDetails,
 } from './parse';
@@ -79,6 +80,23 @@ describe('parseo de la entrada de las callable', () => {
 
     it.each([{ kind: 'quantity', value: -1 }, { kind: 'quantity', value: 1.5 }, { kind: 'otro' }, 5])('rechaza %j', (value) => {
       expect(rejection(() => parseSetVariantStock(stock(value))).code).toBe('invalid-argument');
+    });
+  });
+
+  describe('imágenes (FR-038a)', () => {
+    it('la posición es el orden de la lista, y cada una trae su texto alternativo', () => {
+      const parsed = parseSetVariantImages({
+        productId: 'p1',
+        variantId: 'v1',
+        version: 1,
+        images: [{ storagePath: 'tenants/t1/products/p1/images/b.png', alt: 'Dorso', position: 7 }, { storagePath: 'tenants/t1/products/p1/images/a.png', alt: 'Frente' }],
+      });
+      expect(parsed.images.map((image) => [image.alt, image.position])).toEqual([['Dorso', 0], ['Frente', 1]]);
+    });
+
+    it('sin texto alternativo como texto, se rechaza nombrando el campo', () => {
+      const input = { productId: 'p1', variantId: 'v1', version: 1, images: [{ storagePath: 'x' }] };
+      expect(rejection(() => parseSetVariantImages(input)).details).toEqual({ field: 'images[0].alt' });
     });
   });
 

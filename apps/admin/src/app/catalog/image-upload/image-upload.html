@@ -1,0 +1,44 @@
+<h3 [id]="headingId">{{ heading() }}</h3>
+
+@if (images().length > 0) {
+  <ul [attr.aria-labelledby]="headingId">
+    @for (image of images(); track image.storagePath; let i = $index) {
+      <li>
+        <app-storage-image [storagePath]="image.storagePath" [alt]="image.alt" />
+        <span class="alt">{{ image.alt }}</span>
+        <button matButton type="button" [attr.aria-label]="'Quitar la imagen «' + image.alt + '»'" (click)="remove(i)">Quitar</button>
+      </li>
+    }
+  </ul>
+} @else if (!chosen()) {
+  <p class="empty">Todavía no tiene imágenes.</p>
+}
+
+@if (chosen(); as selected) {
+  <form novalidate (submit)="$event.preventDefault(); upload()">
+    <!-- Vista previa decorativa: el texto alternativo se está escribiendo al lado. -->
+    <img class="preview" [src]="selected.preview" alt="" width="96" height="96" />
+    <mat-form-field>
+      <mat-label>Texto alternativo</mat-label>
+      <input matInput autocomplete="off" [formField]="altForm.alt" />
+      <mat-hint>Qué muestra la imagen, para quien no puede verla.</mat-hint>
+      @if (altForm.alt().errors()[0]; as error) {
+        <mat-error>{{ error.message }}</mat-error>
+      }
+    </mat-form-field>
+    @if (progress() !== undefined) {
+      <mat-progress-bar mode="determinate" aria-label="Subiendo la imagen" [value]="(progress() ?? 0) * 100" />
+    }
+    <div class="actions">
+      <button matButton type="button" (click)="cancel()">Cancelar</button>
+      <button matButton="filled" type="submit" [disabled]="altForm().submitting()">
+        {{ uploadedPath() ? 'Reintentar guardar' : 'Subir imagen' }}
+      </button>
+    </div>
+  </form>
+} @else {
+  <input #file type="file" hidden [accept]="accept" (change)="choose(file)" />
+  <button matButton="outlined" type="button" (click)="file.click()">Agregar imagen</button>
+}
+
+<div role="alert" class="failure">{{ failure() }}</div>

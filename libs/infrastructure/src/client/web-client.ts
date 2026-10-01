@@ -3,12 +3,14 @@ import { CustomProvider, initializeAppCheck, ReCaptchaEnterpriseProvider } from 
 import { connectAuthEmulator, getAuth, type Auth } from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore, type Firestore } from 'firebase/firestore';
 import { connectFunctionsEmulator, getFunctions, type Functions } from 'firebase/functions';
+import { connectStorageEmulator, getStorage, type FirebaseStorage } from 'firebase/storage';
 
 /** Los puertos de `firebase.json`. */
 export interface EmulatorPorts {
   readonly auth: number;
   readonly firestore: number;
   readonly functions: number;
+  readonly storage: number;
 }
 
 interface CommonConfig {
@@ -29,6 +31,7 @@ export interface WebClient {
   readonly auth: Auth;
   readonly firestore: Firestore;
   readonly functions: Functions;
+  readonly storage: FirebaseStorage;
 }
 
 export function connectWebClient(config: WebClientConfig): WebClient {
@@ -36,7 +39,12 @@ export function connectWebClient(config: WebClientConfig): WebClient {
     throw new Error('Falta la clave de App Check del proyecto real: sin ella, la guarda rechazaría toda orden');
   }
   const app = initializeApp(config.firebase);
-  const client = { auth: getAuth(app), firestore: getFirestore(app), functions: getFunctions(app, config.functionsRegion) };
+  const client = {
+    auth: getAuth(app),
+    firestore: getFirestore(app),
+    functions: getFunctions(app, config.functionsRegion),
+    storage: getStorage(app),
+  };
 
   if ('emulators' in config) {
     assertDemoProject(config.firebase.projectId);
@@ -44,6 +52,7 @@ export function connectWebClient(config: WebClientConfig): WebClient {
     connectAuthEmulator(client.auth, `http://${host}:${ports.auth}`, { disableWarnings: true });
     connectFirestoreEmulator(client.firestore, host, ports.firestore);
     connectFunctionsEmulator(client.functions, host, ports.functions);
+    connectStorageEmulator(client.storage, host, ports.storage);
     initializeAppCheck(app, { provider: emulatorAppCheck(config.firebase.appId ?? 'demo-app'), isTokenAutoRefreshEnabled: true });
   } else {
     initializeAppCheck(app, { provider: new ReCaptchaEnterpriseProvider(config.appCheckSiteKey), isTokenAutoRefreshEnabled: true });

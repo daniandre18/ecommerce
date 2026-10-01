@@ -150,6 +150,20 @@ Response { version: number; complete: boolean }
 Permiso: `catalog.write`. Crea `skuIndex/{SKU_NORMALIZADO}` en la misma transacción; si ya existe y
 apunta a otra variante → `sku-conflict` con el `variantId` que lo ocupa (FR-021).
 
+### `setVariantImages`
+
+Nueva en T060 (FR-020: cada variante, también la implícita, tiene sus propias imágenes).
+
+```typescript
+Request  { tenantId; productId; variantId; version: number;
+           images: Array<{ storagePath: string; alt: string }> }   // lista completa; la posición es el orden
+Response { version: number }
+```
+
+Permiso: `catalog.write`. Mismas reglas que las imágenes del producto: texto alternativo obligatorio
+(FR-038a) y ruta bajo `tenants/{tenantId}/products/{productId}/`. Quitar una imagen es no incluirla:
+el archivo no se borra. El archivo se sube antes, directo a Storage (research.md §10).
+
 ### `archiveProduct` / `archiveVariant`
 
 ```typescript

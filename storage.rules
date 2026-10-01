@@ -1,16 +1,44 @@
 rules_version = '2';
 
-// Lectura para miembros del comercio; escritura para nadie desde el cliente. Las imágenes se suben
-// con URL firmada de duración corta, emitida por una Cloud Function que antes verifica
-// `catalog.write` y valida tipo y tamaño del lado del servidor.
+// Las imágenes del catálogo se suben directo desde el panel, y estas reglas —que corren en el
+// servidor— deciden quién, qué tipo, cuánto y dónde. La referencia a la imagen (con su texto
+// alternativo obligatorio) se guarda aparte y solo por callable: el cliente sigue sin escribir en
+// Firestore. Se descartó la URL firmada que emitía una Cloud Function: firmar exige una cuenta de
+// servicio real, así que ese camino no se podía probar contra los emuladores (research.md §10).
 service firebase.storage {
   match /b/{bucket}/o {
-    match /tenants/{tenantId}/{allPaths=**} {
-      allow read: if request.auth != null
-        && firestore.exists(/databases/(default)/documents/tenants/$(tenantId)/members/$(request.auth.uid))
-        && firestore.get(/databases/(default)/documents/tenants/$(tenantId)/members/$(request.auth.uid)).data.status == 'active';
-      allow write: if false;
+
+    function membershipPath(tenantId) {
+      return /databases/(default)/documents/tenants/$(tenantId)/members/$(request.auth.uid);
     }
+
+    function isActiveMember(tenantId) {
+      return request.auth != null
+        && firestore.exists(membershipPath(tenantId))
+        && firestore.get(membershipPath(tenantId)).data.status == 'active';
+    }
+
+    // Propietario, o un rol con `catalog.write`. El rol del Propietario no lista permisos: los tiene todos.
+    function canEditCatalog(tenantId) {
+      let member = firestore.get(membershipPath(tenantId)).data;
+      return isActiveMember(tenantId)
+        && (member.isOwner == true
+          || 'catalog.write' in firestore.get(/databases/(default)/documents/tenants/$(tenantId)/roles/$(member.roleId)).data.permissions);
+    }
+
+    match /tenants/{tenantId}/{allPaths=**} {
+      allow read: if isActiveMember(tenantId);
+    }
+
+    // Solo crear: una imagen subida no se reemplaza ni se borra desde el cliente. Cada subida usa
+    // un nombre nuevo, y quitarla de un producto es quitar su referencia.
+    match /tenants/{tenantId}/products/{productId}/images/{fileName} {
+      allow create: if resource == null
+        && canEditCatalog(tenantId)
+        && request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp|avif|gif)');
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

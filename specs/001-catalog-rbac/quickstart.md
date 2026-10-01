@@ -21,6 +21,7 @@ No hace falta un proyecto de Firebase real: todo corre contra emuladores.
 ```bash
 npm install
 npx nx run-many -t build            # dominio, aplicación, functions y app
+npx nx run functions:build          # las callable corren desde su paquete
 firebase emulators:start            # Auth, Firestore, Functions, Storage
 npx nx serve admin                  # panel en http://localhost:4200
 ```

@@ -154,6 +154,41 @@ async function priceBatches(productId: string): Promise<Map<string, number>> {
   return batches;
 }
 
+/** Un PNG de 1×1 píxel: lo mínimo que un navegador muestra como imagen. */
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+
+// Paso 2, la parte de las imágenes (T060, FR-020, FR-038a): el producto y su variante implícita
+// aceptan imágenes, siempre con texto alternativo.
+test('el producto y su variante implícita aceptan imágenes con texto alternativo', async ({ page }) => {
+  await createProduct(page, `Taza ${test.info().project.name}-${Date.now()}`);
+
+  await test.step('una imagen del producto', async () => {
+    await page.locator('app-product-editor > section app-image-upload input[type="file"]').setInputFiles({ name: 'taza.png', mimeType: 'image/png', buffer: PNG });
+    const form = page.locator('app-product-editor > section app-image-upload form');
+    await form.getByRole('button', { name: 'Subir imagen' }).click();
+    await expect(form.getByText('Describí la imagen para quien no puede verla')).toBeVisible();
+    await form.getByLabel('Texto alternativo').fill('Taza blanca de frente');
+    await form.getByRole('button', { name: 'Subir imagen' }).click();
+    await expect(page.getByRole('img', { name: 'Taza blanca de frente' })).toBeVisible();
+  });
+
+  await test.step('una imagen de la variante implícita', async () => {
+    await variant(page, 'Única').getByRole('button', { name: 'Imágenes de Única (0)' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Imágenes de Única' });
+    await dialog.locator('input[type="file"]').setInputFiles({ name: 'asa.png', mimeType: 'image/png', buffer: PNG });
+    await dialog.getByLabel('Texto alternativo').fill('Detalle del asa');
+    await dialog.getByRole('button', { name: 'Subir imagen' }).click();
+    await expect(dialog.getByRole('img', { name: 'Detalle del asa' })).toBeVisible();
+    await dialog.getByRole('button', { name: 'Listo' }).click();
+    await expect(variant(page, 'Única').getByRole('button', { name: 'Imágenes de Única (1)' })).toBeVisible();
+  });
+
+  await test.step('un formato no admitido se avisa antes de subir', async () => {
+    await page.locator('app-product-editor > section app-image-upload input[type="file"]').setInputFiles({ name: 'logo.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg/>') });
+    await expect(page.getByRole('alert').filter({ hasText: 'Ese formato no se admite' })).toBeVisible();
+  });
+});
+
 // Paso 9 (FR-025): los topes se avisan antes de enviar y no se crea nada.
 test('topes: hasta 5 opciones y 100 combinaciones, sin crear nada', async ({ page }) => {
   await createProduct(page, `Topes ${test.info().project.name}-${Date.now()}`);
