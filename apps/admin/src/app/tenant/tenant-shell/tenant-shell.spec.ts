@@ -3,8 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { SignOut } from '../../auth/sign-out';
-import { CATALOG_QUERIES } from '../../core/client';
-import { FakeCatalogQueries, tenant } from '../../../testing/fakes';
+import { CATALOG_QUERIES, SESSION, TENANT_DIRECTORY } from '../../core/client';
+import { access, FakeCatalogQueries, FakeSession, FakeTenantDirectory, OWNER, tenant } from '../../../testing/fakes';
 import { settle } from '../../../testing/settle';
 import { TenantShell } from './tenant-shell';
 
@@ -13,16 +13,22 @@ class Child {}
 
 describe('TenantShell', () => {
   let queries: FakeCatalogQueries;
+  let directory: FakeTenantDirectory;
   const signOut = { run: vi.fn(async () => undefined) };
 
   beforeEach(() => {
     queries = new FakeCatalogQueries();
+    directory = new FakeTenantDirectory();
+    const session = new FakeSession();
+    session.user = OWNER;
     signOut.run.mockClear();
     TestBed.configureTestingModule({
       providers: [
         provideRouter([{ path: 't/:tenantId', component: TenantShell, children: [{ path: '', component: Child }] }], withComponentInputBinding()),
         { provide: CATALOG_QUERIES, useValue: queries },
         { provide: SignOut, useValue: signOut },
+        { provide: SESSION, useValue: session },
+        { provide: TENANT_DIRECTORY, useValue: directory },
       ],
     });
   });
@@ -60,6 +66,18 @@ describe('TenantShell', () => {
     await settle();
     expect(queries.tenants.filter((s) => !s.closed)).toHaveLength(1);
     expect(queries.tenants).toHaveLength(2);
+  });
+
+  // T075: cambiar de comercio es navegar; con uno solo, no se ofrece.
+  it('ofrece cambiar de comercio solo si la cuenta tiene más de uno', async () => {
+    const root = await open();
+    const link = () => [...root.querySelectorAll('a')].find((a) => a.textContent?.includes('Cambiar de comercio'));
+    directory.open.emit([access('t1', 'Comercio Uno', true)]);
+    await settle();
+    expect(link()).toBeUndefined();
+    directory.open.emit([access('t1', 'Comercio Uno', true), access('t2', 'Comercio Dos')]);
+    await settle();
+    expect(link()?.getAttribute('href')).toBe('/');
   });
 
   it('permite cerrar la sesión', async () => {

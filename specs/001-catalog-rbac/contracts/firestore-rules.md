@@ -133,6 +133,7 @@ obligatorio y CI bloquea el merge si alguno falla.**
 | 5 | Sin autenticar | Leer cualquier cosa | **Denegado** |
 | 6 | Autenticado sin ninguna membresía | Leer `tenants/t1/products/p1` | **Denegado** |
 | 7 | Miembro con `status: 'invited'` (aún no aceptó) | Leer `tenants/t1/products/p1` | **Denegado** (FR-007) |
+| 36 | Cuenta con membresías en `t1` y `t2` | Consulta de grupo sobre `members` filtrada por su uid; filtrada por otro uid; sin filtro | **Permitido** (sus dos membresías); **Denegado**; **Denegado** (T075) |
 | 35 | Miembro activo de `t1` | Leer el documento `tenants/t1`; y el de `tenants/t2` | **Permitido**; **Denegado** (agregado en T054: el panel necesita el nombre y la moneda) |
 
 ### Cuentas en varios comercios (FR-005) — casos nuevos de esta revisión

@@ -108,6 +108,9 @@ interface Membership {
 **Reglas**:
 - El id del documento es el `uid` de Firebase Auth. Una cuenta puede tener una membresía en cada
   comercio; **cada una con su rol y su estado propios** (FR-005).
+- El `uid` se guarda además como campo (T075): una cuenta encuentra sus comercios con una consulta
+  de grupo sobre `members` filtrada por su uid, que es lo único que las reglas le permiten listar.
+  Requiere el índice de grupo de colecciones sobre `members.uid` (`firestore.indexes.json`).
 - `status: 'disabled'` es baja lógica y **solo de ese comercio**: no afecta las membresías de esa
   cuenta en otros comercios ni su capacidad de autenticarse (FR-008a).
 - El documento **nunca** se borra si tiene entradas de bitácora asociadas. Reactivar vuelve a

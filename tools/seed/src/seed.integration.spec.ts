@@ -22,6 +22,11 @@ describe('sembrador', () => {
     }
   });
 
+  // T075: la cuenta encuentra sus comercios consultando sus membresías por este campo.
+  it('cada membresía guarda el uid de su cuenta', async () => {
+    expect(await member('t2', ACCOUNTS.multi.uid)).toEqual(expect.objectContaining({ uid: ACCOUNTS.multi.uid }));
+  });
+
   it('los comercios operan en pesos colombianos', async () => {
     for (const tenant of ['t1', 't2']) {
       expect((await db.doc(`tenants/${tenant}`).get()).get('currency')).toBe('COP');

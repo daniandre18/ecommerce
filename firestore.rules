@@ -97,6 +97,14 @@ service cloud.firestore {
       // `skuIndex` no se declara: lo consulta solo el servidor.
     }
 
+    // Los comercios de una cuenta (T075): consulta de grupo sobre todas las `members`, solo si
+    // filtra por el uid de quien consulta. Este comodín coincide únicamente con documentos de
+    // `members` y solo concede `list` de membresías propias, que ya eran legibles una por una: no
+    // se superpone con ninguna ruta reservada. Prueba: tests/rules/my-tenants.spec.ts
+    match /{path=**}/members/{memberUid} {
+      allow list: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
     // Ninguna regla de este archivo concede `write`. Todo lo no listado queda denegado.
   }
 }

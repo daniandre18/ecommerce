@@ -19,3 +19,4 @@ export * from './client/commands';
 export * from './client/queries';
 export * from './client/session';
 export * from './client/images';
+export * from './client/tenants';

@@ -2,7 +2,7 @@ import type { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 
 // Todo lo de un comercio cuelga de /t/{tenantId}/…: el comercio activo es la ruta, no un estado
-// escondido. Equipo y bitácora se suman con sus historias (T075, T085).
+// escondido, y cambiar de comercio es navegar (T075). Equipo y bitácora se suman con sus historias.
 export const routes: Routes = [
   { path: 'login', title: 'Iniciar sesión', loadComponent: () => import('./auth/login/login').then((m) => m.Login) },
   {
@@ -12,8 +12,8 @@ export const routes: Routes = [
       {
         path: '',
         pathMatch: 'full',
-        title: 'Tu comercio',
-        loadComponent: () => import('./tenant/tenant-entry/tenant-entry').then((m) => m.TenantEntry),
+        title: 'Tus comercios',
+        loadComponent: () => import('./tenant/tenant-switcher/tenant-picker').then((m) => m.TenantPicker),
       },
       {
         path: 't/:tenantId',
