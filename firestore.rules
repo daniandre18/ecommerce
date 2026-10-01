@@ -35,7 +35,7 @@ service cloud.firestore {
       return isActiveMember(tenantId) && member(tenantId).isOwner == true;
     }
 
-    // Lee el rol de la membresía. Solo lo usa la ruta de costos (T068, Historia 2).
+    // Lee el rol de la membresía: +1 lectura. Solo lo usa la ruta de costos (T068).
     function hasPermission(tenantId, permission) {
       return isActiveMember(tenantId)
         && permission in get(/databases/$(database)/documents/tenants/$(tenantId)/roles/$(member(tenantId).roleId)).data.permissions;
@@ -55,10 +55,10 @@ service cloud.firestore {
           allow read: if isActiveMember(tenantId);
         }
 
-        // Costos: documento aparte porque Firestore no protege campos sueltos (FR-015).
-        // Hoy, solo el Propietario. T068 suma `|| hasPermission(tenantId, 'variant.cost.read')`.
+        // Costos: documento aparte porque Firestore no protege campos sueltos (FR-015). Lo lee el
+        // Propietario o un rol con `variant.cost.read` (T068); ningún otro permiso lo abre (caso 34).
         match /private/{docId} {
-          allow read: if isOwnerOf(tenantId);
+          allow read: if isOwnerOf(tenantId) || hasPermission(tenantId, 'variant.cost.read');
         }
       }
 

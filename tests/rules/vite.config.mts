@@ -1,8 +1,12 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 // Pruebas de reglas contra el emulador de Firestore. Se ejecutan con:
 //   firebase emulators:exec --only firestore "npm run test:rules"
 export default defineConfig({
+  resolve: {
+    alias: { '@ecommerce/domain': fileURLToPath(new URL('../../libs/domain/src/index.ts', import.meta.url)) },
+  },
   test: {
     name: 'rules',
     root: import.meta.dirname,
