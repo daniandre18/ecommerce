@@ -4,12 +4,18 @@
   border-bottom: 1px solid var(--mat-sys-outline-variant);
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
 .label {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 8px;
-  margin: 0 0 8px;
+  margin: 0;
   font: var(--mat-sys-title-medium);
   overflow-wrap: anywhere;
 }

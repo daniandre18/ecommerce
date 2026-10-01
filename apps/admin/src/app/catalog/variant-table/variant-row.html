@@ -1,10 +1,14 @@
 <div role="group" [attr.aria-labelledby]="headingId()">
-  <p class="label" [id]="headingId()">
-    {{ label() }}
-    @if (incomplete()) {
-      <span class="incomplete">Falta el SKU</span>
-    }
-  </p>
+  <div class="header">
+    <!-- Fuera del párrafo que nombra el grupo: si no, el nombre de la fila empezaría por "Seleccionar". -->
+    <mat-checkbox [checked]="selected()" [aria-label]="'Seleccionar ' + label()" (change)="selectedChange.emit($event.checked)" />
+    <p class="label" [id]="headingId()">
+      {{ label() }}
+      @if (incomplete()) {
+        <span class="incomplete">Falta el SKU</span>
+      }
+    </p>
+  </div>
 
   <div class="fields">
     <mat-form-field subscriptSizing="dynamic" floatLabel="always">

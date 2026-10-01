@@ -1,0 +1,35 @@
+<h2 id="estado">Estado</h2>
+
+<mat-radio-group aria-labelledby="estado" [value]="target()" (change)="choose($event.value)">
+  @for (status of statuses; track status.value) {
+    <mat-radio-button [value]="status.value">
+      {{ status.name }} <span class="hint">{{ status.hint }}</span>
+    </mat-radio-button>
+  }
+</mat-radio-group>
+
+<div role="alert" class="blocked">
+  @if (blocking().length > 0) {
+    <p>Para dejarlo «{{ targetName() }}», completá el SKU de:</p>
+    <ul>
+      @for (label of blocking(); track label) {
+        <li>{{ label }}</li>
+      }
+    </ul>
+  } @else if (noVariants()) {
+    <p>El producto no tiene variantes en circulación.</p>
+  }
+  {{ failure() }}
+</div>
+
+<div class="actions">
+  <button
+    matButton="filled"
+    type="button"
+    [disabled]="target() === product().status || blocking().length > 0 || noVariants() || saving()"
+    (click)="apply()"
+  >
+    Cambiar estado
+  </button>
+  <button matButton type="button" (click)="archive()">Archivar producto</button>
+</div>
