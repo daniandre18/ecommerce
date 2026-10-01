@@ -1,4 +1,4 @@
-import type { AuditEntry, PriceField } from '../entities/audit-entry';
+import type { AuditEntity, AuditEntry, PriceField, RoleChangeKind, RoleSnapshot } from '../entities/audit-entry';
 import type { AuditEntryId, BatchId, ProductId, TenantId, Uid, VariantId } from '../value-objects/ids';
 import type { Money } from '../value-objects/money';
 import type { StockLevel } from '../value-objects/stock-level';
@@ -52,4 +52,30 @@ export function buildAuditEntries(
       ? { ...common, type: change.type, field: change.field, before: change.before, after: change.after }
       : { ...common, type: change.type, before: change.before, after: change.after };
   });
+}
+
+/** Un cambio de equipo: roles, permisos, membresías, invitaciones o propiedad (FR-031a). */
+export interface TeamChange {
+  readonly change: RoleChangeKind;
+  readonly entity: Pick<AuditEntity, 'kind' | 'id'>;
+  readonly before: RoleSnapshot | null;
+  readonly after: RoleSnapshot | null;
+}
+
+/** Una entrada `role.changed`, con lo anterior y lo resultante (FR-031). */
+export function buildTeamAuditEntry(actor: AuditActor, change: TeamChange, meta: { readonly at: Date; readonly id: AuditEntryId }): AuditEntry {
+  return {
+    id: meta.id,
+    tenantId: actor.tenantId,
+    actorUid: actor.uid,
+    actorName: actor.name,
+    actorKind: 'member',
+    at: meta.at,
+    batchId: null,
+    entity: { kind: change.entity.kind, id: change.entity.id },
+    type: 'role.changed',
+    change: change.change,
+    before: change.before,
+    after: change.after,
+  };
 }

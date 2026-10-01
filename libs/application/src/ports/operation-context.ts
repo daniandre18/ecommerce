@@ -9,5 +9,7 @@ export interface OperationContext {
   readonly tenantId: TenantId;
   readonly actorUid: Uid;
   readonly actorName: string;
+  /** Del token de sesión. Lo usa aceptar una invitación, que va dirigida a un correo. */
+  readonly actorEmail: string | null;
   readonly requestId: string;
 }

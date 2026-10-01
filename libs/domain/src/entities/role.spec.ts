@@ -7,6 +7,7 @@ import {
   createCustomRole,
   createOwnerRole,
   PRESET_CATALOG_PERMISSIONS,
+  presetRoles,
   RoleNotDeletableError,
   RoleNotEditableError,
   setRolePermissions,
@@ -84,5 +85,16 @@ describe('Role', () => {
       const adjusted = setRolePermissions(createCatalogRole(T1, NOW), ['catalog.read']);
       expect(adjusted.permissions).toEqual(['catalog.read']);
     });
+  });
+});
+
+// T070 — todo comercio nace con Propietario y Catálogo, y nada más.
+describe('presetRoles', () => {
+  it('Propietario no editable ni eliminable; Catálogo con exactamente sus tres permisos (FR-016)', () => {
+    const [owner, catalog, ...rest] = presetRoles(tenantId('t1'), new Date('2026-09-30T12:00:00Z'));
+    expect(rest).toEqual([]);
+    expect(owner).toEqual(expect.objectContaining({ id: 'owner', editable: false, permissions: [] }));
+    expect(owner && canDeleteRole(owner)).toBe(false);
+    expect(catalog).toEqual(expect.objectContaining({ id: 'catalog', editable: true, permissions: ['catalog.read', 'catalog.write', 'variant.stock.write'] }));
   });
 });

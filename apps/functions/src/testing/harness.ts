@@ -19,9 +19,9 @@ export const AT = new Date('2026-09-30T12:00:00Z');
 export const T1 = tenantId('t1');
 
 /** Solo los campos que leen la guarda y las callable; el resto de `CallableRequest` no interviene. */
-export function callRequest(parts: { auth?: { uid: string; name?: string }; app?: boolean; data?: unknown }) {
+export function callRequest(parts: { auth?: { uid: string; name?: string; email?: string }; app?: boolean; data?: unknown }) {
   return {
-    auth: parts.auth && { uid: parts.auth.uid, token: { name: parts.auth.name } },
+    auth: parts.auth && { uid: parts.auth.uid, token: { name: parts.auth.name, email: parts.auth.email } },
     app: parts.app === false ? undefined : { appId: 'app' },
     data: parts.data ?? { tenantId: 't1' },
   } as unknown as CallableRequest<unknown>;

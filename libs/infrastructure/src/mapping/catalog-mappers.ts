@@ -40,6 +40,11 @@ export function tenantFromDoc(id: string, d: DocumentData): Tenant {
   };
 }
 
+/** Campos persistidos, enumerados a propósito. El `id` está en la ruta. */
+export function tenantToDoc(t: Tenant): DocumentData {
+  return { name: t.name, ownerUid: t.ownerUid, currency: t.currency, createdAt: t.createdAt, createdBy: t.createdBy, status: t.status };
+}
+
 export function productFromDoc(id: string, tid: string, d: DocumentData): Product {
   return {
     id: productId(id),

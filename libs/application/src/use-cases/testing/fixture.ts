@@ -20,7 +20,7 @@ export const T1 = tenantId('t1');
 export const NOW = new Date('2026-09-30T12:00:00Z');
 export const USD = money(0, 'USD').currency as CurrencyCode;
 
-export const ctx: OperationContext = { tenantId: T1, actorUid: uid('ana'), actorName: 'Ana Pérez', requestId: 'req-1' };
+export const ctx: OperationContext = { tenantId: T1, actorUid: uid('ana'), actorName: 'Ana Pérez', actorEmail: 'ana@t1.test', requestId: 'req-1' };
 
 export interface UseCase<I, O> {
   execute(tx: TransactionScope, ctx: OperationContext, input: I): Promise<O>;

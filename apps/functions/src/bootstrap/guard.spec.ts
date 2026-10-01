@@ -1,4 +1,4 @@
-import { requireOwner, requirePermission } from '@ecommerce/application';
+import { requireAccount, requireOwner, requirePermission } from '@ecommerce/application';
 import type { InMemorySecurityEventRecorder } from '@ecommerce/application/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { callRequest, harness, httpsErrorCode } from '../testing/harness';
@@ -71,6 +71,14 @@ describe('guarded', () => {
       const catalogEdit = { operation: 'updateProductDetails', requires: requirePermission('catalog.write') };
       const ctx = await guarded(request, catalogEdit, deps, async (_tx, context) => context);
       expect(ctx).toEqual(expect.objectContaining({ tenantId: 't1', actorUid: 'ana', actorName: 'Ana' }));
+    });
+
+    // Aceptar una invitación: quien acepta todavía no es miembro; el caso de uso verifica el correo.
+    it('una operación que solo exige cuenta pasa sin membresía, con el correo de la sesión en el contexto', async () => {
+      const accept = { operation: 'acceptInvitation', requires: requireAccount() };
+      const request = callRequest({ auth: { uid: 'nueva', email: 'nueva@correo.test' }, data: { tenantId: 't1' } });
+      const ctx = await guarded(request, accept, deps, async (_tx, context) => context);
+      expect(ctx).toEqual(expect.objectContaining({ actorUid: 'nueva', actorEmail: 'nueva@correo.test' }));
     });
 
     it('las operaciones de Propietario rechazan a cualquier otro rol', async () => {

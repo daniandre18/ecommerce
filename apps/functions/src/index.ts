@@ -2,6 +2,7 @@ import { setGlobalOptions } from 'firebase-functions/options';
 import { productionDependencies } from './bootstrap/composition';
 import { catalogCallables } from './catalog/callables';
 import { pricingCallables } from './pricing/callables';
+import { teamCallables } from './team/callables';
 
 /**
  * Una sola región, la misma que Firestore, para no pagar latencia entre regiones. ⚠️ La ubicación
@@ -27,3 +28,15 @@ export const {
 } = catalogCallables(deps);
 
 export const { setVariantPrice, setVariantCost, setVariantStock } = pricingCallables(deps);
+
+export const {
+  createRole,
+  updateRole,
+  deleteRole,
+  inviteCollaborator,
+  revokeInvitation,
+  acceptInvitation,
+  assignRole,
+  setMembershipEnabled,
+  transferOwnership,
+} = teamCallables(deps);

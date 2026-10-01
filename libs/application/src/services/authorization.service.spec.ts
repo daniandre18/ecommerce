@@ -18,7 +18,7 @@ import { RoleBasedAuthorizationService } from './authorization.service';
 
 const T1 = tenantId('t1');
 const AT = new Date('2026-09-30T12:00:00Z');
-const ctx = (u: string): OperationContext => ({ tenantId: T1, actorUid: uid(u), actorName: u, requestId: 'r' });
+const ctx = (u: string): OperationContext => ({ tenantId: T1, actorUid: uid(u), actorName: u, actorEmail: `${u}@t1`, requestId: 'r' });
 
 function activeMember(u: string, role: string, isOwner = false): Membership {
   const m = activateMembership(

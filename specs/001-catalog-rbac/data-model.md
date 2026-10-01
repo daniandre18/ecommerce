@@ -167,8 +167,8 @@ mutación (FR-008). Todo cambio de rol o de permisos deja entrada de bitácora (
 interface Invitation {
   id: InvitationId;
   tenantId: TenantId;
-  email: string;
-  roleId: RoleId;
+  email: string;               // normalizado: minúsculas, sin espacios al borde
+  roleId: RoleId;              // nunca `owner`: la propiedad solo se traspasa
   status: 'pending' | 'accepted' | 'expired' | 'revoked';
   createdAt: Timestamp;
   expiresAt: Timestamp;        // 14 días
@@ -180,7 +180,8 @@ interface Invitation {
 **Reglas**: sin acceso hasta aceptar (FR-007); sin tope de cantidad (FR-006). Al aceptar se crea la
 `Membership` **de ese comercio**; si la persona ya tiene cuenta, se le suma una membresía y no se
 crea una cuenta nueva. Invitar a quien ya es miembro **de este** comercio se rechaza. Ya no hay
-obligación de ocultar que el contacto tiene cuenta en otro inquilino.
+obligación de ocultar que el contacto tiene cuenta en otro inquilino. Hay a lo sumo una invitación
+pendiente por correo: invitar de nuevo la renueva. Solo la acepta una sesión con ese mismo correo.
 
 ### Product (Producto) — `products/{productId}`
 

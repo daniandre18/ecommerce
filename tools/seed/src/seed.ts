@@ -2,10 +2,9 @@ import { auth, FirestoreUnitOfWork, firestore } from '@ecommerce/infrastructure'
 import {
   activateMembership,
   CATALOG_ROLE_ID,
-  createCatalogRole,
-  createOwnerRole,
   inviteMembership,
   OWNER_ROLE_ID,
+  presetRoles,
   tenantId,
   uid,
   type Membership,
@@ -101,7 +100,7 @@ async function seedTenant(tenant: SeedTenant): Promise<void> {
     { ...activeMembership(tenant.id, tenant.owner, OWNER_ROLE_ID), isOwner: true },
     ...tenant.collaborators.map((c) => activeMembership(tenant.id, c.account, c.role)),
   ];
-  const roles = [createOwnerRole(tenant.id, AT), createCatalogRole(tenant.id, AT)].map((role) =>
+  const roles = presetRoles(tenant.id, AT).map((role) =>
     withMemberCount(role, memberships),
   );
 

@@ -20,3 +20,6 @@ export * from './client/queries';
 export * from './client/session';
 export * from './client/images';
 export * from './client/tenants';
+export * from './use-cases/team/roles';
+export * from './use-cases/team/invitations';
+export * from './use-cases/team/memberships';

@@ -1,5 +1,6 @@
 import type {
   AuditLogRepository,
+  InvitationRepository,
   MembershipRepository,
   ProductRepository,
   RoleRepository,
@@ -17,6 +18,7 @@ export interface TransactionScope {
   readonly tenant: TenantRepository;
   readonly audit: AuditLogRepository;
   readonly members: MembershipRepository;
+  readonly invitations: InvitationRepository;
   readonly roles: RoleRepository;
   readonly products: ProductRepository;
   readonly variants: VariantRepository;

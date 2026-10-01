@@ -30,7 +30,7 @@ import { FirestoreUnitOfWork } from './unit-of-work';
 const db = firestore();
 const T1 = tenantId('t1');
 const NOW = new Date('2026-09-30T12:00:00Z');
-const ctx: OperationContext = { tenantId: T1, actorUid: uid('ana'), actorName: 'Ana', requestId: 'p1' };
+const ctx: OperationContext = { tenantId: T1, actorUid: uid('ana'), actorName: 'Ana', actorEmail: 'ana@t1.test', requestId: 'p1' };
 const usd = (amount: number) => money(amount, 'USD');
 
 const color: VariationOption = {

@@ -1,6 +1,9 @@
 import {
   assertCanDeleteRole,
+  normalizeEmail,
   type AuditEntry,
+  type Invitation,
+  type InvitationId,
   type Membership,
   type Money,
   type Product,
@@ -14,6 +17,7 @@ import {
 } from '@ecommerce/domain';
 import type {
   AuditLogRepository,
+  InvitationRepository,
   MembershipRepository,
   ProductRepository,
   RoleRepository,
@@ -34,6 +38,7 @@ import type { TransactionScope, UnitOfWork } from '../ports/unit-of-work';
 export class InMemoryStore {
   tenant: Tenant | null = null;
   members = new Map<Uid, Membership>();
+  invitations = new Map<InvitationId, Invitation>();
   roles = new Map<RoleId, Role>();
   audit: AuditEntry[] = [];
   costs = new Map<ProductId, Record<VariantId, Money>>();
@@ -45,6 +50,7 @@ export class InMemoryStore {
     const copy = new InMemoryStore();
     copy.tenant = this.tenant;
     copy.members = new Map(this.members);
+    copy.invitations = new Map(this.invitations);
     copy.roles = new Map(this.roles);
     copy.audit = [...this.audit];
     copy.costs = new Map([...this.costs].map(([id, costs]) => [id, { ...costs }]));
@@ -72,7 +78,12 @@ export class DocumentAlreadyExistsError extends Error {
 }
 
 function scopeOver(s: InMemoryStore): TransactionScope {
-  const tenant: TenantRepository = { get: async () => s.tenant };
+  const tenant: TenantRepository = {
+    get: async () => s.tenant,
+    save: async (value) => {
+      s.tenant = value;
+    },
+  };
 
   const audit: AuditLogRepository = {
     append: async (entries) => {
@@ -85,8 +96,18 @@ function scopeOver(s: InMemoryStore): TransactionScope {
 
   const members: MembershipRepository = {
     findByUid: async (id) => s.members.get(id) ?? null,
+    findByEmail: async (email) => [...s.members.values()].find((m) => normalizeEmail(m.email) === normalizeEmail(email)) ?? null,
     save: async (membership) => {
       s.members.set(membership.uid, membership);
+    },
+  };
+
+  const invitations: InvitationRepository = {
+    findById: async (id) => s.invitations.get(id) ?? null,
+    findPendingByEmail: async (email) =>
+      [...s.invitations.values()].find((i) => i.status === 'pending' && i.email === normalizeEmail(email)) ?? null,
+    save: async (invitation) => {
+      s.invitations.set(invitation.id, invitation);
     },
   };
 
@@ -145,7 +166,7 @@ function scopeOver(s: InMemoryStore): TransactionScope {
     },
   };
 
-  return { tenant, audit, members, roles, products, variants, costs, skuIndex };
+  return { tenant, audit, members, invitations, roles, products, variants, costs, skuIndex };
 }
 
 export class InMemoryUnitOfWork implements UnitOfWork {

@@ -10,6 +10,7 @@ import {
   productToDoc,
   skuIndexFromDoc,
   tenantFromDoc,
+  tenantToDoc,
   variantFromDoc,
   variantToDoc,
 } from '../../mapping/catalog-mappers';
@@ -21,6 +22,9 @@ export function tenantRepository(t: Transaction, paths: TenantPaths): TenantRepo
       const snap = await t.get(paths.tenantDoc());
       const data = snap.data();
       return data ? tenantFromDoc(snap.id, data) : null;
+    },
+    save: async (tenant) => {
+      t.set(paths.tenantDoc(), tenantToDoc(tenant));
     },
   };
 }

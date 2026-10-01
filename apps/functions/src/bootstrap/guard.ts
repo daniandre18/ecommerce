@@ -71,6 +71,7 @@ function verifiedContext(request: CallableRequest<unknown>): OperationContext {
     tenantId: parseTenantId(data['tenantId']),
     actorUid: uid(request.auth.uid),
     actorName: firstString(token.name, token.email) ?? request.auth.uid,
+    actorEmail: firstString(token.email) ?? null,
     requestId: firstString(data['requestId']) ?? randomUUID(),
   };
 }
@@ -87,8 +88,16 @@ function parseTenantId(value: unknown): TenantId {
   }
 }
 
-function authorize(authz: AuthorizationService, tx: TransactionScope, ctx: OperationContext, requires: Requirement) {
-  return requires.kind === 'owner' ? authz.assertOwner(tx, ctx) : authz.assert(tx, ctx, requires.permission);
+async function authorize(authz: AuthorizationService, tx: TransactionScope, ctx: OperationContext, requires: Requirement) {
+  switch (requires.kind) {
+    case 'owner':
+      return authz.assertOwner(tx, ctx);
+    case 'permission':
+      return authz.assert(tx, ctx, requires.permission);
+    case 'account':
+      // Solo sesión: la usa aceptar una invitación, cuyo caso de uso verifica el correo.
+      return;
+  }
 }
 
 /**
