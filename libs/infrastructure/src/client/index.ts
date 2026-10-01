@@ -8,3 +8,4 @@ export * from './firebase-image-storage';
 export * from './firestore-tenant-directory';
 export * from './firestore-team-queries';
 export * from './callable-team-commands';
+export * from './firestore-audit-queries';

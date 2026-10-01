@@ -85,7 +85,8 @@ service cloud.firestore {
 
       // Bitácora (FR-032, FR-034). No hay `allow create/update/delete` en ningún lado: nadie
       // escribe desde un cliente, ni el Propietario. El Admin SDK de las Functions evade estas
-      // reglas por diseño.
+      // reglas por diseño. Tampoco la abre `audit.read`: las entradas incluyen cambios de costo, y
+      // un rol sin `variant.cost.read` los vería (FR-015). Prueba: tests/rules/audit-read.spec.ts
       match /auditLog/{entryId} {
         allow read: if isOwnerOf(tenantId);
       }

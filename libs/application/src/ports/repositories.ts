@@ -1,6 +1,5 @@
 import type {
   AuditEntry,
-  AuditEventType,
   Invitation,
   InvitationId,
   Membership,
@@ -24,25 +23,6 @@ import type {
  */
 export interface AuditLogRepository {
   append(entries: readonly AuditEntry[]): Promise<void>;
-}
-
-export interface AuditFilter {
-  readonly actorUid?: Uid;
-  readonly entityId?: string;
-  readonly type?: AuditEventType;
-  readonly from?: Date;
-  readonly to?: Date;
-}
-
-export interface Page<T> {
-  readonly items: readonly T[];
-  /** Cursor opaco. Nunca `offset`: Firestore cobra los documentos saltados. */
-  readonly nextCursor: string | null;
-}
-
-/** Lectura de la bitácora. Separada de la escritura porque se usa fuera de las transacciones. */
-export interface AuditLogQuery {
-  query(filter: AuditFilter, cursor?: string, pageSize?: number): Promise<Page<AuditEntry>>;
 }
 
 export interface MembershipRepository {

@@ -162,7 +162,7 @@ function skuFromDoc(value: unknown): Sku | null {
   return { raw: String(raw), normalized: String(normalized) };
 }
 
-function moneyFromDoc(value: unknown): Money | null {
+export function moneyFromDoc(value: unknown): Money | null {
   if (value == null) return null;
   const { amount, currency } = value as { amount: number; currency: string };
   return money(amount, currency);
@@ -180,7 +180,7 @@ export function variantCostsFromDoc(d: DocumentData | undefined): ReadonlyMap<Va
 
 const moneyToDoc = (value: Money | null) => value && { amount: value.amount, currency: value.currency };
 
-function stockFromDoc(value: unknown): StockLevel {
+export function stockFromDoc(value: unknown): StockLevel {
   const stock = value as { kind?: string; value?: number } | undefined;
   return stock?.kind === 'quantity' ? stockQuantity(Number(stock.value)) : stockUndefined();
 }

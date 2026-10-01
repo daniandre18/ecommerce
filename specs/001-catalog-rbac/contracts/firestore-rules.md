@@ -188,6 +188,17 @@ El caso 19 es la prueba de que la separación de documentos es real y no decorat
 | 31 | **Propietario** | Borrar una entrada de `auditLog` | **Denegado** |
 | 32 | Propietario | Crear una entrada de `auditLog` a mano | **Denegado** |
 
+Los casos 28 y 29 se prueban también como **consulta** —filtrada por persona, ordenada por fecha y
+paginada, la que hace la vista— en `tests/rules/audit-read.spec.ts`, junto con dos negaciones más:
+el Propietario de otro comercio, y un rol con `audit.read`.
+
+**Por qué `audit.read` no abre la bitácora.** La bitácora registra los cambios de costo
+(`price.changed` con `field: 'cost'`), y Firestore no protege campos sueltos: quien lea una entrada
+la lee entera. Concederla por `audit.read` mostraría costos a un rol sin `variant.cost.read`, que es
+justo lo que FR-015 prohíbe. Hasta que exista una vista de bitácora sin importes de costo —por
+ejemplo, una colección derivada—, la bitácora es solo del Propietario, como dice FR-034, aunque el
+permiso exista en el enumerado.
+
 ### Superposición con rutas del Propietario
 
 | # | Caso | Esperado |
