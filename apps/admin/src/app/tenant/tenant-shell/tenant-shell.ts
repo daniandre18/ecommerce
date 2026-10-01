@@ -1,5 +1,6 @@
 import { Component, computed, inject, input, resource } from '@angular/core';
 import { MatButton } from '@angular/material/button';
+import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { InvalidIdentifierError, tenantId, type MemberAccess, type Tenant, type TenantId, type Uid } from '@ecommerce/domain';
 import { ErrorState } from '@ecommerce/ui';
@@ -13,14 +14,26 @@ import { MyTenants } from '../my-tenants';
 /** El marco de todo lo que pasa dentro de un comercio: `/t/{tenantId}/…`. */
 @Component({
   selector: 'app-tenant-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, MatButton, ErrorState],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, MatButton, MatMenu, MatMenuItem, MatMenuTrigger, ErrorState],
   providers: [
     { provide: CURRENT_TENANT, useFactory: () => inject(TenantShell).current },
     { provide: CURRENT_ACCESS, useFactory: () => inject(TenantShell).access },
   ],
   template: `
+    <!--
+      Dos filas de alto fijo: lo que llega después —el acceso de la cuenta, sus otros comercios— no
+      cambia el alto del encabezado ni empuja la vista (SC-009). Las acciones de la cuenta van en un
+      menú para que no compitan por el ancho de una pantalla de 360 px.
+    -->
     <header>
       <p class="tenant">{{ name() }}</p>
+      <button matButton type="button" class="account" [matMenuTriggerFor]="account">Cuenta</button>
+      <mat-menu #account="matMenu">
+        @if (canSwitch()) {
+          <a mat-menu-item routerLink="/">Cambiar de comercio</a>
+        }
+        <button mat-menu-item type="button" (click)="signOut.run()">Cerrar sesión</button>
+      </mat-menu>
       <nav aria-label="Secciones">
         <a matButton routerLink="catalog" routerLinkActive="active" ariaCurrentWhenActive="page">Catálogo</a>
         <!-- Equipo y bitácora son solo del Propietario (FR-014, FR-034): a otra cuenta ni se le ofrecen. -->
@@ -28,12 +41,6 @@ import { MyTenants } from '../my-tenants';
           <a matButton routerLink="team" routerLinkActive="active" ariaCurrentWhenActive="page">Equipo</a>
           <a matButton routerLink="audit" routerLinkActive="active" ariaCurrentWhenActive="page">Bitácora</a>
         }
-      </nav>
-      <nav aria-label="Cuenta">
-        @if (canSwitch()) {
-          <a matButton routerLink="/">Cambiar de comercio</a>
-        }
-        <button matButton type="button" (click)="signOut.run()">Cerrar sesión</button>
       </nav>
     </header>
 
@@ -49,30 +56,32 @@ import { MyTenants } from '../my-tenants';
   `,
   styles: `
     header {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-rows: 48px 48px;
       align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      min-height: 48px;
+      column-gap: 8px;
       margin-bottom: 8px;
-    }
-
-    nav {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .active {
-      text-decoration: underline;
-      text-underline-offset: 4px;
     }
 
     .tenant {
       margin: 0;
       font: var(--mat-sys-title-medium);
-      overflow-wrap: anywhere;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    nav {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: nowrap;
+      margin-inline: -12px;
+    }
+
+    .active {
+      text-decoration: underline;
+      text-underline-offset: 4px;
     }
   `,
 })

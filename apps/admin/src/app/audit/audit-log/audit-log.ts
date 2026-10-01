@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, linkedSignal, resource, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, linkedSignal, resource, signal } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
@@ -101,7 +101,7 @@ const nextDay = (day: Date) => new Date(day.getFullYear(), day.getMonth(), day.g
         <p role="alert" class="failure">La fecha «desde» es posterior a «hasta».</p>
       } @else if (firstPage.error()) {
         <ui-error-state heading="No pudimos cargar la bitácora" (retry)="firstPage.reload()" />
-      } @else if (!firstPage.hasValue()) {
+      } @else if (!firstPageNamed()) {
         <ui-skeleton rows="5" rowHeight="72px" label="Cargando la bitácora…" />
       } @else if (entries().length === 0) {
         @if (filtered()) {
@@ -211,10 +211,12 @@ export class AuditLog {
     params: () => (this.isOwner() && !this.invalidRange() ? { tenantId: this.id(), filter: this.filter() } : undefined),
     loader: ({ params }) => this.audit.listEntries(params.tenantId, params.filter, { limit: PAGE_SIZE }),
   });
+  /** La primera página, o nada mientras carga o si falló (`value()` lanza en estado de error). */
+  private readonly page1 = computed(() => (this.firstPage.hasValue() ? this.firstPage.value() : undefined));
   /** Las páginas siguientes; con otros filtros se empieza de nuevo. */
-  private readonly more = linkedSignal<AuditPage | undefined, AuditPage[]>({ source: this.firstPage.value, computation: () => [] });
-  protected readonly entries = computed(() => [...(this.firstPage.value()?.entries ?? []), ...this.more().flatMap((page) => page.entries)]);
-  protected readonly next = computed(() => (this.more().at(-1) ?? this.firstPage.value())?.next ?? null);
+  private readonly more = linkedSignal<AuditPage | undefined, AuditPage[]>({ source: this.page1, computation: () => [] });
+  protected readonly entries = computed(() => [...(this.page1()?.entries ?? []), ...this.more().flatMap((page) => page.entries)]);
+  protected readonly next = computed(() => (this.more().at(-1) ?? this.page1())?.next ?? null);
   protected readonly loadingMore = signal(false);
   protected readonly moreFailure = signal('');
 
@@ -228,24 +230,44 @@ export class AuditLog {
 
   /** Cada producto se lee una vez por visita, aunque aparezca en muchas entradas. */
   private readonly subjectCache = new Map<ProductId, Promise<Subject>>();
+  /** Los productos ya leídos; crece a medida que aparecen otros, sin volver a leer los conocidos. */
+  private readonly subjects = signal<ReadonlyMap<ProductId, Subject>>(new Map());
   private readonly productIds = computed(() => {
     const ids = new Set(this.entries().flatMap((entry) => (entry.entity.productId ? [entry.entity.productId] : [])));
     const filtered = this.filter().productId;
     if (filtered) ids.add(filtered);
-    return [...ids].sort();
+    return [...ids];
   });
-  private readonly subjects = resource({
-    params: () => (this.productIds().length > 0 ? { tenantId: this.id(), ids: this.productIds() } : undefined),
-    loader: async ({ params }) => new Map(await Promise.all(params.ids.map(async (id) => [id, await this.subjectOf(params.tenantId, id)] as const))),
+
+  /**
+   * La primera página se muestra con sus nombres ya resueltos: si llegaran después, las entradas
+   * cambiarían de alto al pasar de "una variante" a "Camiseta · Rojo" y la lista saltaría (SC-009).
+   */
+  protected readonly firstPageNamed = computed(() => {
+    const first = this.page1();
+    if (!first || (!this.members.hasValue() && this.members.error() === undefined)) return false;
+    const known = this.subjects();
+    return first.entries.every((entry) => !entry.entity.productId || known.has(entry.entity.productId));
   });
+
+  constructor() {
+    // Lee cada producto nuevo que aparece en la bitácora, una sola vez.
+    effect(() => {
+      const tenant = this.id();
+      for (const id of this.productIds()) {
+        if (this.subjectCache.has(id)) continue;
+        void this.subjectOf(tenant, id).then((subject) => this.subjects.update((known) => new Map(known).set(id, subject)));
+      }
+    });
+  }
 
   protected readonly names = computed<EntryNames>(() => {
     const people = new Map(this.people().map((person) => [person.uid as string, person.displayName]));
-    const subjects = this.subjects.hasValue() ? this.subjects.value() : undefined;
+    const subjects = this.subjects();
     return {
       person: (uid) => people.get(uid),
       variant: (product, variant) => {
-        const subject = subjects?.get(product);
+        const subject = subjects.get(product);
         if (!subject) return undefined;
         return `${subject.name} · ${subject.variants.get(variant as VariantId) ?? 'variante archivada'}`;
       },
@@ -253,7 +275,7 @@ export class AuditLog {
   });
   protected readonly productName = computed(() => {
     const id = this.filter().productId;
-    const subject = id && this.subjects.hasValue() ? this.subjects.value().get(id) : undefined;
+    const subject = id ? this.subjects().get(id) : undefined;
     return subject?.name ?? 'cargando…';
   });
 
@@ -267,14 +289,14 @@ export class AuditLog {
 
   protected async loadMore(): Promise<void> {
     const after = this.next();
-    const base = this.firstPage.value();
+    const base = this.page1();
     if (!after || this.loadingMore()) return;
     this.loadingMore.set(true);
     this.moreFailure.set('');
     try {
       const page = await this.audit.listEntries(this.id(), this.filter(), { limit: PAGE_SIZE, after });
       // Si mientras tanto cambiaron los filtros, esta página ya no corresponde.
-      if (this.firstPage.value() === base) this.more.update((pages) => [...pages, page]);
+      if (this.page1() === base) this.more.update((pages) => [...pages, page]);
     } catch {
       this.moreFailure.set('No pudimos cargar más entradas. Reintentá.');
     } finally {

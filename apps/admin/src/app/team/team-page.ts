@@ -8,6 +8,9 @@ import { InvitationsSection } from './members/invitations-section';
 import { MembersSection } from './members/members-section';
 import { RolesSection } from './roles/roles-section';
 
+/** Ni llegó ni falló. */
+const pending = (read: { hasValue(): boolean; error(): unknown }) => !read.hasValue() && read.error() === undefined;
+
 /**
  * El equipo del comercio (T076): personas, invitaciones y roles, en tiempo real. Es solo del
  * Propietario (FR-014): a otra cuenta no se le piden las lecturas, que las reglas negarían igual.
@@ -17,8 +20,12 @@ import { RolesSection } from './roles/roles-section';
   imports: [Skeleton, ErrorState, EmptyState, MembersSection, InvitationsSection, RolesSection],
   template: `
     <h1>Equipo</h1>
-    @if (access() === undefined) {
-      <ui-skeleton rows="4" label="Cargando el equipo…" />
+    <!--
+      Un solo esqueleto hasta que llegan las tres lecturas: si cada sección apareciera por su lado,
+      una lista de personas más larga que su esqueleto empujaría las de abajo (SC-009).
+    -->
+    @if (access() === undefined || loading()) {
+      <ui-skeleton rows="6" rowHeight="64px" label="Cargando el equipo…" />
     } @else if (!isOwner()) {
       <ui-empty-state heading="Solo el Propietario administra el equipo" message="Si necesitás un cambio, pedíselo a quien es Propietario del comercio." />
     } @else {
@@ -28,8 +35,6 @@ import { RolesSection } from './roles/roles-section';
           <ui-error-state heading="No pudimos cargar el equipo" (retry)="members.reload(); roles.reload()" />
         } @else if (members.hasValue() && roles.hasValue()) {
           <app-members-section [tenantId]="id()" [members]="members.value()" [roles]="roles.value()" />
-        } @else {
-          <ui-skeleton rows="3" rowHeight="64px" label="Cargando el equipo…" />
         }
       </section>
 
@@ -39,8 +44,6 @@ import { RolesSection } from './roles/roles-section';
           <ui-error-state heading="No pudimos cargar las invitaciones" (retry)="invitations.reload(); roles.reload()" />
         } @else if (invitations.hasValue() && roles.hasValue()) {
           <app-invitations-section [tenantId]="id()" [invitations]="invitations.value()" [roles]="roles.value()" />
-        } @else {
-          <ui-skeleton rows="2" label="Cargando las invitaciones…" />
         }
       </section>
 
@@ -50,8 +53,6 @@ import { RolesSection } from './roles/roles-section';
           <ui-error-state heading="No pudimos cargar los roles" (retry)="roles.reload()" />
         } @else if (roles.hasValue()) {
           <app-roles-section [tenantId]="id()" [roles]="roles.value()" />
-        } @else {
-          <ui-skeleton rows="2" label="Cargando los roles…" />
         }
       </section>
     }
@@ -91,4 +92,7 @@ export class TeamPage {
     params: () => this.ownedTenant(),
     subscribe: (id, watcher) => this.queries.watchRoles(id, watcher),
   });
+
+  /** Siendo Propietario, alguna lectura todavía no llegó ni falló. */
+  protected readonly loading = computed(() => this.isOwner() && [this.members, this.invitations, this.roles].some(pending));
 }

@@ -31,14 +31,18 @@ describe('TeamPage', () => {
     return harness.routeNativeElement as HTMLElement;
   }
 
-  it('pide personas, invitaciones y roles del comercio, con un esqueleto por sección mientras llegan', async () => {
+  it('pide personas, invitaciones y roles, y muestra un solo esqueleto hasta tener las tres: así nada salta', async () => {
     const root = await open();
     expect([queries.members, queries.invitations, queries.roles].map((list) => list.map((s) => s.params))).toEqual([['t1'], ['t1'], ['t1']]);
-    expect(root.querySelectorAll('ui-skeleton')).toHaveLength(3);
+    expect(root.querySelectorAll('ui-skeleton')).toHaveLength(1);
 
     queries.members[0]?.emit([member('owner', 'Dueña', 'owner', { isOwner: true }), member('ana', 'Ana', 'catalog')]);
-    queries.invitations[0]?.emit([]);
     queries.roles[0]?.emit(presetRolesOfT1({ catalog: 1 }));
+    await settle();
+    expect(root.querySelector('app-members-section')).toBeNull();
+    expect(root.querySelectorAll('ui-skeleton')).toHaveLength(1);
+
+    queries.invitations[0]?.emit([]);
     await settle();
     expect(root.querySelector('ui-skeleton')).toBeNull();
     expect(root.querySelector('app-members-section')?.textContent).toContain('Ana');
