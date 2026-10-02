@@ -9,3 +9,4 @@ export * from './firestore-tenant-directory';
 export * from './firestore-team-queries';
 export * from './callable-team-commands';
 export * from './firestore-audit-queries';
+export { OfflineError } from './listen';

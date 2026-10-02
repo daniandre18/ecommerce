@@ -28,6 +28,10 @@
             { "replace": "apps/admin/src/environments/environment.ts", "with": "apps/admin/src/environments/environment.production.ts" }
           ]
         },
+        "measure": {
+          "outputHashing": "all",
+          "outputPath": "dist/apps/admin-measure"
+        },
         "development": {
           "optimization": false,
           "extractLicenses": false,

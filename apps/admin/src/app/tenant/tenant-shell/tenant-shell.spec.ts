@@ -81,6 +81,22 @@ describe('TenantShell', () => {
     expect(queries.tenants).toHaveLength(2);
   });
 
+  // FR-037: sin red no se sabe si hay acceso; decir que no lo hay sería presentar un error como un hecho.
+  it('sin conexión, dice que no pudo conectarse y no que falta acceso, y reintenta el comercio y el acceso', async () => {
+    const root = await open();
+    queries.tenants[0]?.fail(Object.assign(new Error('sin red'), { code: 'unavailable' }));
+    directory.accesses[0]?.fail(Object.assign(new Error('sin red'), { code: 'unavailable' }));
+    await settle();
+    const alert = root.querySelector('[role="alert"]')?.textContent;
+    expect(alert).toContain('No pudimos conectarnos');
+    expect(alert).not.toContain('no tengas acceso');
+
+    root.querySelector<HTMLButtonElement>('[role="alert"] button')?.click();
+    await settle();
+    expect(queries.tenants).toHaveLength(2);
+    expect(directory.accesses).toHaveLength(2);
+  });
+
   // T075: cambiar de comercio es navegar; con uno solo, no se ofrece.
   it('ofrece cambiar de comercio solo si la cuenta tiene más de uno', async () => {
     const root = await open();

@@ -56,7 +56,9 @@ export default async function globalSetup(): Promise<void> {
  * crear el proceso: la verificación de la sesión ya corre adentro.
  */
 async function warmUp(name: string): Promise<void> {
-  for (let attempt = 1; ; attempt++) {
+  let failures = 0;
+  for (let attempt = 1; attempt <= 30; attempt++) {
+    let status: number;
     try {
       const response = await fetch(`${FUNCTIONS}/${name}`, {
         method: 'POST',
@@ -65,9 +67,14 @@ async function warmUp(name: string): Promise<void> {
         signal: AbortSignal.timeout(10_000),
       });
       await response.text();
-      return;
+      status = response.status;
     } catch (error) {
-      if (attempt === 3) throw new Error(`La callable ${name} no respondió al calentarla`, { cause: error });
+      if (++failures === 3) throw new Error(`La callable ${name} no respondió al calentarla`, { cause: error });
+      continue;
     }
+    // Recién levantado, el emulador responde 404 hasta terminar de cargar las definiciones.
+    if (status !== 404) return;
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
   }
+  throw new Error(`La callable ${name} no existe en el emulador`);
 }

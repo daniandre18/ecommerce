@@ -4,7 +4,6 @@ import {
   collection,
   doc,
   limit,
-  onSnapshot,
   orderBy,
   query,
   where,
@@ -13,7 +12,7 @@ import {
   type QueryConstraint,
 } from 'firebase/firestore';
 import { productFromDoc, tenantFromDoc, variantCostsFromDoc, variantFromDoc } from '../mapping/catalog-mappers';
-import { deliver } from './deliver';
+import { listenToDoc, listenToQuery } from './listen';
 
 /** Cierre de la búsqueda por prefijo: cualquier texto que empiece por el prefijo queda antes. */
 const PREFIX_END = '';
@@ -23,44 +22,24 @@ export class FirestoreCatalogQueries implements CatalogQueries {
   constructor(private readonly db: Firestore) {}
 
   watchTenant(tenantId: TenantId, watcher: Watcher<Tenant | null>): Unsubscribe {
-    return onSnapshot(
-      doc(this.db, 'tenants', tenantId),
-      (snapshot) => deliver(watcher, () => (snapshot.exists() ? tenantFromDoc(snapshot.id, snapshot.data()) : null)),
-      (error) => watcher.error(error),
-    );
+    return listenToDoc(doc(this.db, 'tenants', tenantId), watcher, (snapshot) => (snapshot.exists() ? tenantFromDoc(snapshot.id, snapshot.data()) : null));
   }
 
   watchProducts(tenantId: TenantId, request: ProductListQuery, watcher: Watcher<readonly Product[]>): Unsubscribe {
-    return onSnapshot(
-      productList(this.db, tenantId, request),
-      (snapshot) => deliver(watcher, () => snapshot.docs.map((d) => productFromDoc(d.id, tenantId, d.data()))),
-      (error) => watcher.error(error),
-    );
+    return listenToQuery(productList(this.db, tenantId, request), watcher, (snapshot) => snapshot.docs.map((d) => productFromDoc(d.id, tenantId, d.data())));
   }
 
   watchProduct(tenantId: TenantId, productId: ProductId, watcher: Watcher<Product | null>): Unsubscribe {
-    return onSnapshot(
-      doc(this.db, 'tenants', tenantId, 'products', productId),
-      (snapshot) => deliver(watcher, () => (snapshot.exists() ? productFromDoc(snapshot.id, tenantId, snapshot.data()) : null)),
-      (error) => watcher.error(error),
-    );
+    return listenToDoc(doc(this.db, 'tenants', tenantId, 'products', productId), watcher, (snapshot) => (snapshot.exists() ? productFromDoc(snapshot.id, tenantId, snapshot.data()) : null));
   }
 
   watchVariants(tenantId: TenantId, productId: ProductId, watcher: Watcher<readonly Variant[]>): Unsubscribe {
     const live = query(collection(this.db, 'tenants', tenantId, 'products', productId, 'variants'), where('archived', '==', false));
-    return onSnapshot(
-      live,
-      (snapshot) => deliver(watcher, () => snapshot.docs.map((d) => variantFromDoc(d.id, tenantId, productId, d.data()))),
-      (error) => watcher.error(error),
-    );
+    return listenToQuery(live, watcher, (snapshot) => snapshot.docs.map((d) => variantFromDoc(d.id, tenantId, productId, d.data())));
   }
 
   watchCosts(tenantId: TenantId, productId: ProductId, watcher: Watcher<ReadonlyMap<VariantId, Money>>): Unsubscribe {
-    return onSnapshot(
-      doc(this.db, 'tenants', tenantId, 'products', productId, 'private', 'costs'),
-      (snapshot) => deliver(watcher, () => variantCostsFromDoc(snapshot.data())),
-      (error) => watcher.error(error),
-    );
+    return listenToDoc(doc(this.db, 'tenants', tenantId, 'products', productId, 'private', 'costs'), watcher, (snapshot) => variantCostsFromDoc(snapshot.data()));
   }
 }
 

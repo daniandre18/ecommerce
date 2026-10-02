@@ -1,6 +1,7 @@
 import type { TenantAccess, TenantDirectory, Unsubscribe, Watcher } from '@ecommerce/application';
 import { isPermission, tenantId, type MemberAccess, type TenantId, type Uid } from '@ecommerce/domain';
-import { collectionGroup, doc, getDoc, onSnapshot, query, where, type Firestore } from 'firebase/firestore';
+import { collectionGroup, doc, getDoc, query, where, type DocumentSnapshot, type Firestore, type QuerySnapshot } from 'firebase/firestore';
+import { listenToDoc, listenToQuery } from './listen';
 
 /**
  * Consulta de grupo sobre las membresías de la cuenta, en todos los comercios. Las reglas solo la
@@ -12,9 +13,9 @@ export class FirestoreTenantDirectory implements TenantDirectory {
 
   watchTenantsOf(uid: Uid, watcher: Watcher<readonly TenantAccess[]>): Unsubscribe {
     let latest = 0;
-    return onSnapshot(
-      query(collectionGroup(this.db, 'members'), where('uid', '==', uid)),
-      (snapshot) => {
+    const memberships = query(collectionGroup(this.db, 'members'), where('uid', '==', uid));
+    const onMemberships: Watcher<QuerySnapshot> = {
+      next: (snapshot) => {
         const call = ++latest;
         const active = snapshot.docs.filter((membership) => membership.get('status') === 'active');
         Promise.all(
@@ -30,8 +31,9 @@ export class FirestoreTenantDirectory implements TenantDirectory {
           })
           .catch((error: unknown) => watcher.error(error));
       },
-      (error) => watcher.error(error),
-    );
+      error: (error) => watcher.error(error),
+    };
+    return listenToQuery(memberships, onMemberships, (snapshot) => snapshot);
   }
 
   /**
@@ -45,9 +47,8 @@ export class FirestoreTenantDirectory implements TenantDirectory {
       role?.stop();
       role = undefined;
     };
-    const stopMembership = onSnapshot(
-      doc(this.db, 'tenants', id, 'members', uid),
-      (membership) => {
+    const onMembership: Watcher<DocumentSnapshot> = {
+      next: (membership) => {
         if (!membership.exists() || membership.get('status') !== 'active') {
           stopRole();
           watcher.next(null);
@@ -60,16 +61,16 @@ export class FirestoreTenantDirectory implements TenantDirectory {
           stopRole();
           role = {
             id: roleId,
-            stop: onSnapshot(
-              doc(this.db, 'tenants', id, 'roles', roleId),
-              (snapshot) => watcher.next({ isOwner: false, permissions: permissionsOf(snapshot.get('permissions')) }),
-              (error) => watcher.error(error),
-            ),
+            stop: listenToDoc(doc(this.db, 'tenants', id, 'roles', roleId), watcher, (snapshot) => ({
+              isOwner: false,
+              permissions: permissionsOf(snapshot.get('permissions')),
+            })),
           };
         }
       },
-      (error) => watcher.error(error),
-    );
+      error: (error) => watcher.error(error),
+    };
+    const stopMembership = listenToDoc(doc(this.db, 'tenants', id, 'members', uid), onMembership, (snapshot) => snapshot);
     return () => {
       stopRole();
       stopMembership();

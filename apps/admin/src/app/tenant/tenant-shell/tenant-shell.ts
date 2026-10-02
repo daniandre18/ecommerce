@@ -44,11 +44,18 @@ import { MyTenants } from '../my-tenants';
       </nav>
     </header>
 
-    @if (noAccess()) {
+    @if (offline()) {
+      <!-- Sin red no se sabe si hay acceso: decir "no tenés acceso" sería presentar un error como un hecho (FR-037). -->
+      <ui-error-state
+        heading="No pudimos conectarnos"
+        message="Revisá tu conexión. Cuando vuelva, el comercio se abre solo."
+        (retry)="tenant.reload(); memberAccess.reload()"
+      />
+    } @else if (noAccess()) {
       <ui-error-state
         heading="No pudimos abrir este comercio"
         message="Puede que no exista o que no tengas acceso. Revisá el código o pedile acceso a su Propietario."
-        (retry)="tenant.reload()"
+        (retry)="tenant.reload(); memberAccess.reload()"
       />
     } @else {
       <router-outlet />
@@ -101,7 +108,7 @@ export class TenantShell {
   });
 
   private readonly user = resource({ loader: () => this.session.current() });
-  private readonly memberAccess = liveResource<MemberAccess | null, { tenantId: TenantId; uid: Uid }>({
+  protected readonly memberAccess = liveResource<MemberAccess | null, { tenantId: TenantId; uid: Uid }>({
     params: () => {
       const id = this.id();
       const uid = this.user.hasValue() ? this.user.value()?.uid : undefined;
@@ -118,6 +125,8 @@ export class TenantShell {
   readonly access = computed(() => (this.memberAccess.hasValue() ? this.memberAccess.value() : undefined));
   /** Mientras carga, el nombre queda vacío y no empuja nada: el encabezado ya tiene su alto. */
   protected readonly name = computed(() => this.current()?.name ?? '');
+  /** La lectura no llegó del servidor: `unavailable` es el código de Firestore y de `OfflineError`. */
+  protected readonly offline = computed(() => [this.tenant.error(), this.memberAccess.error()].some((error) => isUnavailable(error)));
   protected readonly noAccess = computed(
     () =>
       this.id() === undefined ||
@@ -125,6 +134,10 @@ export class TenantShell {
       (this.tenant.hasValue() && this.tenant.value() === null) ||
       this.access() === null,
   );
+}
+
+function isUnavailable(error: Error | undefined): boolean {
+  return error !== undefined && 'code' in error && error.code === 'unavailable';
 }
 
 function parseTenantId(raw: string): TenantId | undefined {
