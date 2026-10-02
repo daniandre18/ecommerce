@@ -1,6 +1,13 @@
 import { initializeApp, type FirebaseOptions } from 'firebase/app';
 import { CustomProvider, initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
-import { connectAuthEmulator, getAuth, type Auth } from 'firebase/auth';
+import {
+  browserLocalPersistence,
+  browserSessionPersistence,
+  connectAuthEmulator,
+  indexedDBLocalPersistence,
+  initializeAuth,
+  type Auth,
+} from 'firebase/auth';
 import { connectFirestoreEmulator, getFirestore, type Firestore } from 'firebase/firestore';
 import { connectFunctionsEmulator, getFunctions, type Functions } from 'firebase/functions';
 import { connectStorageEmulator, getStorage, type FirebaseStorage } from 'firebase/storage';
@@ -40,7 +47,10 @@ export function connectWebClient(config: WebClientConfig): WebClient {
   }
   const app = initializeApp(config.firebase);
   const client = {
-    auth: getAuth(app),
+    // Lo mismo que `getAuth` en el navegador, sin el resolvedor de popup y redirección: el panel entra
+    // con correo y contraseña, y ese resolvedor descarga gapi y un iframe antes de que la sesión esté
+    // lista, ~1 s de la primera visita en una conexión móvil (SC-009).
+    auth: initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence] }),
     firestore: getFirestore(app),
     functions: getFunctions(app, config.functionsRegion),
     storage: getStorage(app),

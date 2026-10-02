@@ -272,6 +272,24 @@ en menos de 1 segundo. Firestore no hace búsqueda de texto completo.
 infraestructura y sincronización pagadas por adelantado contra un problema no demostrado. El spec
 lo deja explícitamente como decisión de esta fase, y esta fase decide medir primero.
 
+**Medición (T100, 2026-10-01)**: la consulta del panel —`archived == false`, rango de prefijo sobre
+`nameNormalized`, orden por nombre, tope de 25— por el SDK web y a través de las reglas, 100
+búsquedas con prefijos de 1 a 4 letras, contra el emulador:
+
+| Catálogo | p50 | p95 | Máximo |
+|---|---|---|---|
+| 100 productos | 6 ms | 11 ms | 199 ms (la primera, en frío) |
+| 2.500 productos, 10.000 variantes | 7 ms | 9 ms | 10 ms |
+
+El tiempo no depende del tamaño del catálogo sino de lo que devuelve: es un recorrido de índice con
+tope, y el listado no lee variantes. El emulador es local y no mide la red ni el servidor real; aun
+sumando una ida y vuelta móvil de 100 a 300 ms, el p95 queda muy por debajo de 1 segundo.
+
+**Conclusión**: para SC-010 la búsqueda por prefijo alcanza; **el disparador de la segunda etapa no
+se activa**. Sigue vigente, pero es funcional y no de rendimiento: buscar por término suelto, por SKU
+parcial o con tolerancia a errores de tipeo. Lo deciden las pruebas de usuario. Confirmarlo en un
+proyecto real va junto con la medición de costo de T096.
+
 ## 8. Costo operativo: verificación de "sin cargo por asiento"
 
 | Componente | Modelo de cobro | ¿Cobra por asiento? |

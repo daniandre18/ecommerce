@@ -34,7 +34,7 @@ import {
 } from '@ecommerce/domain';
 import { deleteApp, initializeApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
-import { connectFirestoreEmulator, getFirestore, terminate } from 'firebase/firestore';
+import { connectFirestoreEmulator, disableNetwork, doc, enableNetwork, getFirestore, terminate } from 'firebase/firestore';
 import { connectStorageEmulator, getStorage } from 'firebase/storage';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { auth as adminAuth } from '../firebase-app';
@@ -47,6 +47,7 @@ import { FirestoreAuditQueries } from './firestore-audit-queries';
 import { FirestoreCatalogQueries } from './firestore-catalog-queries';
 import { FirestoreTeamQueries } from './firestore-team-queries';
 import { FirestoreTenantDirectory } from './firestore-tenant-directory';
+import { listenToDoc, OfflineError } from './listen';
 
 const T1 = tenantId('t1');
 const AT = new Date('2026-09-30T12:00:00Z');
@@ -379,6 +380,35 @@ describe('cliente web contra los emuladores', () => {
       const again = await new FirebaseSession(otherAuth).signUp({ email, password: 'test-1234', displayName: 'Otra' });
       expect(again).toEqual({ ok: false, reason: 'email-in-use' });
     } finally {
+      await deleteApp(other);
+    }
+  });
+
+  // T098 (FR-037): sin red, lo que no está en caché no se presenta como vacío sino como error, y la
+  // lectura se recupera sola cuando vuelve la red.
+  it('sin red, una lectura falla como "sin conexión" en vez de llegar vacía, y se recupera con la red', async () => {
+    const other = initializeApp({ projectId: 'demo-ecommerce', apiKey: 'demo-key' }, 'navegador-sin-red');
+    const otherAuth = getAuth(other);
+    const otherDb = getFirestore(other);
+    connectAuthEmulator(otherAuth, `http://${emulatorHost('FIREBASE_AUTH_EMULATOR_HOST')}`, { disableWarnings: true });
+    const [host, port] = emulatorHost('FIRESTORE_EMULATOR_HOST').split(':');
+    connectFirestoreEmulator(otherDb, host ?? '127.0.0.1', Number(port));
+    try {
+      await new FirebaseSession(otherAuth).signIn(OWNER.email, OWNER.password);
+      await disableNetwork(otherDb);
+      const values: unknown[] = [];
+      let failed: (error: unknown) => void = () => undefined;
+      const failure = new Promise<unknown>((resolve) => (failed = resolve));
+      const stop = listenToDoc(doc(otherDb, 'tenants/t1/products/p1'), { next: (value) => values.push(value), error: (error) => failed(error) }, (snapshot) => snapshot.get('name'), 300);
+      await expect(failure).resolves.toBeInstanceOf(OfflineError);
+      expect(values).toEqual([]);
+
+      // La misma escucha sigue abierta: cuando vuelve la red, entrega el dato y la vista se recupera.
+      await enableNetwork(otherDb);
+      await expect.poll(() => values).toEqual(['Camiseta']);
+      stop();
+    } finally {
+      await terminate(otherDb);
       await deleteApp(other);
     }
   });

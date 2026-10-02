@@ -7,8 +7,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <!--
+      Estructura estática (SC-009): se pinta con el HTML, antes de que llegue y corra el código, y
+      Angular la reemplaza al arrancar. Tiene la forma del marco —encabezado de dos filas y renglones—
+      para que el cambio no se note. Estilos acá adentro: la hoja de estilos todavía no llegó.
+    -->
+    <style>
+      .boot {
+        max-width: 1200px;
+        margin-inline: auto;
+        padding: 16px;
+        font-family: system-ui, sans-serif;
+        color: #49454f;
+      }
+      .boot-header {
+        display: flex;
+        align-items: center;
+        height: 96px;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+      .boot-row {
+        height: 72px;
+        margin-bottom: 8px;
+        border-radius: 12px;
+        background: #ece6f0;
+      }
+      @media (prefers-color-scheme: dark) {
+        .boot {
+          color: #cac4d0;
+        }
+        .boot-row {
+          background: #2b2930;
+        }
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .boot-row {
+          animation: boot-pulse 1.5s ease-in-out infinite;
+        }
+      }
+      @keyframes boot-pulse {
+        50% {
+          opacity: 0.5;
+        }
+      }
+    </style>
   </head>
   <body>
-    <app-root></app-root>
+    <app-root>
+      <div class="boot" aria-busy="true">
+        <p class="boot-header">Cargando el panel…</p>
+        <div class="boot-row"></div>
+        <div class="boot-row"></div>
+        <div class="boot-row"></div>
+        <div class="boot-row"></div>
+      </div>
+    </app-root>
   </body>
 </html>
