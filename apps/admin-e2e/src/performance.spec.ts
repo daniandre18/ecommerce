@@ -43,9 +43,19 @@ async function openCatalog(page: Page, cache: 'cold' | 'warm'): Promise<Timing> 
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: CPU_SLOWDOWN });
   try {
     await page.goto('/t/t1/catalog', { waitUntil: 'commit' });
-    // El contenido útil: el primer producto del listado.
+    // El contenido útil: el primer producto del listado, pintado. Lo marca la propia página
+    // (`markFirstProduct`); medirlo desde Playwright sumaba hasta 300 ms de idas y vueltas.
     await page.locator('main ul li a').first().waitFor({ timeout: 15_000 });
-    const content = await page.evaluate(() => performance.now());
+    const content = await page.evaluate(
+      () => new Promise<number>((resolve) => {
+        const read = () => {
+          const mark = performance.getEntriesByName('primer-producto')[0];
+          if (mark) resolve(mark.startTime);
+          else requestAnimationFrame(read);
+        };
+        read();
+      }),
+    );
     // La estructura visible: la primera pintura con contenido (FCP), la métrica estándar para eso.
     const structure = await page.evaluate(() => performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? Infinity);
     return { structure, content };
@@ -53,6 +63,20 @@ async function openCatalog(page: Page, cache: 'cold' | 'warm'): Promise<Timing> 
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
     await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
   }
+}
+
+/**
+ * Marca `primer-producto` en el primer cuadro pintado con un producto del listado: el producto entra
+ * al DOM, el cuadro siguiente lo pinta, y la tarea que sigue a ese cuadro ya lo tiene en pantalla.
+ */
+async function markFirstProduct(page: Page) {
+  await page.addInitScript(() => {
+    new MutationObserver((_, observer) => {
+      if (!document.querySelector('main ul li a')) return;
+      observer.disconnect();
+      requestAnimationFrame(() => setTimeout(() => performance.mark('primer-producto')));
+    }).observe(document, { childList: true, subtree: true });
+  });
 }
 
 /** La mediana de tres entradas: una sola corrida mide también el ruido de la máquina. */
@@ -94,6 +118,7 @@ test.describe('rendimiento percibido en un teléfono', () => {
   });
 
   test.beforeEach(async ({ page }) => {
+    await markFirstProduct(page);
     await page.goto('/login');
     await signIn(page, OWNER);
   });

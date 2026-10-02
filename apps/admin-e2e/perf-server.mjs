@@ -21,7 +21,7 @@ createServer((request, response) => {
   let file = join(root, path);
   if (!existsSync(file) || statSync(file).isDirectory()) file = join(root, 'index.html');
   const type = types[extname(file)] ?? 'application/octet-stream';
-  const hashed = /-[A-Z0-9]{8}\.(js|css)$/.test(file);
+  const hashed = /-[\w-]{8}\.(js|css)$/.test(file);
   response.setHeader('Content-Type', type);
   response.setHeader('Cache-Control', hashed ? 'public, max-age=31536000, immutable' : 'no-cache');
   if (/text|javascript|json|svg/.test(type) && /\bbr\b/.test(String(request.headers['accept-encoding']))) {
