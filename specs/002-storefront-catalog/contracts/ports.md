@@ -105,4 +105,5 @@ nuevos de `ProductListQuery` (`categoryIds`, `tag`, `brand`, `missingShippingDat
 `libs/application/src/use-cases/authorization.spec.ts` de la 001 recorre todos los casos de uso
 contra el permiso equivocado; los nuevos entran en esa misma prueba. La regla de los casos de uso
 se mantiene: **todas las lecturas antes que cualquier escritura**, y nada fuera de la transacción
-salvo la poda posterior de `DeleteCategory`, que es idempotente.
+salvo la poda posterior de las operaciones del árbol, que es idempotente y convergente (puerto
+`CategoryPruner`, fuera de la transacción).

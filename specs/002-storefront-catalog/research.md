@@ -80,7 +80,10 @@ ordenadas y cortadas al tamaño de página. Es el caso raro; el común es una co
 previo de productos afectados es una agregación `count()` que hace el panel. Los `categoryIds` que
 apuntan a una categoría eliminada **se ignoran al leer** —todo lector resuelve ids contra el árbol—,
 y la misma callable, después de confirmar, los poda de los productos en lotes. La poda es
-convergente: si se corta a la mitad, lo que queda es invisible y la próxima eliminación o edición la
+convergente: la transacción que elimina la categoría agrega su id a `pendingPrune`, una lista del
+propio árbol; **toda** callable del árbol, después de confirmar, poda de los productos los ids
+pendientes en lotes y, cuando ya no queda ninguno, los quita de la lista. Si la poda se corta a la
+mitad, lo que queda es invisible —se ignora al leer— y la próxima operación sobre el árbol la
 termina. Así borrar una categoría con 2.000 productos no depende del tope de escrituras de una
 transacción.
 

@@ -41,11 +41,10 @@ feature amplía ese catálogo; no redefine nada de lo que la 001 ya fija.
   crearla y después nunca cambia sola; si se edita a mano, la anterior queda reservada para
   redirigir. Es plana —no incluye a sus ancestros—, así que mover la categoría no la cambia, y es
   única entre todas las categorías del comercio.
-- **Q: Si se desarchiva un producto cuya variante tiene un GTIN que mientras tanto se asignó a otra
-  variante, ¿qué pasa?** → A: el escenario **queda sin efecto**, porque se elimina en origen: el GTIN
-  de una variante archivada queda reservado igual que su SKU (001) y que la URL amigable (FR-005),
-  así que ninguna otra variante puede tomarlo. Para liberarlo, se quita el GTIN de la variante
-  archivada. No hay datos a migrar: el GTIN es un campo nuevo y todavía no hay ninguno cargado.
+- **Q: ¿El GTIN de una variante archivada queda libre para otra variante?** → A: no. Queda
+  reservado igual que su SKU (001) y que la URL amigable (FR-005), así que ninguna otra variante
+  puede tomarlo. Para liberarlo, se quita el GTIN de la variante archivada. No hay datos a migrar:
+  el GTIN es un campo nuevo y todavía no hay ninguno cargado.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -264,8 +263,7 @@ del producto; cargar MPN, rango de edad y género.
   señala como oculta por su categoría padre, distinta de una oculta por sí misma (FR-021a).
 - **Producto en borrador o no listado dentro de una sección**: se permite y ocupa lugar; el panel
   lo señala, porque la tienda no lo va a mostrar ahí mientras no esté activo.
-- **Producto archivado**: sale de sus secciones al archivarse y libera su lugar (FR-028). Al
-  desarchivarlo no vuelve a ellas solo.
+- **Producto archivado**: sale de sus secciones al archivarse y libera su lugar (FR-028).
 - **Etiquetas o marcas que difieren solo en mayúsculas o acentos** ("Algodón" y "algodon"): se
   tratan como la misma; se conserva la primera forma registrada.
 - **Video de una plataforma admitida que fue eliminado o es privado**: se acepta el enlace (no se
@@ -405,8 +403,7 @@ del producto; cargar MPN, rango de edad y género.
 - **FR-027c**: El listado del catálogo MUST poder filtrarse por sección destacada, y desde ahí MUST
   poder quitarse un producto de la sección.
 - **FR-028**: Archivar un producto MUST quitarlo de las secciones en las que figura y liberar sus
-  lugares; el aviso de archivado MUST decirlo antes de confirmar. Desarchivarlo MUST NOT devolverlo a
-  ellas.
+  lugares; el aviso de archivado MUST decirlo antes de confirmar.
 - **FR-029**: El comercio MUST poder aplicar cualquiera de los valores de FR-026 y FR-027 a varios
   productos seleccionados en una sola acción, con los permisos de FR-002 y FR-003 y el tope de
   FR-027a. Si el rol carece de permiso sobre alguno de los cambios pedidos, si no hay lugar para
@@ -544,9 +541,8 @@ Se verifican con pruebas de usuario y no bloquean el despliegue.
 - **Topes**: 3 niveles de categoría, 20 categorías por producto, 30 etiquetas por producto. Son
   límites de producto, ajustables en el plan si la experiencia lo pide.
 - **El GTIN se reserva al archivar**, igual que el SKU (001) y la URL amigable (FR-005): los tres
-  identificadores siguen una sola regla, y así desarchivar nunca choca con un código que otra
-  variante tomó mientras tanto. Quien archiva un producto y lo vuelve a cargar quita el GTIN de la
-  variante archivada para reusarlo (FR-030).
+  identificadores siguen una sola regla. Quien archiva un producto y lo vuelve a cargar quita el
+  GTIN de la variante archivada para reusarlo (FR-030).
 - **La categoría tiene visibilidad propia y nada más**: no tiene estados de publicación como el
   producto. Qué hace la tienda con una categoría oculta —omitirla del menú, responder 404 en su URL,
   o mostrarla solo por enlace directo— se decide con la tienda pública.
@@ -560,6 +556,11 @@ Se verifican con pruebas de usuario y no bloquean el despliegue.
   donde sí—, pero una sola regla para toda acción masiva es más predecible que tres reglas con
   matices. El rechazo ofrece quitar los digitales y reintentar para que la fricción sea mínima. Si
   en la práctica resulta alta, este es el primer caso a revisar.
+- **Sin desarchivado**: la 001 archiva productos y no los desarchiva; esta feature tampoco lo
+  agrega. Si más adelante existe una operación de desarchivado, deberá decidir qué ocurre con la URL
+  amigable (que pudo ser tomada por otro producto mientras tanto), el SKU, el GTIN y las secciones
+  destacadas —y no debería devolver el producto a las secciones de las que salió al archivarse—.
+  Esas cuatro decisiones justifican una feature propia, no un requisito agregado acá.
 - **Productos existentes**: se completan con los valores por defecto de los casos límite, sin
   intervención del comercio y sin cambiar su estado.
 

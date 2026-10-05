@@ -75,8 +75,12 @@ dominio correspondiente ([data-model](../data-model.md#categorytree--storefrontc
 | `setCategorySlug` | `categoryId`, `slug` | La anterior pasa a `previousSlugs` |
 | `moveCategory` | `categoryId`, `parentId` o `null`, `position` | `category-limit` si quedaría a más de 3 niveles o dentro de su rama. No toca ningún `hidden` |
 | `setCategoryHidden` | `categoryId`, `hidden` | Escribe solo ese nodo (FR-021a) |
-| `deleteCategory` | `categoryId` | `category-has-children` si tiene hijas. Después de confirmar, poda `categoryIds` de los productos en lotes (research §2) |
+| `deleteCategory` | `categoryId` | `category-has-children` si tiene hijas. Agrega el id a `pendingPrune` en la misma transacción |
 | `assignCategory` / `unassignCategory` | `categoryId`, `productIds` (≤ 100) | Conjunto: sin duplicar, sin `version` (FR-025) |
+
+**Poda convergente** (research §2): toda callable de esta tabla, después de confirmar su
+transacción, poda de los productos los ids de `pendingPrune` en lotes y los quita de la lista
+cuando ya no queda ninguno. Es idempotente: cortada a la mitad, la termina la operación siguiente.
 
 Lo que el panel calcula sin callable: cuántas subcategorías quedan ocultas al ocultar una (sale del
 árbol en memoria) y cuántos productos pierden una categoría al eliminarla (`count()` sobre
