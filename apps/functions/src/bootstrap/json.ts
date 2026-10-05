@@ -41,6 +41,16 @@ export class JsonObject {
     return (this.has(key) ? { [key]: read(key) } : {}) as { [P in K]?: T };
   }
 
+  /** Un campo que admite `null`: `null` lo quita; cualquier otro valor se lee con `read`. */
+  nullable<T>(key: string, read: (key: string) => T): T | null {
+    return this.isNull(key) ? null : read(key);
+  }
+
+  /** Un objeto anidado, o `null`. */
+  nullableObject<T>(key: string, read: (entry: JsonObject) => T): T | null {
+    return this.isNull(key) ? null : read(this.object(key));
+  }
+
   string(key: string): string {
     const value = this.data[key];
     if (typeof value !== 'string') reject(this.field(key), 'se esperaba un texto');

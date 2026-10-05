@@ -7,10 +7,14 @@ import type {
   SetVariantPriceInput,
   SetVariantSkuInput,
   SetVariantStockInput,
+  SetProductShippingInput,
+  SetProductSlugInput,
+  SetProductTypeInput,
   UpdateProductDetailsInput,
 } from '@ecommerce/application';
 import {
   optionId,
+  PRODUCT_KINDS,
   PRODUCT_STATUSES,
   productId,
   valueId,
@@ -38,6 +42,33 @@ export function parseUpdateProductDetails(data: unknown): UpdateProductDetailsIn
     ...json.optional('name', (key) => json.string(key)),
     ...json.optional('description', (key) => json.string(key)),
     ...json.optional('images', () => imagesOf(json)),
+    // Ficha de tienda (002). Los topes y la plataforma del video los valida el caso de uso.
+    ...json.optional('seoTitle', (key) => json.nullable(key, (k) => json.string(k))),
+    ...json.optional('seoDescription', (key) => json.nullable(key, (k) => json.string(k))),
+    ...json.optional('tags', (key) => json.strings(key)),
+    ...json.optional('brand', (key) => json.nullable(key, (k) => json.string(k))),
+    ...json.optional('video', (key) => json.nullableObject(key, (video) => ({ url: video.string('url'), position: video.integer('position') }))),
+  };
+}
+
+export function parseSetProductSlug(data: unknown): SetProductSlugInput {
+  const json = JsonObject.payload(data);
+  return { productId: json.id('productId', productId), version: json.integer('version'), slug: json.string('slug') };
+}
+
+export function parseSetProductType(data: unknown): SetProductTypeInput {
+  const json = JsonObject.payload(data);
+  return { productId: json.id('productId', productId), version: json.integer('version'), kind: json.oneOf('kind', PRODUCT_KINDS) };
+}
+
+/** Los dos campos son obligatorios en el pedido; `null` quita el valor. */
+export function parseSetProductShipping(data: unknown): SetProductShippingInput {
+  const json = JsonObject.payload(data);
+  return {
+    productId: json.id('productId', productId),
+    version: json.integer('version'),
+    weightGrams: json.nullable('weightGrams', (key) => json.integer(key)),
+    dimensionsMm: json.nullableObject('dimensionsMm', (d) => ({ length: d.integer('length'), width: d.integer('width'), height: d.integer('height') })),
   };
 }
 

@@ -18,10 +18,13 @@ import { liveResource } from '../../shared/live-resource';
 import { CURRENT_ACCESS } from '../../tenant/current-access';
 import { CURRENT_TENANT } from '../../tenant/current-tenant';
 import { ImageUpload } from '../image-upload/image-upload';
+import { ProductVideo } from '../image-upload/product-video';
 import { VariantTable } from '../variant-table/variant-table';
 import { DetailsSection } from './details-section';
 import { OptionsEditor } from './options-editor/options-editor';
 import { StatusControl } from './status-control/status-control';
+import { ShippingSection } from './shipping-section/shipping-section';
+import { StorefrontSection } from './storefront-section/storefront-section';
 
 interface Ids {
   readonly tenantId: TenantId;
@@ -41,7 +44,10 @@ const STATUS_LABELS: Record<Product['status'], string> = { draft: 'Borrador', ac
     EmptyState,
     HasPermission,
     DetailsSection,
+    StorefrontSection,
+    ShippingSection,
     ImageUpload,
+    ProductVideo,
     StatusControl,
     OptionsEditor,
     VariantTable,

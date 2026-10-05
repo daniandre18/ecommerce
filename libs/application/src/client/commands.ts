@@ -1,4 +1,4 @@
-import type { ProductId, TenantId, VariantId } from '@ecommerce/domain';
+import type { ProductId, Slug, TenantId, VariantId } from '@ecommerce/domain';
 import type { BusinessErrorCode } from '../errors';
 import type { CreateProductInput } from '../use-cases/create-product';
 import type { SetProductOptionsInput, SetProductOptionsOutput } from '../use-cases/set-product-options';
@@ -11,6 +11,9 @@ import type {
 } from '../use-cases/set-variant-amounts';
 import type { SetVariantImagesInput } from '../use-cases/set-variant-images';
 import type { SetVariantSkuInput } from '../use-cases/set-variant-sku';
+import type { SetProductShippingInput } from '../use-cases/storefront/set-product-shipping';
+import type { SetProductSlugInput } from '../use-cases/storefront/set-product-slug';
+import type { BuyerChange, SetProductTypeInput } from '../use-cases/storefront/set-product-type';
 import type { UpdateProductDetailsInput } from '../use-cases/update-product-details';
 
 /** Códigos que viajan en la envoltura `{ ok: false }` de las callable (`contracts/callable-functions.md`). */
@@ -42,7 +45,7 @@ export interface CatalogCommands {
   createProduct(
     tenantId: TenantId,
     input: CreateProductInput & { readonly requestId: string },
-  ): Promise<CommandResult<{ readonly productId: ProductId; readonly variantId: VariantId }>>;
+  ): Promise<CommandResult<{ readonly productId: ProductId; readonly variantId: VariantId; readonly slug: Slug | null }>>;
   updateProductDetails(tenantId: TenantId, input: UpdateProductDetailsInput): Promise<CommandResult<Version>>;
   setProductOptions(tenantId: TenantId, input: SetProductOptionsInput): Promise<CommandResult<SetProductOptionsOutput>>;
   setProductStatus(tenantId: TenantId, input: SetProductStatusInput): Promise<CommandResult<Version>>;
@@ -56,4 +59,10 @@ export interface CatalogCommands {
   setVariantPrice(tenantId: TenantId, input: SetVariantPriceInput): Promise<CommandResult<AmountsOutput>>;
   setVariantCost(tenantId: TenantId, input: SetVariantCostInput): Promise<CommandResult<AmountsOutput>>;
   setVariantStock(tenantId: TenantId, input: SetVariantStockInput): Promise<CommandResult<AmountsOutput>>;
+  // Ficha de tienda (002)
+  /** Devuelve la URL final: la normalizada, que puede no ser la escrita (FR-007). */
+  setProductSlug(tenantId: TenantId, input: SetProductSlugInput): Promise<CommandResult<Version & { readonly slug: Slug }>>;
+  setProductShipping(tenantId: TenantId, input: SetProductShippingInput): Promise<CommandResult<Version>>;
+  /** Devuelve lo que cambió para el comprador, lo mismo que quedó en la bitácora (FR-016, FR-032). */
+  setProductType(tenantId: TenantId, input: SetProductTypeInput): Promise<CommandResult<Version & { readonly changes: readonly BuyerChange[] }>>;
 }

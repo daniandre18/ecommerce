@@ -15,6 +15,7 @@ import type {
   SessionUser,
   SignInResult,
   SignUpResult,
+  SlugIndexEntry,
   TeamCommands,
   TeamQueries,
   Unsubscribe,
@@ -42,11 +43,13 @@ import {
   type Product,
   type ProductId,
   type Role,
+  type Slug,
   type Tenant,
   type TenantId,
   type Uid,
   type Variant,
   type VariantId,
+  type Vocabulary,
 } from '@ecommerce/domain';
 import { CURRENT_ACCESS } from '../app/tenant/current-access';
 
@@ -114,6 +117,10 @@ export class FakeCatalogQueries implements CatalogQueries {
   readonly products: Subscription<Product | null, { tenantId: TenantId; productId: ProductId }>[] = [];
   readonly variantLists: Subscription<readonly Variant[], { tenantId: TenantId; productId: ProductId }>[] = [];
   readonly costLists: Subscription<ReadonlyMap<VariantId, Money>, { tenantId: TenantId; productId: ProductId }>[] = [];
+  readonly vocabularies: Subscription<Vocabulary, TenantId>[] = [];
+  /** Las URL reservadas que conoce `findSlug`; la prueba las agrega. */
+  readonly slugs = new Map<string, SlugIndexEntry>();
+  readonly findSlug = vi.fn(async (_tenantId: TenantId, slug: Slug) => this.slugs.get(slug) ?? null);
 
   watchTenant(id: TenantId, watcher: Watcher<Tenant | null>): Unsubscribe {
     return this.open(this.tenants, new Subscription(id, watcher));
@@ -133,6 +140,10 @@ export class FakeCatalogQueries implements CatalogQueries {
 
   watchCosts(id: TenantId, productId: ProductId, watcher: Watcher<ReadonlyMap<VariantId, Money>>): Unsubscribe {
     return this.open(this.costLists, new Subscription({ tenantId: id, productId }, watcher));
+  }
+
+  watchVocabulary(id: TenantId, watcher: Watcher<Vocabulary>): Unsubscribe {
+    return this.open(this.vocabularies, new Subscription(id, watcher));
   }
 
   /** La suscripción abierta más reciente al listado. */
@@ -168,6 +179,9 @@ export function fakeCatalogCommands(): Mocked<CatalogCommands> {
     setVariantPrice: pending(),
     setVariantCost: pending(),
     setVariantStock: pending(),
+    setProductSlug: pending(),
+    setProductShipping: pending(),
+    setProductType: pending(),
   } as unknown as Mocked<CatalogCommands>;
 }
 

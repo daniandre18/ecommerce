@@ -18,6 +18,9 @@ export class CallableCatalogCommands implements CatalogCommands {
   setVariantPrice: CatalogCommands['setVariantPrice'] = (tenantId, input) => this.call('setVariantPrice', tenantId, input);
   setVariantCost: CatalogCommands['setVariantCost'] = (tenantId, input) => this.call('setVariantCost', tenantId, input);
   setVariantStock: CatalogCommands['setVariantStock'] = (tenantId, input) => this.call('setVariantStock', tenantId, input);
+  setProductSlug: CatalogCommands['setProductSlug'] = (tenantId, input) => this.call('setProductSlug', tenantId, input);
+  setProductShipping: CatalogCommands['setProductShipping'] = (tenantId, input) => this.call('setProductShipping', tenantId, input);
+  setProductType: CatalogCommands['setProductType'] = (tenantId, input) => this.call('setProductType', tenantId, input);
 
   private call<T>(name: string, tenantId: TenantId, input: object): Promise<CommandResult<T>> {
     return callCommand<T>(this.functions, name, { ...input, tenantId });

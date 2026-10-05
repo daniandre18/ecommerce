@@ -22,3 +22,5 @@ export * from './services/normalize-name';
 export * from './services/build-audit-entries';
 export * from './services/sale-conditions';
 export * from './services/shipping-data';
+export * from './services/video-url';
+export * from './services/vocabulary';

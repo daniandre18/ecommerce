@@ -59,4 +59,20 @@ describe('creaciones simultáneas en un comercio', () => {
       await deleteApp(app);
     }
   });
+
+  // T024a (002) — SC-001: dos creaciones a la vez con el MISMO nombre se disputan la misma URL. Las
+  // dos tienen que terminar, una con la URL y la otra con el sufijo: la reserva atómica no puede
+  // convertirse en un error para quien llegó segundo.
+  it('dos con el mismo nombre a la vez terminan las dos, con camiseta y camiseta-2', async () => {
+    const { createProduct } = catalogCallables(productionDependencies());
+    const results = await Promise.all(
+      ['c1', 'c2'].map((requestId) => createProduct.run(callAs('owner', { requestId, name: 'Camiseta', description: '' }))),
+    );
+    expect(results.every((r) => r.ok)).toBe(true);
+
+    const slugs = (await db.collection('tenants/t1/products').get()).docs.map((d) => d.get('slug') as string);
+    expect(slugs.sort()).toEqual(['camiseta', 'camiseta-2']);
+    const index = (await db.collection('tenants/t1/slugIndex').get()).docs.map((d) => [d.id, d.get('productId') as string]);
+    expect(index).toHaveLength(2);
+  });
 });

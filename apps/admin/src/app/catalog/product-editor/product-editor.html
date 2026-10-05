@@ -23,6 +23,14 @@
     <app-details-section [tenantId]="current.tenantId" [product]="current" />
   </section>
 
+  <section aria-labelledby="tienda">
+    <app-storefront-section [tenantId]="current.tenantId" [product]="current" />
+  </section>
+
+  <section aria-labelledby="envio">
+    <app-shipping-section [tenantId]="current.tenantId" [product]="current" />
+  </section>
+
   <section>
     <app-image-upload
       heading="Imágenes del producto"
@@ -31,6 +39,7 @@
       [images]="current.images"
       [save]="saveProductImages"
     />
+    <app-product-video [tenantId]="current.tenantId" [product]="current" />
   </section>
 
   @if (variants.error()) {

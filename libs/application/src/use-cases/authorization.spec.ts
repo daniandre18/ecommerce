@@ -11,10 +11,26 @@ import { SetProductStatus } from './set-product-status';
 import { SetVariantCost, SetVariantPrice, SetVariantStock } from './set-variant-amounts';
 import { SetVariantImages } from './set-variant-images';
 import { SetVariantSku } from './set-variant-sku';
+import { SetProductShipping } from './storefront/set-product-shipping';
+import { SetProductSlug } from './storefront/set-product-slug';
+import { SetProductType } from './storefront/set-product-type';
 import { ctx, NOW, T1 } from './testing/fixture';
 import { UpdateProductDetails } from './update-product-details';
 
-const CATALOG = [CreateProduct, UpdateProductDetails, SetProductOptions, SetProductStatus, SetVariantSku, SetVariantImages, ArchiveProduct, ArchiveVariant];
+const CATALOG = [
+  CreateProduct,
+  UpdateProductDetails,
+  SetProductOptions,
+  SetProductStatus,
+  SetVariantSku,
+  SetVariantImages,
+  ArchiveProduct,
+  ArchiveVariant,
+  // 002, Historia 1 (T026): la ficha de tienda y el tipo son decisiones de catálogo, no de precio.
+  SetProductSlug,
+  SetProductShipping,
+  SetProductType,
+];
 
 /** ¿Pasa la autorización una cuenta con exactamente estos permisos? */
 async function allowed(permissions: readonly Permission[], requires: Requirement): Promise<boolean> {

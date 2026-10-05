@@ -93,6 +93,12 @@ export interface StorefrontFields {
   readonly slugLocked: boolean;
   /** La de respaldo de un nombre sin letras ni números, para reemplazar (FR-006). */
   readonly slugNeedsReplacement: boolean;
+  /**
+   * ¿Estuvo activo o no listado alguna vez? Decide qué pasa con una URL que deja de ser la vigente:
+   * si nunca se publicó, se libera, porque nadie la enlazó; si sí, queda reservada para redirigir
+   * (FR-008). No se deduce de `slugLocked`, que también se pone al editarla a mano.
+   */
+  readonly publishedOnce: boolean;
   readonly seoTitle: string | null;
   readonly seoDescription: string | null;
   readonly tags: readonly string[];
@@ -127,6 +133,7 @@ export function storefrontDefaults(): StorefrontFields {
     slug: null,
     slugLocked: false,
     slugNeedsReplacement: false,
+    publishedOnce: false,
     seoTitle: null,
     seoDescription: null,
     tags: [],

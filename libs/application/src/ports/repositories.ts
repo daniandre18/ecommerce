@@ -9,11 +9,13 @@ import type {
   Role,
   RoleId,
   Sku,
+  Slug,
   Tenant,
   Uid,
   Variant,
   VariantId,
   VariantSummary,
+  Vocabulary,
 } from '@ecommerce/domain';
 
 /**
@@ -106,4 +108,31 @@ export interface SkuIndexRepository {
   release(normalized: string): Promise<void>;
   /** El SKU de una variante archivada queda reservado para siempre (FR-023). */
   markArchived(normalized: string): Promise<void>;
+}
+
+/** Una URL amigable reservada (FR-005, FR-008 de la 002). El id de cada entrada es la URL. */
+export interface SlugIndexEntry {
+  readonly productId: ProductId;
+  /** `previous`: la que un producto publicado tuvo y ya no tiene; reservada para redirigir. */
+  readonly kind: 'current' | 'previous';
+}
+
+/** Unicidad de la URL amigable de un producto dentro del comercio. Como `SkuIndexRepository`. */
+export interface SlugIndexRepository {
+  find(slug: Slug): Promise<SlugIndexEntry | null>;
+  /** Crea la reserva como vigente. Si la URL ya existe, falla al confirmar: la colisión es atómica. */
+  reserve(slug: Slug, productId: ProductId): Promise<void>;
+  /** Solo para la URL de un producto que nunca se publicó: nadie la enlazó (FR-008). */
+  release(slug: Slug): Promise<void>;
+  /** La que deja de ser vigente de un producto publicado alguna vez: queda reservada (FR-008). */
+  markPrevious(slug: Slug): Promise<void>;
+  /** Volver a una anterior propia la recupera como vigente. */
+  markCurrent(slug: Slug): Promise<void>;
+}
+
+/** Etiquetas y marcas del comercio, en un solo documento (research §7 de la 002). */
+export interface VocabularyRepository {
+  /** Vacío si todavía no existe. */
+  get(): Promise<Vocabulary>;
+  save(vocabulary: Vocabulary): Promise<void>;
 }

@@ -7,6 +7,7 @@ import {
   optionId,
   PRODUCT_KINDS,
   productId,
+  slug,
   stockQuantity,
   stockUndefined,
   tenantId,
@@ -25,7 +26,6 @@ import {
   type Product,
   type ProductStatus,
   type Sku,
-  type Slug,
   type StockLevel,
   type Tenant,
   type Variant,
@@ -85,11 +85,14 @@ function storefrontFromDoc(d: DocumentData) {
   const weightGrams = numberOrNull(d['weightGrams']);
   const dimensionsMm = dimensionsFromDoc(d['dimensionsMm']);
   return {
-    // `null` es DEFENSA ante una migración interrumpida (T042), no un estado del producto. La forma
-    // de la URL no se valida acá todavía: la factoría `slug()` llega con T027 (Historia 1).
-    slug: typeof d['slug'] === 'string' ? (d['slug'] as Slug) : null,
+    // `null` es DEFENSA ante una migración interrumpida (T042), no un estado del producto. Una URL
+    // presente se reconstruye con `slug()`: solo la factoría y la migración las producen, así que una
+    // mal formada es corrupción y falla fuerte al leerla antes que publicarse en la tienda.
+    slug: d['slug'] == null ? null : slug(String(d['slug'])),
     slugLocked: d['slugLocked'] === true,
     slugNeedsReplacement: d['slugNeedsReplacement'] === true,
+    // Sin historial, un producto anterior a la 002 cuenta como publicado si hoy está activo o no listado.
+    publishedOnce: d['publishedOnce'] === undefined ? d['status'] !== 'draft' : d['publishedOnce'] === true,
     seoTitle: stringOrNull(d['seoTitle']),
     seoDescription: stringOrNull(d['seoDescription']),
     tags: strings(d['tags']),
@@ -136,6 +139,7 @@ export function productToDoc(p: Product): DocumentData {
     slug: p.slug,
     slugLocked: p.slugLocked,
     slugNeedsReplacement: p.slugNeedsReplacement,
+    publishedOnce: p.publishedOnce,
     seoTitle: p.seoTitle,
     seoDescription: p.seoDescription,
     tags: [...p.tags],
@@ -284,7 +288,10 @@ function videoFromDoc(value: unknown): ExternalVideo | null {
   };
 }
 
-/** La validación del dígito de control llega con la factoría `gtin()` en T087 (Historia 4). */
+/**
+ * Permisivo por ahora, solo porque la factoría `gtin()` todavía no existe: llega con T087
+ * (Historia 4), que cambia esto por ella, como se hizo con `slug()` en T027.
+ */
 function gtinFromDoc(value: unknown): Gtin | null {
   if (value == null) return null;
   const { raw, normalized } = value as { raw: unknown; normalized: unknown };

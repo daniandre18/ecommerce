@@ -47,7 +47,7 @@ describe('ProductEditor', () => {
     queries.variantLists[0]?.emit([{ ...createIncompleteVariant({ id: variantId('v1'), tenantId: T1, productId: productId('p1'), optionValues: {} }), version: 1 }]);
     await settle();
     expect(root.querySelector('h1')?.textContent).toContain('Camiseta');
-    expect([...root.querySelectorAll('h2')].map((h) => h.textContent?.trim())).toEqual(['Datos', 'Estado', 'Opciones de variación', 'Variantes (1)']);
+    expect([...root.querySelectorAll('h2')].map((h) => h.textContent?.trim())).toEqual(['Datos', 'En la tienda', 'Tipo y envío', 'Estado', 'Opciones de variación', 'Variantes (1)']);
     expect(root.querySelector('h3')?.textContent?.trim()).toBe('Imágenes del producto');
     expect(root.querySelector('[role="group"]')?.textContent).toContain('Única');
   });
@@ -59,7 +59,7 @@ describe('ProductEditor', () => {
     queries.products[0]?.emit(product('p1', 'Camiseta'));
     queries.variantLists[0]?.emit([{ ...createIncompleteVariant({ id: variantId('v1'), tenantId: T1, productId: productId('p1'), optionValues: {} }), version: 1 }]);
     await settle();
-    expect([...root.querySelectorAll('h2')].map((h) => h.textContent?.trim())).toEqual(['Datos', 'Variantes (1)']);
+    expect([...root.querySelectorAll('h2')].map((h) => h.textContent?.trim())).toEqual(['Datos', 'En la tienda', 'Tipo y envío', 'Variantes (1)']);
   });
 
   it('un producto que no existe lo dice y ofrece volver al catálogo', async () => {

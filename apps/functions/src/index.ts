@@ -2,6 +2,7 @@ import { setGlobalOptions } from 'firebase-functions/options';
 import { productionDependencies } from './bootstrap/composition';
 import { catalogCallables } from './catalog/callables';
 import { pricingCallables } from './pricing/callables';
+import { storefrontCallables } from './storefront/callables';
 import { teamCallables } from './team/callables';
 
 /**
@@ -28,6 +29,8 @@ export const {
 } = catalogCallables(deps);
 
 export const { setVariantPrice, setVariantCost, setVariantStock } = pricingCallables(deps);
+
+export const { setProductSlug, setProductShipping, setProductType } = storefrontCallables(deps);
 
 export const {
   createRole,

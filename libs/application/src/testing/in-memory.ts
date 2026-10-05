@@ -1,5 +1,6 @@
 import {
   assertCanDeleteRole,
+  emptyVocabulary,
   normalizeEmail,
   type AuditEntry,
   type Invitation,
@@ -10,10 +11,12 @@ import {
   type ProductId,
   type Role,
   type RoleId,
+  type Slug,
   type Tenant,
   type Uid,
   type Variant,
   type VariantId,
+  type Vocabulary,
 } from '@ecommerce/domain';
 import type {
   AuditLogRepository,
@@ -23,9 +26,12 @@ import type {
   RoleRepository,
   SkuIndexEntry,
   SkuIndexRepository,
+  SlugIndexEntry,
+  SlugIndexRepository,
   TenantRepository,
   VariantCostsRepository,
   VariantRepository,
+  VocabularyRepository,
 } from '../ports/repositories';
 import type { SecurityEvent, SecurityEventRecorder } from '../ports/security-events';
 import type { TransactionScope, UnitOfWork } from '../ports/unit-of-work';
@@ -45,6 +51,8 @@ export class InMemoryStore {
   products = new Map<ProductId, Product>();
   variants = new Map<string, Variant>();
   skuIndex = new Map<string, SkuIndexEntry>();
+  slugIndex = new Map<Slug, SlugIndexEntry>();
+  vocabulary: Vocabulary = emptyVocabulary();
 
   clone(): InMemoryStore {
     const copy = new InMemoryStore();
@@ -57,6 +65,8 @@ export class InMemoryStore {
     copy.products = new Map(this.products);
     copy.variants = new Map(this.variants);
     copy.skuIndex = new Map(this.skuIndex);
+    copy.slugIndex = new Map(this.slugIndex);
+    copy.vocabulary = this.vocabulary;
     return copy;
   }
 
@@ -166,7 +176,34 @@ function scopeOver(s: InMemoryStore): TransactionScope {
     },
   };
 
-  return { tenant, audit, members, invitations, roles, products, variants, costs, skuIndex };
+  const slugIndex: SlugIndexRepository = {
+    find: async (value) => s.slugIndex.get(value) ?? null,
+    reserve: async (value, productId) => {
+      if (s.slugIndex.has(value)) throw new DocumentAlreadyExistsError(value);
+      s.slugIndex.set(value, { productId, kind: 'current' });
+    },
+    release: async (value) => {
+      s.slugIndex.delete(value);
+    },
+    markPrevious: async (value) => markSlug(s, value, 'previous'),
+    markCurrent: async (value) => markSlug(s, value, 'current'),
+  };
+
+  const vocabulary: VocabularyRepository = {
+    get: async () => s.vocabulary,
+    save: async (value) => {
+      s.vocabulary = value;
+    },
+  };
+
+  return { tenant, audit, members, invitations, roles, products, variants, costs, skuIndex, slugIndex, vocabulary };
+}
+
+/** Como `update` en Firestore: falla si la entrada no existe. */
+function markSlug(s: InMemoryStore, value: Slug, kind: SlugIndexEntry['kind']): void {
+  const entry = s.slugIndex.get(value);
+  if (!entry) throw new Error(`No existe la reserva ${value}`);
+  s.slugIndex.set(value, { ...entry, kind });
 }
 
 export class InMemoryUnitOfWork implements UnitOfWork {

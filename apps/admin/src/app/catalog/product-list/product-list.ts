@@ -1,5 +1,5 @@
 import { Component, computed, inject, input, linkedSignal, signal } from '@angular/core';
-import { debounce, form, FormField } from '@angular/forms/signals';
+import { debounce, disabled, form, FormField } from '@angular/forms/signals';
 import { MatButton } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
@@ -20,6 +20,18 @@ export const PAGE_SIZE = 25;
 const STATUS_LABELS: Record<ProductStatus, string> = { draft: 'Borrador', active: 'Activo', unlisted: 'No listado' };
 
 type StatusFilter = ProductStatus | 'all';
+
+/** Un filtro de la ficha de tienda a la vez (FR-017, FR-035): Firestore admite una condición de arreglo. */
+type AttributeFilter = 'none' | 'missing' | 'tag' | 'brand';
+
+interface Filters {
+  search: string;
+  status: StatusFilter;
+  attribute: AttributeFilter;
+  attributeValue: string;
+}
+
+const NO_FILTERS: Filters = { search: '', status: 'all', attribute: 'none', attributeValue: '' };
 
 /**
  * El catálogo de un comercio (T054). No lee variantes: el resumen de cada producto (cantidad, si
@@ -48,7 +60,25 @@ type StatusFilter = ProductStatus | 'all';
           <option value="unlisted">No listados</option>
         </select>
       </mat-form-field>
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-label>Mostrar</mat-label>
+        <select matNativeControl data-field="attribute" [formField]="filterForm.attribute">
+          <option value="none">Todos los productos</option>
+          <option value="missing">Con datos de envío faltantes</option>
+          <option value="tag">Con la etiqueta…</option>
+          <option value="brand">De la marca…</option>
+        </select>
+      </mat-form-field>
+      @if (filters().attribute === 'tag' || filters().attribute === 'brand') {
+        <mat-form-field subscriptSizing="dynamic">
+          <mat-label>{{ filters().attribute === 'tag' ? 'Etiqueta' : 'Marca' }}</mat-label>
+          <input matInput data-field="attributeValue" autocomplete="off" [formField]="filterForm.attributeValue" />
+        </mat-form-field>
+      }
     </div>
+    @if (searching() && filters().attribute !== 'none') {
+      <p class="hint">La búsqueda por nombre no se combina con este filtro: se aplica cuando borrás la búsqueda.</p>
+    }
 
     @if (products.error()) {
       <ui-error-state heading="No pudimos cargar el catálogo" (retry)="products.reload()" />
@@ -72,6 +102,10 @@ type StatusFilter = ProductStatus | 'all';
                 <span class="meta">{{ statusLabel(product) }} · {{ variantsLabel(product) }}</span>
                 @if (product.hasIncompleteVariants) {
                   <span class="incomplete">Variantes sin SKU</span>
+                }
+                <!-- Una marca para completar, nunca un bloqueo (FR-017). -->
+                @if (product.missingShippingData) {
+                  <span class="missing-shipping">Faltan datos de envío</span>
                 }
               </a>
             </li>
@@ -153,6 +187,17 @@ type StatusFilter = ProductStatus | 'all';
       color: var(--mat-sys-error);
     }
 
+    .missing-shipping {
+      font: var(--mat-sys-label-medium);
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    .hint {
+      margin: -8px 0 16px;
+      font: var(--mat-sys-body-medium);
+      color: var(--mat-sys-on-surface-variant);
+    }
+
     .more {
       margin-top: 8px;
     }
@@ -168,9 +213,13 @@ export class ProductList {
   private readonly route = inject(ActivatedRoute);
   protected readonly canWrite = injectCan('catalog.write');
 
-  protected readonly filters = signal<{ search: string; status: StatusFilter }>({ search: '', status: 'all' });
+  protected readonly filters = signal<Filters>(NO_FILTERS);
+  protected readonly searching = computed(() => this.filters().search.trim() !== '');
   protected readonly filterForm = form(this.filters, (path) => {
     debounce(path.search, 300);
+    debounce(path.attributeValue, 300);
+    // La búsqueda ordena por nombre: combinarla con estos filtros pediría un índice por combinación.
+    disabled(path.attribute, { when: () => this.searching() });
   });
   protected readonly pageSize = signal(PAGE_SIZE);
 
@@ -179,7 +228,7 @@ export class ProductList {
     const query: ProductListQuery = {
       limit: this.pageSize(),
       ...(status === 'all' ? {} : { status }),
-      ...(search.trim() === '' ? {} : { search: search.trim() }),
+      ...(search.trim() === '' ? this.attributeQuery() : { search: search.trim() }),
     };
     return { tenantId: tenantId(this.tenantId()), query };
   });
@@ -195,7 +244,20 @@ export class ProductList {
     computation: (value, previous) => value ?? previous?.value,
   });
 
-  protected readonly filtered = computed(() => this.filters().status !== 'all' || this.filters().search.trim() !== '');
+  protected readonly filtered = computed(() => {
+    const { status, search, attribute } = this.filters();
+    return status !== 'all' || search.trim() !== '' || attribute !== 'none';
+  });
+
+  /** El filtro de la ficha elegido; etiqueta y marca, recién cuando tienen un valor. */
+  private attributeQuery(): Partial<ProductListQuery> {
+    const { attribute, attributeValue } = this.filters();
+    const value = attributeValue.trim();
+    if (attribute === 'missing') return { missingShippingData: true };
+    if (attribute === 'tag' && value) return { tag: value };
+    if (attribute === 'brand' && value) return { brand: value };
+    return {};
+  }
 
   protected statusLabel(product: Product): string {
     return STATUS_LABELS[product.status];
@@ -210,7 +272,7 @@ export class ProductList {
   }
 
   protected clearFilters(): void {
-    this.filters.set({ search: '', status: 'all' });
+    this.filters.set(NO_FILTERS);
     this.pageSize.set(PAGE_SIZE);
   }
 
@@ -221,7 +283,8 @@ export class ProductList {
       .afterClosed()
       .subscribe((created) => {
         if (!created) return;
-        this.snackBar.open(`Creaste «${created.name}»`, undefined, { duration: 4000 });
+        // La URL final: puede no ser la de la vista previa si otra creación la tomó antes (T038a).
+        this.snackBar.open(created.slug ? `Creaste «${created.name}» en …/${created.slug}` : `Creaste «${created.name}»`, undefined, { duration: 4000 });
         // Lo siguiente que se hace con un producto nuevo es armar sus variantes.
         void this.router.navigate([created.productId], { relativeTo: this.route });
       });

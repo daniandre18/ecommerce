@@ -11,7 +11,9 @@ import {
 } from './repositories/catalog.repositories';
 import { membershipRepository } from './repositories/membership.repository';
 import { roleRepository } from './repositories/role.repository';
+import { slugIndexRepository } from './repositories/slug-index.repository';
 import { variantCostsRepository } from './repositories/variant-costs.repository';
+import { vocabularyRepository } from './repositories/vocabulary.repository';
 import { TenantPaths } from './tenant-paths';
 
 function transactionScope(t: Transaction, paths: TenantPaths): TransactionScope {
@@ -25,6 +27,8 @@ function transactionScope(t: Transaction, paths: TenantPaths): TransactionScope 
     variants: variantRepository(t, paths),
     costs: variantCostsRepository(t, paths),
     skuIndex: skuIndexRepository(t, paths),
+    slugIndex: slugIndexRepository(t, paths),
+    vocabulary: vocabularyRepository(t, paths),
   };
 }
 

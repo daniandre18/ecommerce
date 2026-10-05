@@ -49,6 +49,8 @@ interface Product {
   slug: Slug | null;            // null SOLO si la migración se interrumpió: el lector lo tolera, la interfaz no le da estado propio
   slugLocked: boolean;          // true tras editarla a mano o al publicarse por primera vez
   slugNeedsReplacement: boolean; // la de respaldo de un nombre sin letras ni números (FR-006)
+  publishedOnce: boolean;       // ¿estuvo activo o no listado alguna vez? Decide si la URL anterior
+                                // se libera o se reserva (FR-008); no se deduce de slugLocked
 
   // Buscadores, etiquetas, marca (FR-009 a FR-012)
   seoTitle: string | null;      // ≤ 70
@@ -102,8 +104,10 @@ type Gender = 'male' | 'female' | 'unisex';
 muestra `newborn` → "0 a 3 meses", `infant` → "3 a 12 meses", `toddler` → "1 a 5 años",
 `kids` → "5 a 13 años", `adult` → "Adulto". El mapeo vive en la capa de presentación.
 
-**Transición que cambia**: `SetProductStatus` de la 001, al pasar a `active` o `unlisted` por
-primera vez, pone `slugLocked: true`. No cambia ninguna otra regla de estado: la falta de datos de
+**Transición que cambia**: `SetProductStatus` de la 001, al pasar a `active` o `unlisted`, pone
+`publishedOnce: true` y `slugLocked: true`. Agregado al implementar la Historia 1: con `slugLocked`
+solo no se distingue una URL editada a mano de un producto publicado, y FR-008 trata distinto a
+cada uno. Para los productos anteriores a la 002 se infiere de su estado actual. No cambia ninguna otra regla de estado: la falta de datos de
 envío **no** bloquea (FR-017).
 
 ### Variant (ampliada) — `products/{productId}/variants/{variantId}`

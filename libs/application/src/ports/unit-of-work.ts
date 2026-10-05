@@ -5,9 +5,11 @@ import type {
   ProductRepository,
   RoleRepository,
   SkuIndexRepository,
+  SlugIndexRepository,
   TenantRepository,
   VariantCostsRepository,
   VariantRepository,
+  VocabularyRepository,
 } from './repositories';
 
 /**
@@ -24,6 +26,8 @@ export interface TransactionScope {
   readonly variants: VariantRepository;
   readonly costs: VariantCostsRepository;
   readonly skuIndex: SkuIndexRepository;
+  readonly slugIndex: SlugIndexRepository;
+  readonly vocabulary: VocabularyRepository;
 }
 
 /**

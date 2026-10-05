@@ -1,0 +1,116 @@
+<h2 id="tienda">En la tienda</h2>
+
+<!-- URL amigable: se valida contra todo el comercio, por eso se guarda aparte (FR-007). -->
+<form class="slug" novalidate (submit)="$event.preventDefault(); saveSlug()">
+  <mat-form-field>
+    <mat-label>URL amigable</mat-label>
+    <input matInput data-field="slug" autocomplete="off" spellcheck="false" [formField]="slugForm.slug" aria-describedby="slug-status" />
+    @if (normalizedSlug(); as slug) {
+      <mat-hint class="slug-preview">Quedará como …/{{ slug }}</mat-hint>
+    }
+  </mat-form-field>
+  <p id="slug-status" class="slug-status" aria-live="polite">{{ slugStatus()?.text }}</p>
+  @if (product().slugNeedsReplacement) {
+    <p role="note" class="replace">Reemplazá esta URL por una que describa el producto: se generó porque el nombre no tiene letras ni números.</p>
+  }
+  <div role="alert" class="failure">{{ slugFailure() }}</div>
+  @if (canWrite() && slugStatus()) {
+    <div class="actions">
+      <button matButton="filled" type="submit" [disabled]="!slugStatus()?.canSave">Guardar URL</button>
+    </div>
+  }
+</form>
+
+<!-- Buscadores, etiquetas y marca, que se guardan juntos (FR-009 a FR-012). -->
+<form novalidate (submit)="$event.preventDefault(); saveSheet()">
+  <mat-form-field>
+    <mat-label>Título para buscadores</mat-label>
+    <input matInput data-field="seoTitle" autocomplete="off" [formField]="sheetForm.seoTitle" />
+    <mat-hint align="end" class="seo-title-count">{{ sheet().seoTitle.length }}/{{ maxSeoTitle }}</mat-hint>
+    @if (sheetForm.seoTitle().errors()[0]; as error) {
+      <mat-error>{{ error.message }}</mat-error>
+    }
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Descripción para buscadores</mat-label>
+    <textarea matInput data-field="seoDescription" rows="2" [formField]="sheetForm.seoDescription"></textarea>
+    <mat-hint align="end" class="seo-description-count">{{ sheet().seoDescription.length }}/{{ maxSeoDescription }}</mat-hint>
+    @if (sheetForm.seoDescription().errors()[0]; as error) {
+      <mat-error>{{ error.message }}</mat-error>
+    }
+  </mat-form-field>
+
+  <figure class="preview" aria-labelledby="preview-caption">
+    <figcaption id="preview-caption">Así aparecería en un buscador</figcaption>
+    <p class="preview-url">{{ preview().url }}</p>
+    <p class="preview-title">{{ preview().title }}</p>
+    <p class="preview-description">{{ preview().description }}</p>
+    @if (preview().usesDefaults) {
+      <p class="preview-note">Se usarán el nombre y el comienzo de la descripción del producto donde falte.</p>
+    }
+  </figure>
+
+  <fieldset class="tags">
+    <legend>Etiquetas de búsqueda</legend>
+    <mat-chip-set aria-label="Etiquetas del producto">
+      @for (tag of sheet().tags; track tag) {
+        <mat-chip>
+          <span class="chip-label">{{ tag }}</span>
+          @if (canWrite()) {
+            <button matChipRemove type="button" [attr.aria-label]="'Quitar ' + tag" (click)="removeTag(tag)">×</button>
+          }
+        </mat-chip>
+      } @empty {
+        <span class="none">Sin etiquetas</span>
+      }
+    </mat-chip-set>
+    @if (canWrite()) {
+      <mat-form-field>
+        <mat-label>Agregar etiqueta</mat-label>
+        <input
+          matInput
+          data-field="tag"
+          autocomplete="off"
+          [value]="tagInput()"
+          (input)="setTagInput($any($event.target).value)"
+          (keydown.enter)="$event.preventDefault(); addTag(tagInput())"
+          aria-describedby="tag-help"
+        />
+        <mat-hint id="tag-help">Escribila y apretá Enter.</mat-hint>
+      </mat-form-field>
+      @if (tagSuggestions().length > 0) {
+        <div class="suggestions tag-suggestions" role="group" aria-label="Etiquetas que ya usa el comercio">
+          @for (suggestion of tagSuggestions(); track suggestion) {
+            <button matButton type="button" (click)="addTag(suggestion)">{{ suggestion }}</button>
+          }
+        </div>
+      }
+      <div role="alert" class="failure">{{ tagFailure() }}</div>
+    }
+  </fieldset>
+
+  <mat-form-field>
+    <mat-label>Marca</mat-label>
+    <input matInput data-field="brand" autocomplete="off" [formField]="sheetForm.brand" />
+    @if (sheetForm.brand().errors()[0]; as error) {
+      <mat-error>{{ error.message }}</mat-error>
+    }
+  </mat-form-field>
+  @if (canWrite() && brandSuggestions().length > 0) {
+    <div class="suggestions brand-suggestions" role="group" aria-label="Marcas que ya usa el comercio">
+      @for (suggestion of brandSuggestions(); track suggestion) {
+        <button matButton type="button" (click)="chooseBrand(suggestion)">{{ suggestion }}</button>
+      }
+    </div>
+  }
+
+  <div role="alert" class="failure">{{ sheetFailure() }}</div>
+  @if (canWrite()) {
+    <div class="actions">
+      @if (dirty()) {
+        <button matButton type="button" (click)="discard()">Descartar cambios</button>
+      }
+      <button matButton="filled" type="submit" [disabled]="sheetForm().submitting()">Guardar ficha</button>
+    </div>
+  }
+</form>

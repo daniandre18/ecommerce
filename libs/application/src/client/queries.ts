@@ -1,4 +1,5 @@
-import type { Money, Product, ProductId, ProductStatus, Tenant, TenantId, Variant, VariantId } from '@ecommerce/domain';
+import type { Money, Product, ProductId, ProductStatus, Slug, Tenant, TenantId, Variant, VariantId, Vocabulary } from '@ecommerce/domain';
+import type { SlugIndexEntry } from '../ports/repositories';
 
 /** Corta la suscripción. Llamarla dos veces no hace nada. */
 export type Unsubscribe = () => void;
@@ -12,8 +13,19 @@ export interface Watcher<T> {
 export interface ProductListQuery {
   /** Sin estado, todos los que están en circulación. */
   readonly status?: ProductStatus;
-  /** Prefijo del nombre; se compara normalizado, como `nameNormalized`. */
+  /**
+   * Prefijo del nombre, comparado normalizado como `nameNormalized`. Encuentra además el producto
+   * cuya URL amigable es exactamente lo escrito, normalizado (FR-035 de la 002).
+   */
   readonly search?: string;
+  // Filtros de la ficha de tienda (002). Se combinan con el estado, pero entre sí de a uno: Firestore
+  // admite una sola condición de arreglo por consulta, y cada combinación necesita su índice.
+  /** Una etiqueta; se compara normalizada. */
+  readonly tag?: string;
+  /** Una marca; se compara normalizada. */
+  readonly brand?: string;
+  /** Solo los físicos a los que les falta peso o dimensiones (FR-017). */
+  readonly missingShippingData?: true;
   readonly limit: number;
 }
 
@@ -39,4 +51,11 @@ export interface CatalogQueries {
    * ese permiso, y si lo pidiera, la lectura llegaría como error.
    */
   watchCosts(tenantId: TenantId, productId: ProductId, watcher: Watcher<ReadonlyMap<VariantId, Money>>): Unsubscribe;
+  /** Etiquetas y marcas del comercio, para sugerir mientras se escribe (FR-011, FR-012). */
+  watchVocabulary(tenantId: TenantId, watcher: Watcher<Vocabulary>): Unsubscribe;
+  /**
+   * La reserva de una URL amigable, para mostrar antes de guardar si está libre (FR-007). Es una
+   * vista previa: la que decide es la reserva en el servidor, al confirmar.
+   */
+  findSlug(tenantId: TenantId, slug: Slug): Promise<SlugIndexEntry | null>;
 }

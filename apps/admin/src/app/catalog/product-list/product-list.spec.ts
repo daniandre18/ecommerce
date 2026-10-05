@@ -63,9 +63,10 @@ describe('ProductList', () => {
     await settle();
 
     const items = [...root.querySelectorAll('li a')].map((link) => [...link.children].map((part) => part.textContent?.trim()));
+    // Los dos nacen sin peso: la 002 los marca para completar (FR-017).
     expect(items).toEqual([
-      ['Camiseta', 'Activo · 4 variantes'],
-      ['Taza', 'Borrador · 1 variante', 'Variantes sin SKU'],
+      ['Camiseta', 'Activo · 4 variantes', 'Faltan datos de envío'],
+      ['Taza', 'Borrador · 1 variante', 'Variantes sin SKU', 'Faltan datos de envío'],
     ]);
     expect(root.querySelector('ui-skeleton')).toBeNull();
     expect(root.querySelector('li a')?.getAttribute('href')).toBe('/t/t1/catalog/p1');
@@ -134,6 +135,74 @@ describe('ProductList', () => {
     status.dispatchEvent(new Event('change'));
     await settle();
     expect(queries.productList.params.query).toEqual({ limit: PAGE_SIZE, status: 'active' });
+  });
+
+  // T041 (002) — FR-017 y FR-035: los filtros de la ficha de tienda, de a uno.
+  describe('filtros de la ficha de tienda', () => {
+    const choose = async (root: HTMLElement, value: string) => {
+      const show = root.querySelector<HTMLSelectElement>('[data-field="attribute"]');
+      if (!show) throw new Error('No hay filtro "Mostrar"');
+      show.value = value;
+      show.dispatchEvent(new Event('input'));
+      show.dispatchEvent(new Event('change'));
+      await settle();
+    };
+    const typeValue = async (root: HTMLElement, value: string) => {
+      const input = root.querySelector<HTMLInputElement>('[data-field="attributeValue"]');
+      if (!input) throw new Error('No hay campo para el valor del filtro');
+      input.value = value;
+      input.dispatchEvent(new Event('input'));
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      await settle();
+    };
+
+    it('muestra solo los físicos a los que les faltan datos de envío', async () => {
+      const { root } = await open();
+      await choose(root, 'missing');
+      expect(queries.productList.params.query).toEqual({ limit: PAGE_SIZE, missingShippingData: true });
+    });
+
+    it('filtra por etiqueta y por marca, de a una', async () => {
+      const { root } = await open();
+      await choose(root, 'tag');
+      await typeValue(root, 'Verano');
+      expect(queries.productList.params.query).toEqual({ limit: PAGE_SIZE, tag: 'Verano' });
+      await choose(root, 'brand');
+      expect(queries.productList.params.query).toEqual({ limit: PAGE_SIZE, brand: 'Verano' });
+    });
+
+    it('sin valor, elegir etiqueta todavía no filtra', async () => {
+      const { root } = await open();
+      await choose(root, 'tag');
+      expect(queries.productList.params.query).toEqual({ limit: PAGE_SIZE });
+    });
+
+    // La búsqueda ordena por nombre: combinarla con estos filtros pediría otro índice por combinación.
+    it('mientras se busca por nombre, los filtros de la ficha no se aplican y lo dice', async () => {
+      const { root } = await open();
+      await choose(root, 'missing');
+      const search = root.querySelector<HTMLInputElement>('input[type="search"]');
+      if (!search) throw new Error('No hay buscador');
+      search.value = 'cafe';
+      search.dispatchEvent(new Event('input'));
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      await settle();
+      expect(queries.productList.params.query).toEqual({ limit: PAGE_SIZE, search: 'cafe' });
+      expect(root.querySelector<HTMLSelectElement>('[data-field="attribute"]')?.disabled).toBe(true);
+      expect(root.textContent).toContain('La búsqueda por nombre no se combina con este filtro');
+    });
+
+    it('señala los productos a los que les faltan datos de envío (FR-017)', async () => {
+      const { root } = await open();
+      queries.productList.emit([
+        product('p1', 'Camiseta', { missingShippingData: true }),
+        product('p2', 'Licencia', { kind: 'digital', missingShippingData: false }),
+      ]);
+      await settle();
+      const rows = [...root.querySelectorAll('li')].map((li) => li.textContent ?? '');
+      expect(rows[0]).toContain('Faltan datos de envío');
+      expect(rows[1]).not.toContain('Faltan datos de envío');
+    });
   });
 
   it('con filtros y sin resultados, ofrece quitarlos en lugar de invitar a crear', async () => {

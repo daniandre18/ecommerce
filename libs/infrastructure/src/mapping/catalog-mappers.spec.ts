@@ -1,5 +1,6 @@
 import {
   categoryId,
+  InvalidSlugError,
   productId,
   stockUndefined,
   tenantId,
@@ -82,6 +83,14 @@ describe('lectura de un producto anterior a la 002', () => {
     expect(product.missingShippingData).toBe(true);
   });
 
+  // FR-008: la URL anterior de un producto que alguna vez estuvo publicado se reserva. Sin historial,
+  // lo mejor que se puede inferir es el estado de hoy: activo o no listado cuenta como publicado.
+  it('un producto activo cuenta como publicado alguna vez; uno en borrador, no', () => {
+    expect(product.publishedOnce).toBe(true);
+    expect(productFromDoc('p1', 't1', { ...PRODUCT_001, status: 'draft' }).publishedOnce).toBe(false);
+    expect(productFromDoc('p1', 't1', { ...PRODUCT_001, status: 'unlisted' }).publishedOnce).toBe(true);
+  });
+
   it('conserva todo lo que ya tenía', () => {
     expect(product).toEqual(expect.objectContaining({ name: 'Camiseta', status: 'active', version: 3 }));
   });
@@ -101,6 +110,7 @@ describe('ida y vuelta de los campos de la 002', () => {
     slug: 'camiseta-basica' as Slug,
     slugLocked: true,
     slugNeedsReplacement: false,
+    publishedOnce: true,
     seoTitle: 'Camiseta básica de algodón',
     seoDescription: 'Algodón peinado, cuello redondo.',
     tags: ['Verano', 'Algodón'],
@@ -142,6 +152,19 @@ describe('ida y vuelta de los campos de la 002', () => {
       dimensionsMm: { length: 600, width: 400, height: 30 },
     };
     expect(variantFromDoc('v1', 't1', 'p1', variantToDoc(variant))).toEqual(variant);
+  });
+});
+
+// T027: la URL se reconstruye con la factoría `slug()`. Ninguna URL válida llega por otro camino
+// —solo `slug()`, `slugify()` y la migración las producen—, así que una mal formada es corrupción, y
+// tiene que saltar al leerla antes que publicarse en la tienda. El nulo, en cambio, se tolera (T042).
+describe('URL amigable guardada', () => {
+  it('una bien formada se lee tal cual', () => {
+    expect(productFromDoc('p1', 't1', { ...PRODUCT_001, slug: 'camiseta-basica' }).slug).toBe('camiseta-basica');
+  });
+
+  it.each(['Camiseta Básica', 'camiseta--basica', 'a/b', ''])('una mal formada (%j) falla fuerte', (value) => {
+    expect(() => productFromDoc('p1', 't1', { ...PRODUCT_001, slug: value })).toThrow(InvalidSlugError);
   });
 });
 
