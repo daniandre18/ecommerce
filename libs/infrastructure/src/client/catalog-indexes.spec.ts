@@ -38,6 +38,28 @@ describe('índices del listado del catálogo', () => {
     expect(found).toBe(true);
   });
 
+  // Hallado en la 002 (Historia 1): la búsqueda por nombre de la 001 se combina con el estado, y esa
+  // combinación no tenía índice. En el emulador funcionaba; en producción, la consulta fallaba.
+  it.each([
+    ['buscar por nombre', [{ fieldPath: 'archived', order: 'ASCENDING' }, { fieldPath: 'nameNormalized', order: 'ASCENDING' }]],
+    [
+      'buscar por nombre junto con el estado',
+      [
+        { fieldPath: 'archived', order: 'ASCENDING' },
+        { fieldPath: 'status', order: 'ASCENDING' },
+        { fieldPath: 'nameNormalized', order: 'ASCENDING' },
+      ],
+    ],
+  ] as const)('%s tiene su índice', (_label, expected) => {
+    const found = indexes.some(
+      (index) =>
+        index.collectionGroup === 'products' &&
+        index.fields.length === expected.length &&
+        expected.every((field, i) => matches(index.fields[i], field)),
+    );
+    expect(found).toBe(true);
+  });
+
   it('los filtros son los de la Historia 1: etiqueta, marca y datos de envío faltantes', () => {
     expect(Object.keys(PRODUCT_ATTRIBUTE_FILTERS).sort()).toEqual(['brand', 'missingShippingData', 'tag']);
   });
