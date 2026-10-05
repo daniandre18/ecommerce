@@ -2,6 +2,7 @@ import {
   createIncompleteVariant,
   InvalidIdentifierError,
   productId,
+  storefrontDefaults,
   summarizeVariants,
   variantId,
   type ProductId,
@@ -49,6 +50,8 @@ export class CreateProduct {
       optionValues: {},
     });
     await tx.products.save({
+      // La URL amigable se genera en T032 (Historia 1); hasta entonces nace sin ella.
+      ...storefrontDefaults(),
       id,
       tenantId: ctx.tenantId,
       ...productName(input.name),

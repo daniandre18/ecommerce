@@ -15,6 +15,7 @@ import {
   money,
   optionId,
   normalizeName,
+  storefrontDefaults,
   productId,
   roleId,
   tenantId,
@@ -90,6 +91,7 @@ const AUDIT: AuditEntry[] = [
 ];
 
 const product = (id: string, name: string, minute: number, overrides: Partial<Product> = {}): Product => ({
+  ...storefrontDefaults(),
   id: productId(id),
   tenantId: T1,
   name,

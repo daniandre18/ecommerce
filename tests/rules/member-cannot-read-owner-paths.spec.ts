@@ -46,6 +46,26 @@ describe('un colaborador activo no lee las rutas reservadas al Propietario', () 
     await assertFails(getDoc(doc(db(env.authenticatedContext('pricer1')), 'tenants/t1/products/p1/private/costs')));
   });
 
+  // Caso 44 (002): la regla de `storefront` es una colección nueva bajo el inquilino. Con ella en
+  // pie —el colaborador lee el árbol—, sigue sin abrir ninguna ruta del Propietario.
+  it('caso 44: con la regla de storefront, sigue sin leer las rutas del Propietario', async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(db(ctx), 'tenants/t1/storefront/categoryTree'), { nodes: {}, pendingPrune: [] });
+      await setDoc(doc(db(ctx), 'tenants/t1/invitations/i1'), { email: 'x@test', status: 'pending' });
+      await setDoc(doc(db(ctx), 'tenants/t1/securityEvents/s1'), { kind: 'permission-denied' });
+    });
+    await assertSucceeds(getDoc(doc(catalog(), 'tenants/t1/storefront/categoryTree')));
+    for (const path of [
+      'tenants/t1/config/secrets',
+      'tenants/t1/config/billing',
+      'tenants/t1/auditLog/e1',
+      'tenants/t1/invitations/i1',
+      'tenants/t1/securityEvents/s1',
+    ]) {
+      await assertFails(getDoc(doc(catalog(), path)));
+    }
+  });
+
   it('sí lee su propia membresía', async () => {
     await assertSucceeds(getDoc(doc(catalog(), 'tenants/t1/members/catalog1')));
   });

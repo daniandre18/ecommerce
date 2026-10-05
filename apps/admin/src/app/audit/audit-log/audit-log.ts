@@ -30,6 +30,7 @@ const TYPES: readonly { readonly value: AuditEventType; readonly label: string }
   { value: 'price.changed', label: 'Precios y costo' },
   { value: 'stock.adjusted', label: 'Existencias' },
   { value: 'role.changed', label: 'Equipo y roles' },
+  { value: 'sale-conditions.changed', label: 'Condiciones de venta' },
   { value: 'platform.action', label: 'Operador de la plataforma' },
 ];
 
@@ -271,6 +272,7 @@ export class AuditLog {
         if (!subject) return undefined;
         return `${subject.name} · ${subject.variants.get(variant as VariantId) ?? 'variante archivada'}`;
       },
+      product: (product) => subjects.get(product)?.name,
     };
   });
   protected readonly productName = computed(() => {

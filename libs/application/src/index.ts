@@ -22,6 +22,7 @@ export * from './client/images';
 export * from './client/tenants';
 export * from './client/team';
 export * from './client/audit';
+export * from './client/chunked-query';
 export * from './use-cases/team/roles';
 export * from './use-cases/team/invitations';
 export * from './use-cases/team/memberships';

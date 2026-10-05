@@ -28,6 +28,7 @@ import {
   createOwnerRole,
   invitationId,
   normalizeName,
+  storefrontDefaults,
   PRESET_CATALOG_PERMISSIONS,
   productId,
   tenantId,
@@ -184,6 +185,7 @@ export const tenant = (overrides: Partial<Tenant> = {}): Tenant => ({
 });
 
 export const product = (id: string, name: string, overrides: Partial<Product> = {}): Product => ({
+  ...storefrontDefaults(),
   id: productId(id),
   tenantId: T1,
   name,

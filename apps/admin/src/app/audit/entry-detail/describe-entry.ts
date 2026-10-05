@@ -1,4 +1,14 @@
-import type { AuditEntry, Money, Permission, PriceField, ProductId, RoleSnapshot, StockLevel } from '@ecommerce/domain';
+import type {
+  AuditEntry,
+  Money,
+  Permission,
+  PriceField,
+  ProductId,
+  RoleSnapshot,
+  SaleConditionField,
+  SaleConditionValue,
+  StockLevel,
+} from '@ecommerce/domain';
 import { formatMoneyInput } from '../../catalog/shared/amount-input';
 import { PERMISSION_LABELS } from '../../team/role-editor/permission-labels';
 
@@ -22,12 +32,27 @@ export interface EntryNames {
   person(uid: string): string | undefined;
   /** "Producto · Combinación" de una variante; `undefined` si no se pudo resolver. */
   variant(productId: ProductId, variantId: string): string | undefined;
+  /** El nombre de un producto; `undefined` si no se pudo resolver. */
+  product(productId: ProductId): string | undefined;
 }
 
 const PRICE_FIELDS: Readonly<Record<PriceField, { readonly title: string; readonly none: string }>> = {
   price: { title: 'Cambio de precio', none: 'Sin precio' },
   compareAtPrice: { title: 'Cambio de precio tachado', none: 'Sin precio tachado' },
   cost: { title: 'Cambio de costo', none: 'Sin costo' },
+};
+
+/** Lo que ve o paga el comprador (FR-032 de la 002): condiciones efectivas, no campos. */
+const SALE_CONDITION_TITLES: Readonly<Record<SaleConditionField, string>> = {
+  price: 'Condiciones de venta: precio en la tienda',
+  shipping: 'Condiciones de venta: envío',
+};
+const SALE_CONDITION_VALUES: Readonly<Record<SaleConditionValue, string>> = {
+  shown: 'Precio mostrado',
+  hidden: 'Precio oculto',
+  none: 'Sin envío',
+  charged: 'Envío con cargo',
+  free: 'Envío gratis',
 };
 
 const money = (value: Money | null, none: string) => (value ? `${formatMoneyInput(value)} ${value.currency}` : none);
@@ -45,6 +70,14 @@ export function describeEntry(entry: AuditEntry, names: EntryNames): EntryView {
       return { title: 'Ajuste de existencias', ...variantSubject(entry, names), before: stock(entry.before), after: stock(entry.after) };
     case 'role.changed':
       return describeTeamChange(entry, names);
+    case 'sale-conditions.changed':
+      return {
+        title: SALE_CONDITION_TITLES[entry.field],
+        subject: names.product(entry.entity.id as ProductId) ?? 'Un producto',
+        productId: entry.entity.id as ProductId,
+        before: SALE_CONDITION_VALUES[entry.before],
+        after: SALE_CONDITION_VALUES[entry.after],
+      };
     case 'platform.action':
       return { title: 'Acción del operador de la plataforma', subject: 'El comercio', before: record(entry.before), after: record(entry.after) };
   }

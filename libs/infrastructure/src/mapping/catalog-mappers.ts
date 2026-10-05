@@ -1,7 +1,11 @@
 import type { SkuIndexEntry } from '@ecommerce/application';
 import {
+  AGE_GROUPS,
+  categoryId,
+  GENDERS,
   money,
   optionId,
+  PRODUCT_KINDS,
   productId,
   stockQuantity,
   stockUndefined,
@@ -9,14 +13,19 @@ import {
   uid,
   valueId,
   variantId,
+  VIDEO_PROVIDERS,
   type Combination,
   type CurrencyCode,
+  type Dimensions,
+  type ExternalVideo,
+  type Gtin,
   type ImageRef,
   type Money,
   type PlatformOperatorId,
   type Product,
   type ProductStatus,
   type Sku,
+  type Slug,
   type StockLevel,
   type Tenant,
   type Variant,
@@ -62,6 +71,46 @@ export function productFromDoc(id: string, tid: string, d: DocumentData): Produc
     createdAt: toDate(d['createdAt']),
     updatedAt: toDate(d['updatedAt']),
     version: Number(d['version']),
+    ...storefrontFromDoc(d),
+  };
+}
+
+/**
+ * La ficha de tienda de la 002. Un producto guardado antes no tiene ninguno de estos campos: se lee
+ * con los valores por defecto (research §12 de la 002). Un valor fuera de las listas cerradas sí es
+ * un error, como el resto del mapeo.
+ */
+function storefrontFromDoc(d: DocumentData) {
+  const kind = d['kind'] === undefined ? 'physical' : oneOf(PRODUCT_KINDS, d['kind'], 'Tipo de producto');
+  const weightGrams = numberOrNull(d['weightGrams']);
+  const dimensionsMm = dimensionsFromDoc(d['dimensionsMm']);
+  return {
+    // `null` es DEFENSA ante una migración interrumpida (T042), no un estado del producto. La forma
+    // de la URL no se valida acá todavía: la factoría `slug()` llega con T027 (Historia 1).
+    slug: typeof d['slug'] === 'string' ? (d['slug'] as Slug) : null,
+    slugLocked: d['slugLocked'] === true,
+    slugNeedsReplacement: d['slugNeedsReplacement'] === true,
+    seoTitle: stringOrNull(d['seoTitle']),
+    seoDescription: stringOrNull(d['seoDescription']),
+    tags: strings(d['tags']),
+    tagsNormalized: strings(d['tagsNormalized']),
+    brand: stringOrNull(d['brand']),
+    brandNormalized: stringOrNull(d['brandNormalized']),
+    kind,
+    weightGrams,
+    dimensionsMm,
+    // Un producto anterior a la 002 no lo tiene guardado: se deriva de lo que sí tiene (FR-017).
+    missingShippingData:
+      d['missingShippingData'] === undefined
+        ? kind === 'physical' && (weightGrams === null || dimensionsMm === null)
+        : d['missingShippingData'] === true,
+    priceVisible: d['priceVisible'] !== false,
+    freeShipping: d['freeShipping'] === true,
+    video: videoFromDoc(d['video']),
+    categoryIds: strings(d['categoryIds']).map(categoryId),
+    mpn: stringOrNull(d['mpn']),
+    ageGroup: d['ageGroup'] == null ? null : oneOf(AGE_GROUPS, d['ageGroup'], 'Rango de edad'),
+    gender: d['gender'] == null ? null : oneOf(GENDERS, d['gender'], 'Género'),
   };
 }
 
@@ -84,6 +133,26 @@ export function productToDoc(p: Product): DocumentData {
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
     version: p.version,
+    slug: p.slug,
+    slugLocked: p.slugLocked,
+    slugNeedsReplacement: p.slugNeedsReplacement,
+    seoTitle: p.seoTitle,
+    seoDescription: p.seoDescription,
+    tags: [...p.tags],
+    tagsNormalized: [...p.tagsNormalized],
+    brand: p.brand,
+    brandNormalized: p.brandNormalized,
+    kind: p.kind,
+    weightGrams: p.weightGrams,
+    dimensionsMm: dimensionsToDoc(p.dimensionsMm),
+    missingShippingData: p.missingShippingData,
+    priceVisible: p.priceVisible,
+    freeShipping: p.freeShipping,
+    video: p.video && { provider: p.video.provider, videoId: p.video.videoId, position: p.video.position },
+    categoryIds: [...p.categoryIds],
+    mpn: p.mpn,
+    ageGroup: p.ageGroup,
+    gender: p.gender,
   };
 }
 
@@ -100,6 +169,9 @@ export function variantFromDoc(id: string, tid: string, pid: string, d: Document
     images: imagesFromDoc(d['images']),
     archived: d['archived'] === true,
     version: Number(d['version']),
+    gtin: gtinFromDoc(d['gtin']),
+    weightGrams: numberOrNull(d['weightGrams']),
+    dimensionsMm: dimensionsFromDoc(d['dimensionsMm']),
   };
 }
 
@@ -114,6 +186,9 @@ export function variantToDoc(v: Variant): DocumentData {
     images: v.images.map(imageToDoc),
     archived: v.archived,
     version: v.version,
+    gtin: v.gtin && { raw: v.gtin.raw, normalized: v.gtin.normalized },
+    weightGrams: v.weightGrams,
+    dimensionsMm: dimensionsToDoc(v.dimensionsMm),
   };
 }
 
@@ -179,6 +254,42 @@ export function variantCostsFromDoc(d: DocumentData | undefined): ReadonlyMap<Va
 }
 
 const moneyToDoc = (value: Money | null) => value && { amount: value.amount, currency: value.currency };
+
+function oneOf<T extends string>(allowed: readonly T[], value: unknown, label: string): T {
+  const found = allowed.find((candidate) => candidate === value);
+  if (!found) throw new TypeError(`${label} desconocido: ${String(value)}`);
+  return found;
+}
+
+const stringOrNull = (value: unknown) => (typeof value === 'string' ? value : null);
+const numberOrNull = (value: unknown) => (typeof value === 'number' ? value : null);
+const strings = (value: unknown) => (Array.isArray(value) ? value.map(String) : []);
+
+function dimensionsFromDoc(value: unknown): Dimensions | null {
+  if (value == null) return null;
+  const { length, width, height } = value as Record<string, unknown>;
+  return { length: Number(length), width: Number(width), height: Number(height) };
+}
+
+const dimensionsToDoc = (value: Dimensions | null) =>
+  value && { length: value.length, width: value.width, height: value.height };
+
+function videoFromDoc(value: unknown): ExternalVideo | null {
+  if (value == null) return null;
+  const video = value as Record<string, unknown>;
+  return {
+    provider: oneOf(VIDEO_PROVIDERS, video['provider'], 'Proveedor de video'),
+    videoId: String(video['videoId']),
+    position: Number(video['position']),
+  };
+}
+
+/** La validación del dígito de control llega con la factoría `gtin()` en T087 (Historia 4). */
+function gtinFromDoc(value: unknown): Gtin | null {
+  if (value == null) return null;
+  const { raw, normalized } = value as { raw: unknown; normalized: unknown };
+  return { raw: String(raw), normalized: String(normalized) };
+}
 
 export function stockFromDoc(value: unknown): StockLevel {
   const stock = value as { kind?: string; value?: number } | undefined;

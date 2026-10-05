@@ -2,7 +2,8 @@ import type { OptionId, ProductId, TenantId, ValueId, VariantId } from '../value
 import type { Money } from '../value-objects/money';
 import type { Sku } from '../value-objects/sku';
 import { stockUndefined, type StockLevel } from '../value-objects/stock-level';
-import type { ImageRef } from './product';
+import type { Gtin } from '../value-objects/gtin';
+import type { Dimensions, ImageRef } from './product';
 
 /**
  * Valor elegido para cada opción del producto. `{}` es la variante implícita de un producto sin
@@ -29,6 +30,12 @@ export interface Variant {
   readonly archived: boolean;
   /** Control de concurrencia optimista (FR-027). */
   readonly version: number;
+  /** Código de barras, además del SKU (FR-030). Reservado aunque la variante se archive. */
+  readonly gtin: Gtin | null;
+  /** Peso propio en gramos; `null` = hereda el del producto (FR-015). */
+  readonly weightGrams: number | null;
+  /** Dimensiones propias; `null` = hereda las del producto (FR-015). */
+  readonly dimensionsMm: Dimensions | null;
 }
 
 /**
@@ -73,6 +80,9 @@ export function createIncompleteVariant(input: {
     images: Object.freeze([]),
     archived: false,
     version: 0,
+    gtin: null,
+    weightGrams: null,
+    dimensionsMm: null,
   });
 }
 

@@ -120,6 +120,14 @@ describe('AuditLog', () => {
     });
   });
 
+  // T019 (002) — FR-033: el filtro por tipo incluye las condiciones de venta.
+  it('el filtro por tipo ofrece "Condiciones de venta" y lo consulta', async () => {
+    const { select } = await open('/t/t1/audit?type=sale-conditions.changed');
+    expect(audit.last.filter).toEqual({ type: 'sale-conditions.changed' });
+    const options = [...select('Tipo de evento').options].map((option) => option.textContent?.trim());
+    expect(options).toContain('Condiciones de venta');
+  });
+
   it('elegir una persona la lleva a la dirección y vuelve a consultar', async () => {
     const { select } = await open();
     team.members[0]?.emit([member('ana', 'Ana', 'catalog')]);

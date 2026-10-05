@@ -544,8 +544,10 @@ Se verifican con pruebas de usuario y no bloquean el despliegue.
   variante. Si un catálogo externo los exige por variante, se resuelve en la feature que publique.
 - **Los valores de rango de edad y género** siguen las listas cerradas que usan los principales
   catálogos de anuncios, para no tener que traducirlos al publicar.
-- **Topes**: 3 niveles de categoría, 20 categorías por producto, 30 etiquetas por producto. Son
-  límites de producto, ajustables en el plan si la experiencia lo pide.
+- **Topes**: 3 niveles de categoría, 1.000 categorías por comercio, 20 categorías por producto, 30
+  etiquetas por producto. Son límites de producto, ajustables en el plan si la experiencia lo pide.
+  El de 1.000 categorías sale del plan: el árbol entero vive en un solo documento, con tope de
+  1 MiB (`research.md` §1).
 - **El GTIN se reserva al archivar**, igual que el SKU (001) y la URL amigable (FR-005): los tres
   identificadores siguen una sola regla. Quien archiva un producto y lo vuelve a cargar quita el
   GTIN de la variante archivada para reusarlo (FR-030).

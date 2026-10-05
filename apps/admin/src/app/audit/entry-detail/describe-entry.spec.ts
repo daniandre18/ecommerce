@@ -11,6 +11,8 @@ import {
   variantId,
   type AuditEntry,
   type PriceField,
+  type SaleConditionField,
+  type SaleConditionValue,
   type TeamChange,
 } from '@ecommerce/domain';
 import { only } from '../../../testing/fakes';
@@ -22,6 +24,7 @@ const actor = { tenantId: T1, uid: uid('ana'), name: 'Ana' };
 const names: EntryNames = {
   person: (id) => ({ ana: 'Ana', beto: 'Beto', owner: 'Dueña' })[id],
   variant: (product, variant) => (product === 'p1' && variant === 'v1' ? 'Camiseta · Rojo' : undefined),
+  product: (product) => (product === 'p1' ? 'Camiseta' : undefined),
 };
 
 const priceEntry = (field: PriceField, before: number | null, after: number | null, variant = 'v1') =>
@@ -31,6 +34,14 @@ const priceEntry = (field: PriceField, before: number | null, after: number | nu
       [{ type: 'price.changed', field, productId: productId('p1'), variantId: variantId(variant), before: before === null ? null : money(before, 'COP'), after: after === null ? null : money(after, 'COP') }],
       { batchId: null, at: AT, newEntryId: () => auditEntryId('e1') },
     ),
+  );
+const saleConditions = (field: SaleConditionField, before: SaleConditionValue, after: SaleConditionValue, product = 'p1') =>
+  only(
+    buildAuditEntries(actor, [{ type: 'sale-conditions.changed', field, productId: productId(product), before, after }], {
+      batchId: null,
+      at: AT,
+      newEntryId: () => auditEntryId('e1'),
+    }),
   );
 const team = (change: TeamChange): AuditEntry => buildTeamAuditEntry(actor, change, { at: AT, id: auditEntryId('e1') });
 
@@ -111,3 +122,40 @@ describe('describeEntry', () => {
     expect(describeEntry(entry, names)).toEqual({ title: 'Acción del operador de la plataforma', subject: 'El comercio', before: 'status: active', after: 'status: suspended' });
   });
 });
+
+// T019 (002) — FR-032: las condiciones de venta se leen como lo que ve o paga el comprador, sobre el
+// producto entero y no sobre una variante.
+describe('describeEntry: condiciones de venta', () => {
+  it('un cambio de tipo que hace pagar envío: de "Sin envío" a "Envío con cargo", sobre el producto', () => {
+    expect(describeEntry(saleConditions('shipping', 'none', 'charged'), names)).toEqual({
+      title: 'Condiciones de venta: envío',
+      subject: 'Camiseta',
+      productId: 'p1',
+      before: 'Sin envío',
+      after: 'Envío con cargo',
+    });
+  });
+
+  it('el envío gratis', () => {
+    expect(describeEntry(saleConditions('shipping', 'charged', 'free'), names)).toEqual(
+      expect.objectContaining({ before: 'Envío con cargo', after: 'Envío gratis' }),
+    );
+  });
+
+  it('ocultar el precio', () => {
+    expect(describeEntry(saleConditions('price', 'shown', 'hidden'), names)).toEqual({
+      title: 'Condiciones de venta: precio en la tienda',
+      subject: 'Camiseta',
+      productId: 'p1',
+      before: 'Precio mostrado',
+      after: 'Precio oculto',
+    });
+  });
+
+  it('si no se pudo resolver el nombre, dice "Un producto" y sigue llevando a él', () => {
+    expect(describeEntry(saleConditions('price', 'hidden', 'shown', 'p9'), names)).toEqual(
+      expect.objectContaining({ subject: 'Un producto', productId: 'p9' }),
+    );
+  });
+});
+

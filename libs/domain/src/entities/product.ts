@@ -1,4 +1,5 @@
-import type { OptionId, ProductId, TenantId, ValueId } from '../value-objects/ids';
+import type { CategoryId, OptionId, ProductId, TenantId, ValueId } from '../value-objects/ids';
+import type { Slug } from '../value-objects/slug';
 
 /** Tope de atributos de variación por producto (FR-025). */
 export const MAX_OPTIONS = 5;
@@ -37,7 +38,116 @@ export interface VariationOption {
   readonly position: number;
 }
 
-export interface Product {
+// ── Ficha de tienda (002-storefront-catalog) ──────────────────────────────────────────────────────
+
+/** Topes de la ficha de tienda (FR-009, FR-011, FR-012, FR-022, FR-031). */
+export const MAX_SEO_TITLE = 70;
+export const MAX_SEO_DESCRIPTION = 160;
+export const MAX_TAGS = 30;
+export const MAX_TAG_LENGTH = 40;
+export const MAX_BRAND_LENGTH = 70;
+export const MAX_MPN_LENGTH = 70;
+export const MAX_CATEGORIES_PER_PRODUCT = 20;
+
+/** Físico o digital (FR-013). Un digital no se envía: no pide peso, dimensiones ni envío gratis. */
+export const PRODUCT_KINDS = ['physical', 'digital'] as const;
+export type ProductKind = (typeof PRODUCT_KINDS)[number];
+
+/** Largo, ancho y alto en milímetros, enteros mayores que cero (FR-014). */
+export interface Dimensions {
+  readonly length: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/** Plataformas de video admitidas (FR-018, Assumptions del spec de la 002). */
+export const VIDEO_PROVIDERS = ['youtube', 'vimeo'] as const;
+export type VideoProvider = (typeof VIDEO_PROVIDERS)[number];
+
+/** Se guarda el id del video, no la URL: la tienda arma la incrustación. */
+export interface ExternalVideo {
+  readonly provider: VideoProvider;
+  readonly videoId: string;
+  /** En la misma secuencia que `images[].position`. */
+  readonly position: number;
+}
+
+/**
+ * Taxonomía de los catálogos de anuncios (FR-031): se guarda y se envía así. El panel presenta cada
+ * valor como su rango legible ("0 a 3 meses" … "Adulto").
+ */
+export const AGE_GROUPS = ['newborn', 'infant', 'toddler', 'kids', 'adult'] as const;
+export type AgeGroup = (typeof AGE_GROUPS)[number];
+
+export const GENDERS = ['male', 'female', 'unisex'] as const;
+export type Gender = (typeof GENDERS)[number];
+
+/** Lo que la 002 suma al producto: lo que una tienda pública necesita para mostrarlo y encontrarlo. */
+export interface StorefrontFields {
+  /**
+   * `null` SOLO si la migración de la 002 se interrumpió: el lector lo tolera, la interfaz no le da
+   * estado propio (T042). Todo producto creado desde la 002 nace con su URL.
+   */
+  readonly slug: Slug | null;
+  /** `true` tras editarla a mano o al publicarse por primera vez: deja de seguir al nombre (FR-008). */
+  readonly slugLocked: boolean;
+  /** La de respaldo de un nombre sin letras ni números, para reemplazar (FR-006). */
+  readonly slugNeedsReplacement: boolean;
+  readonly seoTitle: string | null;
+  readonly seoDescription: string | null;
+  readonly tags: readonly string[];
+  /** Para `array-contains`; misma forma que `nameNormalized`. */
+  readonly tagsNormalized: readonly string[];
+  readonly brand: string | null;
+  readonly brandNormalized: string | null;
+  readonly kind: ProductKind;
+  /** Gramos, entero. `null` hasta cargarse. */
+  readonly weightGrams: number | null;
+  readonly dimensionsMm: Dimensions | null;
+  /** Caché para el listado, como `hasIncompleteVariants` (FR-017). Nunca bloquea un cambio de estado. */
+  readonly missingShippingData: boolean;
+  readonly priceVisible: boolean;
+  /** Se conserva aunque el producto sea digital: vuelve si pasa a físico (FR-016). */
+  readonly freeShipping: boolean;
+  readonly video: ExternalVideo | null;
+  /** Solo las asignadas, nunca sus ancestros: mover una categoría no reescribe productos. */
+  readonly categoryIds: readonly CategoryId[];
+  readonly mpn: string | null;
+  readonly ageGroup: AgeGroup | null;
+  readonly gender: Gender | null;
+}
+
+/**
+ * Los valores con que nace la ficha de tienda (FR-013, FR-026): físico, precio visible, sin envío
+ * gratis, sin categorías. Son también los que reciben al leerse los productos anteriores a la 002.
+ * `missingShippingData` es `true` porque un físico recién creado todavía no tiene peso.
+ */
+export function storefrontDefaults(): StorefrontFields {
+  return {
+    slug: null,
+    slugLocked: false,
+    slugNeedsReplacement: false,
+    seoTitle: null,
+    seoDescription: null,
+    tags: [],
+    tagsNormalized: [],
+    brand: null,
+    brandNormalized: null,
+    kind: 'physical',
+    weightGrams: null,
+    dimensionsMm: null,
+    missingShippingData: true,
+    priceVisible: true,
+    freeShipping: false,
+    video: null,
+    categoryIds: [],
+    mpn: null,
+    ageGroup: null,
+    gender: null,
+  };
+}
+
+export interface Product extends StorefrontFields {
   readonly id: ProductId;
   readonly tenantId: TenantId;
   readonly name: string;
