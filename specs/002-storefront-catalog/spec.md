@@ -28,6 +28,24 @@ feature amplía ese catálogo; no redefine nada de lo que la 001 ya fija.
 - **Q: ¿Las categorías tienen visibilidad propia?** → A: sí. El admin de referencia permite ocultar
   una categoría sin eliminarla ni desasignar sus productos. Ocultar una rama oculta sus
   subcategorías. (Verificado en el panel de administración de referencia.)
+- **Q: Si un colaborador sin permiso de precios cambia un producto de físico a digital (o al
+  revés), ¿cómo se trata ese cambio?** → A: basta con el permiso de editar el catálogo, y **todo**
+  cambio de tipo registra una entrada "condiciones de venta" en la bitácora, en las dos
+  direcciones, porque siempre cambia el envío que ve el comprador: un digital que pasa a físico sin
+  envío gratis previo hace que el comprador pase a pagar envío. El aviso previo dice qué cambia
+  para el comprador, no solo qué datos dejan de usarse.
+- **Q: Si en una acción masiva para activar el envío gratis hay productos digitales entre los
+  seleccionados, ¿qué pasa con la acción?** → A: se rechaza entera, nombrando los productos
+  digitales, y la misma pantalla ofrece quitarlos de la selección y reintentar con el resto.
+- **Q: Cuando se renombra o se mueve una categoría, ¿su URL amigable cambia?** → A: no. Se genera al
+  crearla y después nunca cambia sola; si se edita a mano, la anterior queda reservada para
+  redirigir. Es plana —no incluye a sus ancestros—, así que mover la categoría no la cambia, y es
+  única entre todas las categorías del comercio.
+- **Q: Si se desarchiva un producto cuya variante tiene un GTIN que mientras tanto se asignó a otra
+  variante, ¿qué pasa?** → A: el escenario **queda sin efecto**, porque se elimina en origen: el GTIN
+  de una variante archivada queda reservado igual que su SKU (001) y que la URL amigable (FR-005),
+  así que ninguna otra variante puede tomarlo. Para liberarlo, se quita el GTIN de la variante
+  archivada. No hay datos a migrar: el GTIN es un campo nuevo y todavía no hay ninguno cargado.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -169,6 +187,9 @@ comprobar que el producto 41 se rechaza.
     archivado dice que sale de Destacados, y al confirmar el contador queda en 39 de 40.
 12. **Given** quedan 39 de 40 en Ofertas, **When** dos personas agregan a la vez un producto distinto
     cada una, **Then** se acepta solo uno y el otro se rechaza por sección completa.
+13. **Given** se seleccionan 20 productos y 3 son digitales, **When** el Propietario les activa envío
+    gratis, **Then** se rechaza la acción entera nombrando los 3 digitales, y desde la misma pantalla
+    puede quitarlos de la selección y reintentar: el envío gratis queda activo en los 17 físicos.
 
 ---
 
@@ -191,8 +212,8 @@ del producto; cargar MPN, rango de edad y género.
    correcto, **Then** se acepta.
 2. **Given** un GTIN con el dígito verificador incorrecto, **When** se intenta guardar, **Then** se
    rechaza indicando que el código no es válido.
-3. **Given** otra variante activa del mismo comercio ya usa un GTIN, **When** se lo asigna a una
-   variante distinta, **Then** se rechaza e indica qué producto lo tiene.
+3. **Given** otra variante del mismo comercio, archivada o no, ya usa un GTIN, **When** se lo asigna
+   a una variante distinta, **Then** se rechaza e indica qué producto lo tiene y si está archivado.
 4. **Given** un producto físico de 300 g, **When** a su variante "XL" se le asigna 450 g, **Then**
    "XL" pesa 450 g y las demás variantes siguen mostrando 300 g, señalados como heredados del
    producto.
@@ -202,6 +223,8 @@ del producto; cargar MPN, rango de edad y género.
    dimensiones por variante.
 7. **Given** un producto, **When** se le asigna rango de edad "adultos" y género "unisex", **Then**
    quedan registrados con esos valores, elegidos de una lista cerrada.
+8. **Given** una variante archivada tiene un GTIN, **When** se le quita, **Then** el código queda
+   libre y otra variante puede tomarlo.
 
 ---
 
@@ -221,10 +244,19 @@ del producto; cargar MPN, rango de edad y género.
   físico sin peso ni dimensiones, precio visible, sin envío gratis y sin secciones destacadas. No se
   cambia su estado ni se bloquea nada.
 - **Un producto cambia de físico a digital con envío gratis activo**: el envío gratis deja de
-  aplicar y se conserva el valor por si vuelve a ser físico; el aviso lo dice antes de confirmar.
+  aplicar y se conserva el valor por si vuelve a ser físico; el aviso lo dice antes de confirmar, y
+  queda la entrada de bitácora (FR-032).
+- **Un producto creado como digital pasa a físico**: no tiene envío gratis previo que recuperar y
+  toma el valor por defecto, de modo que el comprador pasa a pagar envío; el aviso lo dice y queda
+  la entrada de bitácora (FR-032).
 - **Variante con peso propio en un producto que pasa a digital**: igual que el producto, el dato se
   conserva sin usarse.
 - **Una categoría vacía**: se puede tener; el catálogo filtrado por ella muestra el estado de vacío.
+- **Dos categorías con el mismo nombre bajo padres distintos** ("Hombre > Camisas" y "Mujer >
+  Camisas", que FR-020 permite): como la URL es plana y única en todo el comercio (FR-021), reciben
+  `camisas` y `camisas-2` por el sufijo de FR-006. El panel muestra la URL resultante al crear la
+  categoría, para que el comercio la corrija en el momento —por ejemplo, a `camisas-mujer`— en vez
+  de descubrirla ya publicada.
 - **Mover una categoría haría superar los tres niveles** (porque arrastra subcategorías): se impide
   e informa por qué.
 - **Mover una categoría visible dentro de una oculta**: la rama manda. La categoría movida queda
@@ -302,9 +334,12 @@ del producto; cargar MPN, rango de edad y género.
 - **FR-015**: Cada variante de un producto físico MUST poder tener peso propio y dimensiones propias,
   independientes entre sí. Una variante sin valor propio MUST heredar el del producto, y la tabla de
   variantes MUST distinguir el valor propio del heredado.
-- **FR-016**: Cambiar el tipo de un producto MUST avisar antes de confirmar qué datos dejan de
-  usarse —peso, dimensiones y envío gratis al pasar a digital—, y MUST conservarlos para que vuelvan
-  si el producto vuelve a ser físico.
+- **FR-016**: Cambiar el tipo de un producto MUST avisar antes de confirmar qué cambia para el
+  comprador —por ejemplo "el comprador dejará de pagar envío" o "el comprador pasará a pagar
+  envío"— y qué datos dejan de usarse —peso, dimensiones y envío gratis al pasar a digital—. Esos
+  datos MUST conservarse para que vuelvan si el producto vuelve a ser físico. Cambiar el tipo MUST
+  requerir el permiso de editar el catálogo (FR-002) y no el de modificar precios, y MUST quedar en
+  la bitácora (FR-032).
 - **FR-017**: El listado del catálogo MUST señalar los productos físicos a los que les falta peso o
   alguna dimensión efectiva en alguna variante, y MUST permitir filtrarlos. Esa falta MUST NOT
   impedir ningún cambio de estado del producto.
@@ -322,8 +357,14 @@ del producto; cargar MPN, rango de edad y género.
   categoría a más de tres niveles o dentro de una de sus propias subcategorías.
 - **FR-020**: Dos categorías con el mismo padre MUST NOT tener el mismo nombre, comparado sin
   distinguir mayúsculas ni acentos.
-- **FR-021**: Cada categoría MUST tener su propia URL amigable, generada de su nombre y editable con
-  las reglas de FR-006 y FR-007, única entre las categorías del inquilino.
+- **FR-021**: Cada categoría MUST tener su propia URL amigable, generada de su nombre al crearla y
+  editable con las reglas de FR-006 y FR-007. La URL amigable de una categoría MUST ser plana e
+  independiente de su posición en el árbol —no incluye a sus ancestros—; por eso MUST ser única
+  entre **todas** las categorías del inquilino, y no solo entre hermanas, incluidas las URL
+  anteriores reservadas. Después de creada MUST NOT cambiar sola: ni al renombrar ni al mover la
+  categoría. Si se edita a mano, la anterior MUST quedar registrada como anterior de esa categoría y
+  reservada para redirigir, como en FR-008. Al crear una categoría, el panel MUST mostrar la URL
+  resultante antes de confirmar.
 - **FR-021a**: Cada categoría MUST declarar si está visible u oculta (por defecto, visible). Ocultar
   una categoría MUST NOT modificar los productos asignados a ella, MUST NOT quitar ninguna
   asignación y MUST NOT afectar la presencia de esos productos en otras categorías. Ocultar una
@@ -368,15 +409,20 @@ del producto; cargar MPN, rango de edad y género.
   ellas.
 - **FR-029**: El comercio MUST poder aplicar cualquiera de los valores de FR-026 y FR-027 a varios
   productos seleccionados en una sola acción, con los permisos de FR-002 y FR-003 y el tope de
-  FR-027a. Si el rol carece de permiso sobre alguno de los cambios pedidos, o si no hay lugar para
-  todos, la acción MUST NOT aplicarse a ninguno.
+  FR-027a. Si el rol carece de permiso sobre alguno de los cambios pedidos, si no hay lugar para
+  todos, o si se pide activar el envío gratis y hay productos digitales entre los seleccionados, la
+  acción MUST NOT aplicarse a ninguno. En este último caso el rechazo MUST nombrar los productos
+  digitales y ofrecer, en la misma pantalla, quitarlos de la selección y reintentar la acción sobre
+  el resto, sin volver al listado.
 
 #### Identificadores para catálogos externos
 
 - **FR-030**: Cada variante MUST admitir un GTIN opcional, además de su SKU. El sistema MUST aceptar
   solo GTIN de 8, 12, 13 o 14 dígitos con dígito verificador correcto, y MUST rechazar un GTIN ya
-  asignado a otra variante no archivada del mismo inquilino, comparándolos normalizados a 14
-  dígitos e indicando qué producto lo tiene.
+  asignado a otra variante del mismo inquilino, archivada o no, comparándolos normalizados a 14
+  dígitos e indicando qué producto lo tiene. Así el GTIN de una variante archivada queda reservado
+  igual que su SKU. Quitar el GTIN de una variante archivada MUST ser posible y MUST liberar el
+  código para otra variante.
 - **FR-031**: Cada producto MUST admitir un MPN opcional de hasta 70 caracteres, un rango de edad
   opcional elegido entre **recién nacido**, **bebé**, **niño pequeño**, **niño** y **adulto**, y un
   género opcional elegido entre **masculino**, **femenino** y **unisex**. El panel MUST presentar
@@ -386,11 +432,13 @@ del producto; cargar MPN, rango de edad y género.
 
 #### Bitácora
 
-- **FR-032**: Todo cambio de la visibilidad del precio y todo cambio del envío gratis MUST registrarse
-  en la bitácora con un tipo de evento propio, **condiciones de venta**, cuyos valores anterior y
-  nuevo son los de esa opción. El cambio y su entrada MUST aplicarse como unidad indivisible, en los
-  mismos términos que FR-030, FR-032 y FR-033 de la 001; una acción masiva MUST producir una entrada
-  por producto.
+- **FR-032**: Todo cambio de la visibilidad del precio, todo cambio del envío gratis y todo cambio
+  del tipo de producto MUST registrarse en la bitácora con un tipo de evento propio, **condiciones
+  de venta**. Sus valores anterior y nuevo son la visibilidad del precio, o las condiciones de envío
+  efectivas: **sin envío** (digital), **envío con cargo** o **envío gratis**. Como todo cambio de
+  tipo altera las condiciones de envío efectivas, todo cambio de tipo produce su entrada, en las dos
+  direcciones. El cambio y su entrada MUST aplicarse como unidad indivisible, en los mismos términos
+  que FR-030, FR-032 y FR-033 de la 001; una acción masiva MUST producir una entrada por producto.
 - **FR-033**: El filtro de la bitácora por tipo de evento MUST incluir el tipo condiciones de venta.
 
 #### Interfaz
@@ -409,8 +457,8 @@ del producto; cargar MPN, rango de edad y género.
   Hasta tres niveles.
 - **Asignación a categoría**: vínculo entre un producto y una categoría. Un producto tiene de cero a
   veinte.
-- **URL amigable anterior**: URL que un producto tuvo y ya no tiene, registrada y reservada para
-  redirigir a la vigente.
+- **URL amigable anterior**: URL que un producto o una categoría tuvo y ya no tiene, registrada y
+  reservada para redirigir a la vigente.
 - **Sección destacada**: lugar de la tienda donde se destacan productos. Son dos, fijas de la
   plataforma: Destacados y Ofertas. Cada una admite hasta 40 productos por comercio; un producto
   figura en ninguna, una o las dos.
@@ -430,8 +478,9 @@ del producto; cargar MPN, rango de edad y género.
 - **SC-002**: El 100% de los intentos de cambiar la visibilidad del precio o el envío gratis sin el
   permiso de modificar precios son rechazados por el servidor y registrados como evento de
   seguridad, aunque se eviten los controles de la interfaz.
-- **SC-003**: El 100% de los cambios de visibilidad del precio y de envío gratis tienen su entrada
-  de bitácora, y 0 quedan aplicados sin ella o con una entrada sin su cambio.
+- **SC-003**: El 100% de los cambios de visibilidad del precio, de envío gratis y de tipo de
+  producto tienen su entrada de bitácora, y 0 quedan aplicados sin ella o con una entrada sin su
+  cambio.
 - **SC-004**: El 100% de los intentos de leer o modificar categorías, secciones o datos de esta
   feature de otro inquilino son denegados.
 - **SC-005**: El 100% de los GTIN con dígito verificador incorrecto o longitud inválida son
@@ -494,8 +543,10 @@ Se verifican con pruebas de usuario y no bloquean el despliegue.
   catálogos de anuncios, para no tener que traducirlos al publicar.
 - **Topes**: 3 niveles de categoría, 20 categorías por producto, 30 etiquetas por producto. Son
   límites de producto, ajustables en el plan si la experiencia lo pide.
-- **El GTIN no se reserva al archivar**, a diferencia del SKU: identifica un artículo del fabricante,
-  y un comercio que archiva un producto y lo vuelve a cargar necesita reusarlo.
+- **El GTIN se reserva al archivar**, igual que el SKU (001) y la URL amigable (FR-005): los tres
+  identificadores siguen una sola regla, y así desarchivar nunca choca con un código que otra
+  variante tomó mientras tanto. Quien archiva un producto y lo vuelve a cargar quita el GTIN de la
+  variante archivada para reusarlo (FR-030).
 - **La categoría tiene visibilidad propia y nada más**: no tiene estados de publicación como el
   producto. Qué hace la tienda con una categoría oculta —omitirla del menú, responder 404 en su URL,
   o mostrarla solo por enlace directo— se decide con la tienda pública.
@@ -504,6 +555,11 @@ Se verifican con pruebas de usuario y no bloquean el despliegue.
 - **Rechazar en vez de desplazar** al superar el tope: es predecible, y ningún producto sale de una
   sección sin que una persona lo decida. El único caso en que sale solo es el archivado (FR-028),
   porque un producto archivado no se ofrece.
+- **Todo o nada también con productos digitales en el envío gratis masivo** (FR-029): acá aplicar
+  en parte no daría un resultado incorrecto —a diferencia de los permisos y del tope de secciones,
+  donde sí—, pero una sola regla para toda acción masiva es más predecible que tres reglas con
+  matices. El rechazo ofrece quitar los digitales y reintentar para que la fricción sea mínima. Si
+  en la práctica resulta alta, este es el primer caso a revisar.
 - **Productos existentes**: se completan con los valores por defecto de los casos límite, sin
   intervención del comercio y sin cambiar su estado.
 
@@ -517,7 +573,7 @@ Se verifican con pruebas de usuario y no bloquean el despliegue.
 | IV. Desacoplamiento de recaudo y logística | Peso y dimensiones se registran sin atarse a ninguna transportadora (FR-014, FR-015) |
 | V. Analíticas en tiempo real | Fuera de alcance |
 | VI. RBAC jerárquico y mínimo privilegio | FR-001 a FR-004: sin permisos nuevos; visibilidad del precio y envío gratis bajo el permiso de precios, verificado en el servidor |
-| VII. Trazabilidad inmutable | FR-032 y FR-033: condiciones de venta en la bitácora, con la atomicidad de la 001 |
+| VII. Trazabilidad inmutable | FR-032 y FR-033: condiciones de venta —visibilidad del precio, envío gratis y tipo de producto— en la bitácora, con la atomicidad de la 001 |
 | VIII. Optimización de carga percibida | FR-034; SC-006, SC-008 |
 | IX. Enfoque mobile-first | FR-034; SC-008 |
 | X. Regla de garantía automática | Los criterios bajo *Criterios verificables automáticamente* son compuertas antes de producción; SC-009 y SC-010 se verifican con pruebas de usuario |
