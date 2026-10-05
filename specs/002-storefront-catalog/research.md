@@ -87,6 +87,10 @@ mitad, lo que queda es invisible —se ignora al leer— y la próxima operació
 termina. Así borrar una categoría con 2.000 productos no depende del tope de escrituras de una
 transacción.
 
+**El editor envía lo que agrega y lo que quita, nunca el conjunto completo**: reemplazar el conjunto
+pisaría una asignación masiva hecha al mismo tiempo. Con agregar y quitar por separado, toda escritura
+de `categoryIds` es conmutativa.
+
 **Asignar y quitar en masa** (FR-025): son operaciones de conjunto, conmutativas e idempotentes,
 así que no comparan `version` ni la incrementan: dos personas que asignan categorías distintas al
 mismo producto no pueden pisarse, y no provocan un conflicto a quien está editando su nombre.

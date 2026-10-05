@@ -93,5 +93,5 @@ Lo que bloquea el merge es lo mismo que en la 001: `lint`, `typecheck`, `unit`, 
 | Suite | Qué garantiza |
 |---|---|
 | `unit` | Las propiedades del dominio de `contracts/ports.md`, incluida la tabla completa de condiciones de venta |
-| `rules` | Casos 35 a 48 de `contracts/firestore-rules.md` |
+| `rules` | Casos 35 a 48 y 35a de `contracts/firestore-rules.md` |
 | `integration` | Atomicidad de `setProductType` y `setSaleConditions` con su bitácora; tope de secciones con agregados simultáneos (SC-011); URL única con creaciones simultáneas (SC-001) |

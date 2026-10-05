@@ -13,7 +13,7 @@ cumplir.
 |---|---|---|
 | `value-objects/slug.ts` | `Slug`, `slug()`, `slugify(name)`, `nextSlugCandidate(base, n)` | FR-005 a FR-007, FR-021 |
 | `value-objects/gtin.ts` | `Gtin`, `gtin()` (valida longitud y dígito de control), `normalized` | FR-030 |
-| `entities/category-tree.ts` | `CategoryTree`, `CategoryNode`, `MAX_CATEGORY_DEPTH = 3`, `MAX_CATEGORIES = 1000`, y las operaciones `createCategory`, `renameCategory`, `setCategorySlug`, `moveCategory`, `reorderCategory`, `setCategoryHidden`, `deleteCategory` | FR-019 a FR-021a, FR-024 |
+| `entities/category-tree.ts` | `CategoryTree`, `CategoryNode`, `MAX_CATEGORY_DEPTH = 3`, `MAX_CATEGORIES = 1000`, y las operaciones `createCategory`, `renameCategory`, `setCategorySlug`, `moveCategory` (también reordena, con el mismo padre), `setCategoryHidden`, `deleteCategory`, `completePrune` | FR-019 a FR-021a, FR-024 |
 | `services/effective-visibility.ts` | `effectiveVisibility(tree)`, `descendantsOf`, `depthOf` | FR-021a, FR-023 |
 | `services/sale-conditions.ts` | `effectiveSaleConditions(product)`, `saleConditionChanges(before, after)` | FR-016, FR-026, FR-032 |
 | `services/sections.ts` | `MAX_SECTION_PRODUCTS = 40`, `addToSection`, `removeFromSection`, `SectionFullError` | FR-027a, FR-027b |

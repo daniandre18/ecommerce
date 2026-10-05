@@ -33,7 +33,7 @@ type ErrorCode =
 | `setProductShipping` | `productId`, `version`, `weightGrams` o `null`, `dimensionsMm` o `null` | Solo productos físicos (FR-014); recalcula `missingShippingData` |
 | `setVariantShipping` | `productId`, `changes[{ variantId, version, weightGrams?, dimensionsMm? }]` (`null` = heredar) | Solo productos físicos (FR-015); lote de hasta 100; recalcula `missingShippingData` |
 | `setVariantGtin` | `productId`, `variantId`, `version`, `gtin` o `null` | Valida (FR-030); reserva en `gtinIndex`; `null` libera el anterior, **también en una variante archivada** |
-| `setProductCategories` | `productId`, `categoryIds` | Hasta 20, todas existentes en el árbol (FR-022); conjunto completo, sin `version` (research §2) |
+| `setProductCategories` | `productId`, `add`, `remove` | Lo que agrega y lo que quita, **nunca el conjunto completo**, sin `version`: así no pisa una asignación masiva simultánea (research §2). Hasta 20 vigentes, todas existentes en el árbol (FR-022) |
 
 ## Tipo de producto — `catalog.write`, **escribe bitácora**
 

@@ -110,14 +110,14 @@ la navegación principal de cualquier tienda. Depende de que los productos exist
 ficha de tienda de la Historia 1.
 
 **Independent Test**: crear "Ropa", dentro "Hombre" y dentro "Camisetas"; asignar un producto a
-"Camisetas" y a "Ofertas de temporada"; filtrar el catálogo por "Ropa" y verlo; quitar una categoría
+"Camisetas" y a "Temporada de verano"; filtrar el catálogo por "Ropa" y verlo; quitar una categoría
 a diez productos en una sola acción.
 
 **Acceptance Scenarios**:
 
 1. **Given** existe la categoría "Ropa", **When** se crea "Hombre" dentro de ella, **Then** queda como
    subcategoría y el árbol la muestra anidada.
-2. **Given** un producto, **When** se lo asigna a "Camisetas" y a "Ofertas de temporada", **Then**
+2. **Given** un producto, **When** se lo asigna a "Camisetas" y a "Temporada de verano", **Then**
    figura en las dos.
 3. **Given** un producto asignado solo a "Camisetas", **When** se filtra el catálogo por "Ropa",
    **Then** aparece, porque "Camisetas" está dentro de "Ropa".
@@ -132,8 +132,8 @@ a diez productos en una sola acción.
    moverlas o eliminarlas primero.
 8. **Given** "Camisetas" está dentro de "Hombre", **When** se la mueve dentro de "Mujer", **Then** sus
    productos la acompañan, y se impide moverla dentro de una de sus propias subcategorías.
-9. **Given** se seleccionan 50 productos en el listado, **When** se les asigna "Novedades" en una
-   sola acción, **Then** los 50 quedan en "Novedades" y los que ya estaban no se duplican.
+9. **Given** se seleccionan 50 productos en el listado, **When** se les asigna "Recién llegados" en
+   una sola acción, **Then** los 50 quedan en "Recién llegados" y los que ya estaban no se duplican.
 10. **Given** un colaborador sin permiso para editar el catálogo, **When** abre las categorías,
     **Then** las ve y puede filtrar por ellas, pero no se le ofrece crear, mover, renombrar ni
     eliminar.
@@ -280,7 +280,8 @@ del producto; cargar MPN, rango de edad y género.
 - **FR-001**: Toda categoría, sección destacada, etiqueta, marca y dato de esta feature MUST
   pertenecer a un único inquilino y regirse por el mismo aislamiento que la 001 (FR-001 a FR-005 de
   la 001): ningún dato cruza la frontera del comercio.
-- **FR-002**: Leer cualquier dato de esta feature MUST requerir el permiso de ver el catálogo.
+- **FR-002**: Leer cualquier dato de esta feature MUST requerir una membresía activa en el comercio,
+  igual que el catálogo de la 001.
   Crear, editar, mover y eliminar categorías, y editar todo dato de esta feature salvo los de
   FR-003, MUST requerir el permiso de editar el catálogo.
 - **FR-003**: Mostrar u ocultar el precio en la tienda y ofrecer o retirar el envío gratis MUST
@@ -529,6 +530,11 @@ Se verifican con pruebas de usuario y no bloquean el despliegue.
   localización: es evitar decimales en datos que después se usan para cotizar.
 - **Plataformas de video admitidas**: YouTube y Vimeo. La lista se puede ampliar en la fase de plan
   sin cambiar los requisitos. El panel no verifica que el video siga disponible.
+- **Lectura con membresía activa** (FR-002): esta feature adopta el modelo de lectura de la 001,
+  donde todo miembro activo lee el catálogo. Ese modelo está en revisión: el permiso
+  `catalog.read` se puede conceder pero nada lo exige, y la decisión —exigirlo en las reglas o
+  quitarlo del catálogo de permisos— está registrada como T102 en `specs/001-catalog-rbac/tasks.md`.
+  El caso de reglas 35a fija el comportamiento actual hasta entonces.
 - **Envío gratis y visibilidad del precio son decisiones de precio**: cambian lo que el comprador
   ve o paga, y la constitución agrupa el envío gratuito con los descuentos (principio III). Por eso
   exigen el permiso de modificar precios y quedan en la bitácora, aunque no sean un importe.

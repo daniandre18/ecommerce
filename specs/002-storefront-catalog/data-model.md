@@ -46,7 +46,7 @@ interface Product {
   // … todos los campos de la 001 …
 
   // URL amigable (FR-005 a FR-008)
-  slug: Slug | null;            // null SOLO en productos anteriores a la 002 hasta la migración
+  slug: Slug | null;            // null SOLO si la migración se interrumpió: el lector lo tolera, la interfaz no le da estado propio
   slugLocked: boolean;          // true tras editarla a mano o al publicarse por primera vez
   slugNeedsReplacement: boolean; // la de respaldo de un nombre sin letras ni números (FR-006)
 
@@ -162,8 +162,7 @@ function depthOf(tree: CategoryTree, id: CategoryId): 1 | 2 | 3;
 | `createCategory(tree, { parentId, name, slug? })` | profundidad ≤ 3, nombre único entre hermanas, URL única y no reservada, ≤ 1.000 nodos |
 | `renameCategory(tree, id, name)` | nombre único entre hermanas; **no** cambia la URL (FR-021) |
 | `setCategorySlug(tree, id, slug)` | URL única y no reservada; la anterior pasa a `previousSlugs` |
-| `moveCategory(tree, id, parentId, position)` | no dentro de su propia rama; la rama completa queda a ≤ 3 niveles; **no toca `hidden` de nadie** |
-| `reorderCategory(tree, id, position)` | — |
+| `moveCategory(tree, id, parentId, position)` | no dentro de su propia rama; la rama completa queda a ≤ 3 niveles; **no toca `hidden` de nadie**. Con el mismo padre, solo reordena |
 | `setCategoryHidden(tree, id, hidden)` | **escribe solo ese nodo** |
 | `deleteCategory(tree, id)` | sin subcategorías (FR-024); agrega el id a `pendingPrune` |
 | `completePrune(tree, ids)` | quita de `pendingPrune` los ids que ya no quedan en ningún producto |

@@ -42,7 +42,7 @@ dependencia nueva**: GTIN, URL de video y URL amigable son funciones propias del
 `gtinIndex` bajo cada comercio, y campos nuevos en productos y variantes ([data-model.md](./data-model.md)).
 
 **Testing**: Vitest 5 (dominio y aplicación, sin emuladores), `@firebase/rules-unit-testing` 5
-(casos 35 a 48), emulador para atomicidad y concurrencia, Playwright 1.63 (e2e y rendimiento).
+(casos 35 a 48 y 35a), emulador para atomicidad y concurrencia, Playwright 1.63 (e2e y rendimiento).
 
 **Target Platform**: la del panel de la 001; Cloud Functions 2ª gen en la región de Firestore.
 
@@ -74,7 +74,7 @@ referencia: el de la 001 más 300 categorías.
 | VII. Trazabilidad inmutable | ✅ | Nuevo tipo `sale-conditions.changed`, escrito en la misma transacción que el cambio; cubre el cambio de tipo en las dos direcciones |
 | VIII. Carga percibida | ✅ | El árbol y las secciones son un documento cada uno: una lectura para dibujar; esqueletos de la 001 en las vistas nuevas |
 | IX. Mobile-first | ✅ | Vistas nuevas a 360 px y WCAG 2.2 AA, con las mismas e2e que la 001 |
-| X. Garantía automática | ✅ | Las propiedades del dominio, los casos de reglas 35 a 48 y las pruebas de atomicidad y concurrencia entran en las compuertas bloqueantes de la 001 |
+| X. Garantía automática | ✅ | Las propiedades del dominio, los casos de reglas 35 a 48 y 35a y las pruebas de atomicidad y concurrencia entran en las compuertas bloqueantes de la 001 |
 
 **Resultado del gate: PASA.**
 
@@ -94,7 +94,7 @@ specs/002-storefront-catalog/
 ├── quickstart.md        # Fase 1: cómo validar de punta a punta
 ├── contracts/
 │   ├── callable-functions.md   # Callables nuevas y las de la 001 que cambian
-│   ├── firestore-rules.md      # Reglas nuevas + casos 35 a 48
+│   ├── firestore-rules.md      # Reglas nuevas + casos 35 a 48 y 35a
 │   └── ports.md                # Dominio, puertos y casos de uso
 ├── checklists/requirements.md
 └── tasks.md             # Fase 2 (/speckit-tasks)
@@ -135,7 +135,7 @@ apps/admin/src/app/
 ├── catalog/categories/     editor del árbol (nuevo)
 └── audit/                  etiqueta y filtro del tipo "condiciones de venta"
 
-tests/rules/storefront.spec.ts   casos 35 a 43; 44 a 48 en las suites existentes
+tests/rules/storefront.spec.ts   casos 35, 35a y 36 a 43; 44 a 48 en las suites existentes
 tools/migrate/                   URL amigable de productos existentes y documentos de storefront
 firestore.rules, firestore.indexes.json
 ```
@@ -156,8 +156,8 @@ toquen el mismo archivo.
 
 ### Riesgos sin resolver
 
-- El tope de **1.000 categorías por comercio** no está en el spec; conviene agregarlo a sus topes
-  (Assumptions) antes de `/speckit-tasks`.
+- El tope de **1.000 categorías por comercio** todavía no está en el spec: lo registra T001, antes de
+  la Historia 2.
 - **Categoría y etiqueta no se combinan** en un mismo filtro del listado (research §11): Firestore
   admite una sola condición de arreglo por consulta. El spec no lo pide; si las pruebas de usuario lo
   piden, la salida es intersecar en el cliente.

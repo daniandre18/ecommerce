@@ -49,6 +49,7 @@ que se indique otro archivo.
 | # | Caso | Esperado |
 |---|---|---|
 | 35 | Miembro activo de `t1` lee `t1/storefront/categoryTree`, `sections` y `vocabulary` | permitido |
+| 35a | Miembro activo de `t1` cuyo rol **no** tiene `catalog.read` lee `t1/storefront/*` | permitido. **Fija el comportamiento actual a la espera de la decisión pendiente sobre `catalog.read` en la 001** (T102 de la 001): no significa que el modelo esté cerrado |
 | 36 | Miembro activo de `t1` lee `t2/storefront/categoryTree` | **denegado** |
 | 37 | Miembro activo de `t1` lee `t2/storefront/sections` | **denegado** |
 | 38 | Miembro activo de `t1` hace `get` de `t2/slugIndex/{slug}` | **denegado** |
