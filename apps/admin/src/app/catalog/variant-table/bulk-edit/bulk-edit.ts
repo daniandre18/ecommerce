@@ -4,7 +4,7 @@ import { form, FormField, submit, validate } from '@angular/forms/signals';
 import { MatButton } from '@angular/material/button';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
-import type { CommandResult } from '@ecommerce/application';
+import type { CommandResult } from '@ecommerce/application/client';
 import type { CurrencyCode, ProductId, TenantId, Variant } from '@ecommerce/domain';
 import { CATALOG_COMMANDS } from '../../../core/client';
 import { commandErrorMessage } from '../../../shared/command-errors';

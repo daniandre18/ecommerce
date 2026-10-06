@@ -1,4 +1,4 @@
-import type { TenantAccess, TenantDirectory, Unsubscribe, Watcher } from '@ecommerce/application';
+import type { TenantAccess, TenantDirectory, Unsubscribe, Watcher } from '@ecommerce/application/client';
 import { isPermission, tenantId, type MemberAccess, type TenantId, type Uid } from '@ecommerce/domain';
 import { collectionGroup, doc, getDoc, query, where, type DocumentSnapshot, type Firestore, type QuerySnapshot } from 'firebase/firestore';
 import { listenToDoc, listenToQuery } from './listen';

@@ -7,6 +7,7 @@ import {
   type ProductId,
   type SectionId,
 } from '@ecommerce/domain';
+import type { SectionInput, SectionOutput } from '@ecommerce/application/client';
 import { BusinessRuleError } from '../../errors';
 import { requirePermission } from '../../ports/authorization';
 import type { OperationContext } from '../../ports/operation-context';
@@ -16,17 +17,6 @@ import { loadProduct } from '../shared';
 // Destacados y Ofertas (FR-027 a FR-027c). Son decisiones de catálogo: `catalog.write`, sin bitácora
 // y sin permiso de precios. El tope lo hace cumplir la transacción sobre el documento de secciones
 // (research §4): se lee y se escribe la misma lista, así que dos agregados a la vez se serializan.
-
-export interface SectionInput {
-  readonly section: SectionId;
-  readonly productIds: readonly ProductId[];
-}
-
-export interface SectionOutput {
-  readonly section: SectionId;
-  /** Cuántos lugares ocupa la sección ahora: el contador "33 de 40". */
-  readonly count: number;
-}
 
 /** Si no hay lugar para todos, se rechaza entero y se dice cuántos lugares quedan (FR-027b). */
 export class AddToSection {

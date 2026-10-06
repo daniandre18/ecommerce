@@ -6,7 +6,7 @@ import { MatCheckbox } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { MatError, MatFormField, MatHint, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
-import type { CommandErrorCode, CommandFailure, CommandResult } from '@ecommerce/application';
+import type { CommandErrorCode, CommandFailure, CommandResult } from '@ecommerce/application/client';
 import {
   gtin,
   InvalidGtinError,

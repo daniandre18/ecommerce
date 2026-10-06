@@ -1,4 +1,4 @@
-import type { AuditCursor, AuditFilter, ProductListQuery, TenantAccess, Watcher } from '@ecommerce/application';
+import type { AuditCursor, AuditFilter, ProductListQuery, TenantAccess, Watcher } from '@ecommerce/application/client';
 import {
   activateMembership,
   auditEntryId,

@@ -4,7 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatRadioButton, MatRadioGroup } from '@angular/material/radio';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
-import type { CommandFailure } from '@ecommerce/application';
+import type { CommandFailure } from '@ecommerce/application/client';
 import {
   canChangeStatus,
   emptySections,

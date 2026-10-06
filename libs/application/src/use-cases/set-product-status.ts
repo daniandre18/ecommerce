@@ -1,15 +1,10 @@
-import { canChangeStatus, type ProductId, type ProductStatus } from '@ecommerce/domain';
+import { canChangeStatus } from '@ecommerce/domain';
+import type { SetProductStatusInput } from '@ecommerce/application/client';
 import { BusinessRuleError } from '../errors';
 import { requirePermission } from '../ports/authorization';
 import type { OperationContext } from '../ports/operation-context';
 import type { TransactionScope } from '../ports/unit-of-work';
 import { assertVersion, bumped, loadProduct, type UseCaseDependencies } from './shared';
-
-export interface SetProductStatusInput {
-  readonly productId: ProductId;
-  readonly version: number;
-  readonly status: ProductStatus;
-}
 
 /** Activo, borrador o no listado (FR-023a). Para ofrecerse, todas las variantes deben estar completas. */
 export class SetProductStatus {

@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import type { AuditPage } from '@ecommerce/application';
+import type { AuditPage } from '@ecommerce/application/client';
 import {
   auditEntryId,
   buildAuditEntries,

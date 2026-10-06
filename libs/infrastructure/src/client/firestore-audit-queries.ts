@@ -1,4 +1,4 @@
-import type { AuditCursor, AuditFilter, AuditPage, AuditQueries } from '@ecommerce/application';
+import type { AuditCursor, AuditFilter, AuditPage, AuditQueries } from '@ecommerce/application/client';
 import type { TenantId } from '@ecommerce/domain';
 import {
   collection,

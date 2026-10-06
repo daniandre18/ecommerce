@@ -6,7 +6,7 @@ import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import type { CommandFailure } from '@ecommerce/application';
+import type { CommandFailure } from '@ecommerce/application/client';
 import { childrenOf, descendantsOf, slugify, type CategoryId, type CategoryNode, type CategoryTree, type EffectiveVisibility, type TenantId } from '@ecommerce/domain';
 import { CATALOG_COMMANDS, CATALOG_QUERIES } from '../../core/client';
 import { trackUnsaved } from '../../shared/pending-changes/pending-changes';

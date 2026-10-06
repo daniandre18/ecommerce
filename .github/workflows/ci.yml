@@ -31,6 +31,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-workspace
       - run: npx nx run-many -t lint --skip-nx-cache
+      # La misma frontera, verificada sobre lo que llega al navegador (T103 de la 002): construye el
+      # panel de producción y falla si algún fragmento trae código de servidor de application. La
+      # regla de arriba cubre los imports; esta, cualquier camino que se le escape.
+      - run: npx nx run admin:bundle-check --skip-nx-cache
 
   # Vitest no chequea tipos: las pruebas pueden pasar con el código roto. Por eso va aparte.
   typecheck:

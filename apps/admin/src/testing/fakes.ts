@@ -20,7 +20,7 @@ import type {
   TeamQueries,
   Unsubscribe,
   Watcher,
-} from '@ecommerce/application';
+} from '@ecommerce/application/client';
 import { signal, type Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {

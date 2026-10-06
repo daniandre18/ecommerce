@@ -4,7 +4,7 @@ import { MatButton } from '@angular/material/button';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
-import type { SignInFailure } from '@ecommerce/application';
+import type { SignInFailure } from '@ecommerce/application/client';
 import { SESSION } from '../../core/client';
 
 const SIGN_IN_FAILURES: Record<SignInFailure, string> = {

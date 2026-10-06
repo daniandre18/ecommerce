@@ -1,17 +1,11 @@
-import { slugify, type ProductId, type Slug } from '@ecommerce/domain';
+import { slugify, type Slug } from '@ecommerce/domain';
+import type { SetProductSlugInput } from '@ecommerce/application/client';
 import { BusinessRuleError } from '../../errors';
 import { requirePermission } from '../../ports/authorization';
 import type { OperationContext } from '../../ports/operation-context';
 import type { TransactionScope } from '../../ports/unit-of-work';
 import { assertVersion, bumped, loadProduct, type UseCaseDependencies } from '../shared';
 import { moveSlug } from './shared';
-
-export interface SetProductSlugInput {
-  readonly productId: ProductId;
-  readonly version: number;
-  /** Lo que escribió el comercio; se normaliza con las mismas reglas que la generada (FR-007). */
-  readonly slug: string;
-}
 
 /**
  * Edita la URL amigable (FR-007). Desde entonces deja de seguir al nombre; la anterior se libera o

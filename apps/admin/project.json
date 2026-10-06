@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/admin/src",
   "projectType": "application",
-  "tags": ["layer:presentation"],
+  "tags": ["layer:presentation", "runtime:browser"],
   "targets": {
     "build": {
       "executor": "@angular/build:application",
@@ -25,6 +25,7 @@
             { "type": "anyComponentStyle", "maximumWarning": "4kB", "maximumError": "8kB" }
           ],
           "outputHashing": "all",
+          "statsJson": true,
           "fileReplacements": [
             { "replace": "apps/admin/src/environments/environment.ts", "with": "apps/admin/src/environments/environment.production.ts" },
             { "replace": "node_modules/re2js/build/index.js", "with": "apps/admin/src/vendor/re2js.js" }
@@ -59,7 +60,12 @@
     },
     "typecheck": {
       "executor": "nx:run-commands",
-      "options": { "command": "ngc -p apps/admin/tsconfig.app.json --noEmit" }
+      "options": { "command": "ngc -p apps/admin/tsconfig.app.json --noEmit && tsc -p apps/admin/bundle-check/tsconfig.json --noEmit" }
+    },
+    "bundle-check": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": { "command": "vitest run --config apps/admin/bundle-check/vite.config.mts" }
     },
     "lint": {
       "executor": "nx:run-commands",

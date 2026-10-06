@@ -3,28 +3,12 @@ import {
   missingShippingData,
   saleConditionChanges,
   type AuditEntryId,
-  type ProductId,
-  type ProductKind,
-  type SaleConditionField,
-  type SaleConditionValue,
 } from '@ecommerce/domain';
+import type { BuyerChange, SetProductTypeInput } from '@ecommerce/application/client';
 import { requirePermission } from '../../ports/authorization';
 import type { OperationContext } from '../../ports/operation-context';
 import type { TransactionScope } from '../../ports/unit-of-work';
 import { actorOf, assertVersion, bumped, loadProduct, type UseCaseDependencies } from '../shared';
-
-export interface SetProductTypeInput {
-  readonly productId: ProductId;
-  readonly version: number;
-  readonly kind: ProductKind;
-}
-
-/** Lo que cambió para el comprador: lo mismo que quedó en la bitácora. */
-export interface BuyerChange {
-  readonly field: SaleConditionField;
-  readonly before: SaleConditionValue;
-  readonly after: SaleConditionValue;
-}
 
 /**
  * Físico o digital (FR-013, FR-016). Es una decisión de catálogo —basta con editar el catálogo—,

@@ -3,7 +3,7 @@ import { MatButton } from '@angular/material/button';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { ActivatedRoute, Router } from '@angular/router';
-import type { AuditFilter, AuditPage } from '@ecommerce/application';
+import type { AuditFilter, AuditPage } from '@ecommerce/application/client';
 import {
   productId,
   tenantId,

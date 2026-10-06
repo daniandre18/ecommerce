@@ -1,5 +1,5 @@
 import type { LiveAnnouncer } from '@angular/cdk/a11y';
-import type { CatalogCommands, CommandFailure } from '@ecommerce/application';
+import type { CatalogCommands, CommandFailure } from '@ecommerce/application/client';
 import { categoryPath, childrenOf, depthOf, descendantsOf, MAX_CATEGORIES, MAX_CATEGORY_DEPTH, type CategoryId, type CategoryNode, type CategoryTree, type TenantId } from '@ecommerce/domain';
 import { commandErrorMessage } from '../../shared/command-errors';
 

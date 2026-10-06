@@ -8,7 +8,7 @@ import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import type { ProductListQuery } from '@ecommerce/application';
+import type { ProductListQuery } from '@ecommerce/application/client';
 import {
   descendantsOf,
   emptyCategoryTree,

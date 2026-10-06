@@ -21,6 +21,7 @@ import type {
   VariantSummary,
   Vocabulary,
 } from '@ecommerce/domain';
+import type { SlugIndexEntry } from '@ecommerce/application/client';
 
 /**
  * Solo anexado. No existe `update` ni `delete`: la inmutabilidad de la bitácora (FR-032) no es una
@@ -118,13 +119,6 @@ export interface SkuIndexRepository {
   release(normalized: string): Promise<void>;
   /** El SKU de una variante archivada queda reservado para siempre (FR-023). */
   markArchived(normalized: string): Promise<void>;
-}
-
-/** Una URL amigable reservada (FR-005, FR-008 de la 002). El id de cada entrada es la URL. */
-export interface SlugIndexEntry {
-  readonly productId: ProductId;
-  /** `previous`: la que un producto publicado tuvo y ya no tiene; reservada para redirigir. */
-  readonly kind: 'current' | 'previous';
 }
 
 /** Unicidad de la URL amigable de un producto dentro del comercio. Como `SkuIndexRepository`. */

@@ -1,16 +1,8 @@
-import type { ImageRef, ProductId, VariantId } from '@ecommerce/domain';
+import type { SetVariantImagesInput } from '@ecommerce/application/client';
 import { requirePermission } from '../ports/authorization';
 import type { OperationContext } from '../ports/operation-context';
 import type { TransactionScope } from '../ports/unit-of-work';
 import { assertVersion, bumped, findLiveVariant, validImages } from './shared';
-
-export interface SetVariantImagesInput {
-  readonly productId: ProductId;
-  readonly variantId: VariantId;
-  readonly version: number;
-  /** Lista completa, en orden. Quitar una imagen es no incluirla: el archivo no se borra. */
-  readonly images: readonly ImageRef[];
-}
 
 /** Las imágenes propias de una variante (FR-020, T060), con las mismas reglas que las del producto. */
 export class SetVariantImages {

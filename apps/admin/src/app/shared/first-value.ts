@@ -1,4 +1,4 @@
-import type { Unsubscribe, Watcher } from '@ecommerce/application';
+import type { Unsubscribe, Watcher } from '@ecommerce/application/client';
 
 /**
  * El primer valor de una suscripción, y la corta. Para lo que se lee una vez —por ejemplo, el

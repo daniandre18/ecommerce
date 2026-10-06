@@ -31,6 +31,9 @@
       "@ecommerce/ui": [
         "./libs/ui/src/index.ts"
       ],
+      "@ecommerce/application/client": [
+        "./libs/application/client/src/index.ts"
+      ],
       "@ecommerce/application/testing": [
         "./libs/application/src/testing/in-memory.ts"
       ],

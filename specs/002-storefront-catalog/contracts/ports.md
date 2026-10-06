@@ -5,7 +5,11 @@
 Las cuatro capas de la 001 ([ports](../../001-catalog-rbac/contracts/ports.md)) sin cambios de
 forma: `libs/domain` sin Firebase ni Angular, `libs/application` con puertos y casos de uso sin
 SDK, `libs/infrastructure` como único lugar con SDK. `@nx/enforce-module-boundaries` lo hace
-cumplir.
+cumplir. Un cambio, por T103: lo que el panel ve de application es su propio proyecto,
+`libs/application/client` (`@ecommerce/application/client`), con los puertos de cliente, el
+contrato de cada comando y sus utilidades. El panel y `libs/infrastructure/src/client` lo importan
+a él y nunca el barril de `@ecommerce/application`, que trae los casos de uso; la regla lo exige, y
+`admin:bundle-check` lo verifica sobre el build.
 
 ## Dominio — `libs/domain`, todo puro y probado con Vitest sin emuladores
 

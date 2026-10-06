@@ -1,22 +1,15 @@
-import { MAX_CATEGORIES_PER_PRODUCT, resolveCategories, type CategoryId, type CategoryTree, type Product, type ProductId } from '@ecommerce/domain';
+import { MAX_CATEGORIES_PER_PRODUCT, resolveCategories, type CategoryId, type CategoryTree, type Product } from '@ecommerce/domain';
+import { MAX_BULK_PRODUCTS, type BulkCategoryInput, type SetProductCategoriesInput } from '@ecommerce/application/client';
 import { BusinessRuleError } from '../../errors';
 import { requirePermission } from '../../ports/authorization';
 import type { OperationContext } from '../../ports/operation-context';
 import type { TransactionScope } from '../../ports/unit-of-work';
 import { loadProduct } from '../shared';
-import { MAX_BULK_PRODUCTS } from './shared';
 
 // Asignar productos a categorías (FR-022, FR-025). Son operaciones de conjunto: no comparan ni
 // incrementan la versión del producto, así que dos asignaciones a la vez no se pisan y no provocan un
 // conflicto a quien está editando el producto (research §2). Cada escritura de `categoryIds` parte de
 // las categorías vigentes, así que descarta de paso los ids de categorías eliminadas.
-
-export interface SetProductCategoriesInput {
-  readonly productId: ProductId;
-  /** Lo que agrega y lo que quita; nunca el conjunto completo, que pisaría una asignación masiva. */
-  readonly add: readonly CategoryId[];
-  readonly remove: readonly CategoryId[];
-}
 
 /** Las categorías de un producto, desde su editor. */
 export class SetProductCategories {
@@ -41,11 +34,6 @@ export class SetProductCategories {
     await tx.products.updateCategories(product.id, next);
     return { categoryIds: next };
   }
-}
-
-export interface BulkCategoryInput {
-  readonly categoryId: CategoryId;
-  readonly productIds: readonly ProductId[];
 }
 
 /** Asigna una categoría a los seleccionados, sin duplicar (FR-025). Si a uno no le entra, ninguno. */

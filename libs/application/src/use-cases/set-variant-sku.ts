@@ -3,22 +3,14 @@ import {
   isVariantComplete,
   normalizeSku,
   summarizeVariants,
-  type ProductId,
   type Sku,
-  type VariantId,
 } from '@ecommerce/domain';
+import type { SetVariantSkuInput } from '@ecommerce/application/client';
 import { BusinessRuleError } from '../errors';
 import { requirePermission } from '../ports/authorization';
 import type { OperationContext } from '../ports/operation-context';
 import type { TransactionScope } from '../ports/unit-of-work';
 import { assertVersion, bumped, findLiveVariant, loadProduct } from './shared';
-
-export interface SetVariantSkuInput {
-  readonly productId: ProductId;
-  readonly variantId: VariantId;
-  readonly version: number;
-  readonly sku: string;
-}
 
 /**
  * Asigna el SKU de una variante (FR-021). La reserva en el índice va en la misma transacción que la

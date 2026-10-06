@@ -1,22 +1,11 @@
-import { summarizeVariants, type Dimensions, type ProductId, type Variant, type VariantId } from '@ecommerce/domain';
+import { summarizeVariants, type Variant, type VariantId } from '@ecommerce/domain';
+import type { SetVariantShippingInput } from '@ecommerce/application/client';
 import { BusinessRuleError } from '../../errors';
 import { requirePermission } from '../../ports/authorization';
 import type { OperationContext } from '../../ports/operation-context';
 import type { TransactionScope } from '../../ports/unit-of-work';
 import { assertBatch, assertVersion, bumped, findLiveVariant, loadProduct } from '../shared';
 import { dimensions, positiveInteger } from './shared';
-
-export interface SetVariantShippingInput {
-  readonly productId: ProductId;
-  readonly changes: readonly {
-    readonly variantId: VariantId;
-    readonly version: number;
-    /** Gramos; `null` vuelve a heredar el del producto; ausente, no cambia. */
-    readonly weightGrams?: number | null;
-    /** Milímetros; `null` vuelve a heredar las del producto; ausentes, no cambian. */
-    readonly dimensionsMm?: Dimensions | null;
-  }[];
-}
 
 /**
  * Peso y dimensiones propios de las variantes de un físico (FR-015): los de las que difieren del

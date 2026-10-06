@@ -13,7 +13,13 @@ import type {
   VariantId,
   Vocabulary,
 } from '@ecommerce/domain';
-import type { SlugIndexEntry } from '../ports/repositories';
+
+/** Una URL amigable reservada (FR-005, FR-008 de la 002). El id de cada entrada es la URL. */
+export interface SlugIndexEntry {
+  readonly productId: ProductId;
+  /** `previous`: la que un producto publicado tuvo y ya no tiene; reservada para redirigir. */
+  readonly kind: 'current' | 'previous';
+}
 
 /** Corta la suscripción. Llamarla dos veces no hace nada. */
 export type Unsubscribe = () => void;

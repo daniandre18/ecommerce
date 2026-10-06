@@ -1,27 +1,50 @@
 import type { CategoryId, ProductId, Slug, TenantId, VariantId } from '@ecommerce/domain';
-import type { BusinessErrorCode } from '../errors';
-import type { BulkCategoryInput, SetProductCategoriesInput } from '../use-cases/categories/assign';
-import type { SectionInput, SectionOutput } from '../use-cases/sections/sections';
-import type { SetSaleConditionsInput, SetSaleConditionsOutput } from '../use-cases/storefront/set-sale-conditions';
-import type { SetVariantGtinInput } from '../use-cases/storefront/set-variant-gtin';
-import type { SetVariantShippingInput } from '../use-cases/storefront/set-variant-shipping';
-import type { CreateCategoryInput, MoveCategoryInput } from '../use-cases/categories/tree';
-import type { CreateProductInput } from '../use-cases/create-product';
-import type { SetProductOptionsInput, SetProductOptionsOutput } from '../use-cases/set-product-options';
-import type { SetProductStatusInput } from '../use-cases/set-product-status';
 import type {
   AmountsOutput,
+  BulkCategoryInput,
+  BuyerChange,
+  CreateCategoryInput,
+  CreateProductInput,
+  MoveCategoryInput,
+  SectionInput,
+  SectionOutput,
+  SetProductCategoriesInput,
+  SetProductOptionsInput,
+  SetProductOptionsOutput,
+  SetProductShippingInput,
+  SetProductSlugInput,
+  SetProductStatusInput,
+  SetProductTypeInput,
+  SetSaleConditionsInput,
+  SetSaleConditionsOutput,
   SetVariantCostInput,
+  SetVariantGtinInput,
+  SetVariantImagesInput,
   SetVariantPriceInput,
+  SetVariantShippingInput,
+  SetVariantSkuInput,
   SetVariantStockInput,
-} from '../use-cases/set-variant-amounts';
-import type { SetVariantImagesInput } from '../use-cases/set-variant-images';
-import type { SetVariantSkuInput } from '../use-cases/set-variant-sku';
-import type { SetProductShippingInput } from '../use-cases/storefront/set-product-shipping';
-import type { SetProductSlugInput } from '../use-cases/storefront/set-product-slug';
-import type { BuyerChange, SetProductTypeInput } from '../use-cases/storefront/set-product-type';
-import type { UpdateProductDetailsInput } from '../use-cases/update-product-details';
+  UpdateProductDetailsInput,
+} from './inputs';
 
+/** Códigos del contrato de las callable (`contracts/callable-functions.md`). */
+export type BusinessErrorCode =
+  | 'not-found'
+  | 'version-conflict' // FR-027
+  | 'sku-conflict' // FR-021
+  | 'limit-exceeded' // FR-025
+  | 'incomplete-variants' // FR-023a
+  | 'invalid-argument'
+  // 002-storefront-catalog
+  | 'slug-conflict' // FR-007: la URL está en uso o reservada
+  | 'gtin-conflict' // FR-030
+  | 'invalid-gtin' // FR-030
+  | 'unsupported-video' // FR-018
+  | 'category-limit' // FR-019: profundidad, ciclo o tope de categorías
+  | 'category-name-taken' // FR-020
+  | 'category-has-children' // FR-024
+  | 'section-full' // FR-027b
+  | 'digital-products'; // FR-029
 /** Códigos que viajan en la envoltura `{ ok: false }` de las callable (`contracts/callable-functions.md`). */
 export type EnvelopeErrorCode = BusinessErrorCode | 'audit-write-failed';
 

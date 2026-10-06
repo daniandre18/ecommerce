@@ -10,40 +10,18 @@ import {
   normalizeTags,
   parseVideoUrl,
   TagLimitError,
-  type AgeGroup,
   type ExternalVideo,
-  type Gender,
-  type ImageRef,
   type Product,
-  type ProductId,
   type Term,
   type Vocabulary,
 } from '@ecommerce/domain';
+import type { UpdateProductDetailsInput } from '@ecommerce/application/client';
 import { BusinessRuleError } from '../errors';
 import { requirePermission } from '../ports/authorization';
 import type { OperationContext } from '../ports/operation-context';
 import type { TransactionScope } from '../ports/unit-of-work';
 import { assertVersion, bumped, loadProduct, productName, validImages, type UseCaseDependencies } from './shared';
 import { freeSlug, moveSlug, optionalText, slugBaseFor } from './storefront/shared';
-
-export interface UpdateProductDetailsInput {
-  readonly productId: ProductId;
-  readonly version: number;
-  readonly name?: string;
-  readonly description?: string;
-  readonly images?: readonly ImageRef[];
-  // Ficha de tienda (002): lo que no viene, no cambia.
-  readonly seoTitle?: string | null;
-  readonly seoDescription?: string | null;
-  readonly tags?: readonly string[];
-  readonly brand?: string | null;
-  /** Un enlace de YouTube o Vimeo con su lugar entre las imágenes, o `null` para quitarlo. */
-  readonly video?: { readonly url: string; readonly position: number } | null;
-  // Catálogos externos (002, Historia 4, FR-031): `null` los quita.
-  readonly mpn?: string | null;
-  readonly ageGroup?: AgeGroup | null;
-  readonly gender?: Gender | null;
-}
 
 const SUPPORTED_VIDEO = ['YouTube', 'Vimeo'];
 

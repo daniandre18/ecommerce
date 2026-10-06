@@ -4,33 +4,14 @@ import {
   validateOptionLimits,
   validateOptionStructure,
   variantId,
-  type Assignment,
-  type ProductId,
   type Variant,
-  type VariantId,
-  type VariationOption,
 } from '@ecommerce/domain';
+import type { SetProductOptionsInput, SetProductOptionsOutput } from '@ecommerce/application/client';
 import { BusinessRuleError } from '../errors';
 import { requirePermission } from '../ports/authorization';
 import type { OperationContext } from '../ports/operation-context';
 import type { TransactionScope } from '../ports/unit-of-work';
 import { assertVersion, bumped, loadProduct, type UseCaseDependencies } from './shared';
-
-export interface SetProductOptionsInput {
-  readonly productId: ProductId;
-  readonly version: number;
-  /** Estructura completa. Los ids de opciones y valores nuevos los propone el cliente. */
-  readonly options: readonly VariationOption[];
-  readonly assignments: readonly Assignment[];
-}
-
-export interface SetProductOptionsOutput {
-  readonly version: number;
-  readonly created: readonly VariantId[];
-  readonly preserved: readonly VariantId[];
-  readonly archived: readonly VariantId[];
-  readonly discarded: readonly VariantId[];
-}
 
 /** El editor de variaciones (FR-017, FR-018, FR-022, FR-024, FR-025, FR-026). */
 export class SetProductOptions {

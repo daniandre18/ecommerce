@@ -1,17 +1,10 @@
 import { gtin, InvalidGtinError, type Gtin, type ProductId, type VariantId } from '@ecommerce/domain';
+import type { SetVariantGtinInput } from '@ecommerce/application/client';
 import { BusinessRuleError } from '../../errors';
 import { requirePermission } from '../../ports/authorization';
 import type { OperationContext } from '../../ports/operation-context';
 import type { TransactionScope } from '../../ports/unit-of-work';
 import { assertVersion, bumped, findVariant, loadProduct } from '../shared';
-
-export interface SetVariantGtinInput {
-  readonly productId: ProductId;
-  readonly variantId: VariantId;
-  readonly version: number;
-  /** El código como lo escribió la persona, o `null` para quitarlo. */
-  readonly gtin: string | null;
-}
 
 /**
  * El GTIN de una variante (FR-030), reservado en `gtinIndex` en la misma transacción, como el SKU.

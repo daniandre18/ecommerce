@@ -1,5 +1,5 @@
 import { Injectable, inject, resource } from '@angular/core';
-import type { TenantAccess } from '@ecommerce/application';
+import type { TenantAccess } from '@ecommerce/application/client';
 import type { Uid } from '@ecommerce/domain';
 import { SESSION, TENANT_DIRECTORY } from '../core/client';
 import { liveResource } from '../shared/live-resource';

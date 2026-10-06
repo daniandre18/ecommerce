@@ -6,6 +6,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@ecommerce/domain': fileURLToPath(new URL('../domain/src/index.ts', import.meta.url)),
+      '@ecommerce/application/client': fileURLToPath(new URL('../application/client/src/index.ts', import.meta.url)),
       '@ecommerce/application': fileURLToPath(new URL('../application/src/index.ts', import.meta.url)),
     },
   },

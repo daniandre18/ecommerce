@@ -1,5 +1,5 @@
 import { InjectionToken, inject, makeEnvironmentProviders, type EnvironmentProviders } from '@angular/core';
-import type { AuditQueries, CatalogCommands, CatalogQueries, ImageStorage, Session, TeamCommands, TeamQueries, TenantDirectory } from '@ecommerce/application';
+import type { AuditQueries, CatalogCommands, CatalogQueries, ImageStorage, Session, TeamCommands, TeamQueries, TenantDirectory } from '@ecommerce/application/client';
 import {
   CallableCatalogCommands,
   CallableTeamCommands,

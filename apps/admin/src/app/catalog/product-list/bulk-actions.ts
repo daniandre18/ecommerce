@@ -1,7 +1,7 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { MatButton } from '@angular/material/button';
-import { MAX_BULK_PRODUCTS, type CommandFailure } from '@ecommerce/application';
+import { MAX_BULK_PRODUCTS, type CommandFailure } from '@ecommerce/application/client';
 import {
   MAX_SECTION_PRODUCTS,
   SECTION_IDS,

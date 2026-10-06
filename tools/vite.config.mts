@@ -9,6 +9,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@ecommerce/domain': lib('domain/src/index.ts'),
+      '@ecommerce/application/client': lib('application/client/src/index.ts'),
       '@ecommerce/application': lib('application/src/index.ts'),
       '@ecommerce/infrastructure/testing': lib('infrastructure/src/testing/emulator.ts'),
       '@ecommerce/infrastructure': lib('infrastructure/src/index.ts'),

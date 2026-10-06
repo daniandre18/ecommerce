@@ -12,9 +12,6 @@ import {
 import { BusinessRuleError } from '../../errors';
 import type { TransactionScope } from '../../ports/unit-of-work';
 
-/** Hasta cuántos productos admite una acción masiva (SC-007). */
-export const MAX_BULK_PRODUCTS = 100;
-
 /**
  * Lee el árbol, le aplica una operación del dominio y lo guarda, en la misma transacción. No hay una
  * versión global del árbol (research §1): la operación es de intención y se valida contra el árbol

@@ -9,17 +9,13 @@ import {
   type Slug,
   type VariantId,
 } from '@ecommerce/domain';
+import type { CreateProductInput } from '@ecommerce/application/client';
 import { BusinessRuleError } from '../errors';
 import { requirePermission } from '../ports/authorization';
 import type { OperationContext } from '../ports/operation-context';
 import type { TransactionScope } from '../ports/unit-of-work';
 import { bumped, productName, type UseCaseDependencies } from './shared';
 import { freeSlug, slugBaseFor } from './storefront/shared';
-
-export interface CreateProductInput {
-  readonly name: string;
-  readonly description: string;
-}
 
 /**
  * Crea el producto en borrador con su variante implícita (FR-020) y su URL amigable reservada

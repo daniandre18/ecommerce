@@ -1,4 +1,4 @@
-import { chunkIds, mergePages, type CatalogQueries, type ProductListQuery, type SlugIndexEntry, type Unsubscribe, type Watcher } from '@ecommerce/application';
+import { chunkIds, mergePages, type CatalogQueries, type ProductListQuery, type SlugIndexEntry, type Unsubscribe, type Watcher } from '@ecommerce/application/client';
 import {
   normalizeName,
   productId as toProductId,

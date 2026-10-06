@@ -1,4 +1,4 @@
-import type { CommandErrorCode } from '@ecommerce/application';
+import type { CommandErrorCode } from '@ecommerce/application/client';
 
 /**
  * Qué se le dice a la persona por cada código del contrato (`contracts/callable-functions.md`).

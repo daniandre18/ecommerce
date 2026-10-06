@@ -10,6 +10,7 @@ import {
   type CategoryId,
   type Slug,
 } from '@ecommerce/domain';
+import type { CreateCategoryInput, MoveCategoryInput } from '@ecommerce/application/client';
 import { BusinessRuleError } from '../../errors';
 import { requirePermission } from '../../ports/authorization';
 import type { OperationContext } from '../../ports/operation-context';
@@ -21,13 +22,6 @@ import { changeTree, writtenSlug } from './shared';
 
 type Done = Record<string, never>;
 const DONE: Done = {};
-
-export interface CreateCategoryInput {
-  readonly parentId: CategoryId | null;
-  readonly name: string;
-  /** Escrita por el comercio; si falta, se genera del nombre con el menor sufijo libre (FR-021). */
-  readonly slug?: string;
-}
 
 /** Idempotente por `requestId`, como `CreateProduct`: el id de la categoría ES el requestId. */
 export class CreateCategory {
@@ -62,12 +56,6 @@ export class SetCategorySlug {
     const next = writtenSlug(input.slug);
     return changeTree(tx, (tree) => ({ tree: setCategorySlug(tree, input.categoryId, next), result: { slug: next } }));
   }
-}
-
-export interface MoveCategoryInput {
-  readonly categoryId: CategoryId;
-  readonly parentId: CategoryId | null;
-  readonly position: number;
 }
 
 /** Con sus hijas; no toca la visibilidad propia de nadie (FR-021a). Con el mismo padre, reordena. */

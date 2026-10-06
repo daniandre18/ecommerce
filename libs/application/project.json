@@ -16,7 +16,7 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "eslint libs/application --no-error-on-unmatched-pattern --pass-on-no-patterns"
+        "command": "eslint libs/application --ignore-pattern 'libs/application/client/**' --no-error-on-unmatched-pattern --pass-on-no-patterns"
       }
     },
     "typecheck": {

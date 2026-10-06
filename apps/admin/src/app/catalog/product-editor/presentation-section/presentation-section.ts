@@ -2,7 +2,7 @@ import { Component, computed, inject, input, linkedSignal, signal } from '@angul
 import { MatButton } from '@angular/material/button';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import type { CommandFailure } from '@ecommerce/application';
+import type { CommandFailure } from '@ecommerce/application/client';
 import { MAX_SECTION_PRODUCTS, SECTION_IDS, type FeaturedSections, type Product, type SectionId, type TenantId } from '@ecommerce/domain';
 import { CATALOG_COMMANDS } from '../../../core/client';
 import { commandErrorMessage } from '../../../shared/command-errors';

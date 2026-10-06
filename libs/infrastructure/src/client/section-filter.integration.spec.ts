@@ -1,4 +1,4 @@
-import type { ProductListQuery, Watcher } from '@ecommerce/application';
+import type { ProductListQuery, Watcher } from '@ecommerce/application/client';
 import {
   activateMembership,
   inviteMembership,

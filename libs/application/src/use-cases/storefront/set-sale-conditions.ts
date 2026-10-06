@@ -1,24 +1,10 @@
-import { batchId, buildAuditEntries, saleConditionChanges, type AuditEntryId, type BatchId, type Product, type ProductId } from '@ecommerce/domain';
+import { batchId, buildAuditEntries, saleConditionChanges, type AuditEntryId, type Product } from '@ecommerce/domain';
+import { MAX_BULK_PRODUCTS, type SetSaleConditionsInput, type SetSaleConditionsOutput } from '@ecommerce/application/client';
 import { BusinessRuleError } from '../../errors';
 import { requirePermission } from '../../ports/authorization';
 import type { OperationContext } from '../../ports/operation-context';
 import type { TransactionScope } from '../../ports/unit-of-work';
-import { MAX_BULK_PRODUCTS } from '../categories/shared';
 import { actorOf, assertVersion, bumped, loadProduct, type UseCaseDependencies } from '../shared';
-
-export interface SetSaleConditionsInput {
-  readonly changes: readonly { readonly productId: ProductId; readonly version: number }[];
-  /** Ausente, no se toca. */
-  readonly priceVisible?: boolean;
-  readonly freeShipping?: boolean;
-}
-
-export interface SetSaleConditionsOutput {
-  readonly batchId: BatchId;
-  /** Cuántos productos cambiaron; los que ya estaban así no cuentan. */
-  readonly updated: number;
-  readonly auditEntryIds: readonly AuditEntryId[];
-}
 
 /**
  * Precio visible y envío gratis, en uno o en varios productos (FR-026, FR-029). Lo que paga el

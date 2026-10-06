@@ -5,7 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import type { CommandFailure } from '@ecommerce/application';
+import type { CommandFailure } from '@ecommerce/application/client';
 import {
   MAX_COMBINATIONS,
   MAX_OPTIONS,

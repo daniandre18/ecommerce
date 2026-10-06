@@ -23,6 +23,7 @@ import {
   type VariantId,
   type Vocabulary,
 } from '@ecommerce/domain';
+import type { SlugIndexEntry } from '@ecommerce/application/client';
 import type {
   AuditLogRepository,
   CategoryPruner,
@@ -36,7 +37,6 @@ import type {
   RoleRepository,
   SkuIndexEntry,
   SkuIndexRepository,
-  SlugIndexEntry,
   SlugIndexRepository,
   TenantRepository,
   VariantCostsRepository,
