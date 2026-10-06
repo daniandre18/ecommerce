@@ -60,6 +60,9 @@ mat-form-field {
 }
 
 .tags {
+  // Un fieldset toma por omisión el ancho de su contenido: una etiqueta larga sin espacios lo
+  // estiraba más allá de los 360 px (T098 de la 002). El chip ya se acota y corta su texto.
+  min-width: 0;
   margin: 0 0 8px;
   padding: 0;
   border: 0;

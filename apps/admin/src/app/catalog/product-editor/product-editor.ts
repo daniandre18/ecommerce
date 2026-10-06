@@ -81,9 +81,13 @@ export class ProductEditor {
     params: () => this.ids(),
     subscribe: (ids, watcher) => this.queries.watchVariants(ids.tenantId, ids.productId, watcher),
   });
-  /** Las categorías del producto se muestran con su ruta: sin el árbol, no hay qué mostrar. */
+  /**
+   * El árbol, para las rutas de las categorías del producto. A 1.000 categorías es el documento más
+   * pesado del editor y, pedido junto con lo demás, demoraba las variantes por la misma conexión: se
+   * pide cuando ellas llegaron, y el editor no lo espera (T094 de la 002).
+   */
   protected readonly categoryTree = liveResource<CategoryTree, TenantId>({
-    params: () => this.ids()?.tenantId,
+    params: () => (this.variants.hasValue() ? this.ids()?.tenantId : undefined),
     subscribe: (tenant, watcher) => this.queries.watchCategoryTree(tenant, watcher),
   });
 
@@ -94,18 +98,18 @@ export class ProductEditor {
   });
 
   /**
-   * El editor se muestra cuando llegó todo lo que cambia su forma: el producto, el árbol de
-   * categorías, las secciones destacadas y qué puede hacer la cuenta. Si algo de eso llegara después,
-   * lo que depende de ello —el enlace a la bitácora, los botones de guardar, los chips de categorías,
-   * el aviso de una sección— aparecería de golpe y empujaría lo demás (hallado por
-   * `loading-states.spec.ts`, SC-009 de la 001).
+   * El editor se muestra cuando llegó lo que cambia su forma: el producto, las secciones destacadas
+   * y qué puede hacer la cuenta. Si algo de eso llegara después, lo que depende de ello —el enlace a
+   * la bitácora, los botones de guardar, el aviso de una sección— aparecería de golpe y empujaría lo
+   * demás (hallado por `loading-states.spec.ts`, SC-009 de la 001). El árbol no: la sección de
+   * categorías reserva su lugar hasta tenerlo (T094 de la 002).
    */
   protected readonly loaded = computed(() => {
-    if (this.access() === undefined || !this.product.hasValue() || !this.categoryTree.hasValue() || !this.sections.hasValue()) return undefined;
+    if (this.access() === undefined || !this.product.hasValue() || !this.sections.hasValue()) return undefined;
     const product = this.product.value();
-    const tree = this.categoryTree.value();
+    const tree = this.categoryTree.hasValue() ? this.categoryTree.value() : undefined;
     const sections = this.sections.value();
-    return product && tree && sections ? { product, tree, sections } : undefined;
+    return product && sections ? { product, tree, sections } : undefined;
   });
 
   protected readonly currency = computed(() => this.tenant()?.currency);

@@ -49,11 +49,13 @@ describe('ProductEditor', () => {
 
   const variant = () => [{ ...createIncompleteVariant({ id: variantId('v1'), tenantId: T1, productId: productId('p1'), optionValues: {} }), version: 1 }];
   /** Llega todo lo que el editor espera antes de mostrarse: producto, variantes y árbol de categorías. */
+  /** El árbol se pide recién con las variantes (T094 de la 002): llega después del resto. */
   const arrive = async (tree = categoryTree([])) => {
     queries.products[0]?.emit(product('p1', 'Camiseta'));
     queries.variantLists[0]?.emit(variant());
-    queries.categoryTree.emit(tree);
     queries.sections.emit(emptySections());
+    await settle();
+    queries.categoryTree.emit(tree);
     await settle();
   };
 
@@ -98,17 +100,24 @@ describe('ProductEditor', () => {
     expect(root.textContent).toContain('Ver sus cambios en la bitácora');
   });
 
-  // Lo mismo con las categorías: los chips de un producto con categorías aparecían cuando llegaba el
-  // árbol, después del resto, y empujaban las secciones de abajo.
-  it('hasta que llega el árbol de categorías, sigue el esqueleto', async () => {
+  // T094 de la 002: a 1.000 categorías el árbol es el documento más pesado del editor, y por la misma
+  // conexión demoraba las variantes, que son el contenido útil. Se pide después de ellas y el editor no
+  // lo espera: la sección de categorías reserva su lugar hasta tenerlo (antes, T104 lo esperaba).
+  it('el árbol se pide recién cuando llegaron las variantes, y el editor no lo espera', async () => {
     const root = await open();
     queries.products[0]?.emit(product('p1', 'Camiseta', { categoryIds: [categoryId('ropa')] }));
+    queries.sections.emit(emptySections());
+    await settle();
+    expect(queries.categoryTrees).toHaveLength(0);
+    expect(root.querySelector('h1')?.textContent).toContain('Camiseta');
+
     queries.variantLists[0]?.emit(variant());
     await settle();
-    expect(root.querySelector('h1')).toBeNull();
+    expect(queries.categoryTrees).toHaveLength(1);
+    expect(root.querySelector('[role="group"]')).not.toBeNull();
+    expect(root.querySelector('app-categories-section .chip-label')).toBeNull();
 
     queries.categoryTree.emit(categoryTree([['ropa', null, 'Ropa']]));
-    queries.sections.emit(emptySections());
     await settle();
     expect(root.querySelector('app-categories-section .chip-label')?.textContent?.trim()).toBe('Ropa');
   });
@@ -119,7 +128,6 @@ describe('ProductEditor', () => {
     const root = await open();
     queries.products[0]?.emit(product('p1', 'Camiseta'));
     queries.variantLists[0]?.emit(variant());
-    queries.categoryTree.emit(categoryTree([]));
     await settle();
     expect(root.querySelector('h1')).toBeNull();
 

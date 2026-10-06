@@ -309,6 +309,46 @@ Sobre el comercio de referencia de la 001 (500 productos, 2.000 variantes, 20 jo
 
 Ninguna suma depende del tamaño del equipo: el principio rector se mantiene.
 
+## 14. ¿Firestore comprime lo que manda? (T094)
+
+**Contexto**: la medición de rendimiento de la 001 (`admin-e2e:perf`) apunta el panel optimizado a
+los emuladores. A 1.000 categorías, el documento del árbol (§1) es grande, y el emulador lo manda
+sin comprimir. Si Firestore real sí comprime, la medición carga en la red un costo que la persona no
+paga, y comprimir el tráfico del emulador al medir sería medir lo que llega. Si no comprime, sería
+relajar el criterio por la puerta de atrás. Había que verificarlo contra un proyecto real.
+
+**Método** (2026-10-06, reproducible con `tools/firestore-compression/measure.ts`):
+- Proyecto nuevo y propio, `ecommerce-medicion-2610`, con Firestore en `us-central1`. Las reglas
+  abren solo la colección `medicion-compresion`, mientras dura la medición. Al terminar, el documento
+  se borra y las reglas vuelven a negar todo.
+- Desde Chromium (Playwright) y con el SDK web del panel (`firebase` 12.19), una app escribe un
+  documento con la forma del árbol de categorías en su tope: 1.000 nodos, con los campos de
+  `categoryTreeToDoc`. Otra app, nueva y sin caché, lo lee como lo hace el panel: `onSnapshot`
+  hasta la primera entrega confirmada por el servidor (`listen.ts`).
+- Por CDP (`Network.responseReceived`, `Network.dataReceived`) se registran, solo para la lectura, el
+  `content-encoding`, los bytes decodificados y los transferidos (`encodedDataLength`) de cada
+  respuesta. Se registra además quién emitió el certificado TLS: en esta red hay un intermediario TLS,
+  y si interceptara el tráfico, la compresión podría ser suya y no de Google.
+- Lo mismo contra el emulador, con el mismo documento.
+
+**Resultado**:
+
+| | `content-encoding` | Decodificados | Transferidos | Certificado |
+|---|---|---|---|---|
+| Firestore real, 3 lecturas | `gzip` (h2) | 753 kB | **25 kB** | WR2 (Google Trust Services): sin intermediario |
+| Emulador | ninguno (http/1.1) | 258 kB | **257 kB** | sin TLS |
+
+El JSON del canal en producción es más verboso que el del emulador (753 contra 258 kB), pero viaja
+comprimido: unas 30 veces menos. Al final, el emulador transfiere unas 10 veces lo que transfiere
+Firestore real.
+
+**Conclusión**: Firestore comprime sus respuestas, así que comprimir el tráfico del emulador en
+`admin-e2e:perf` es medir lo que recibe la persona, no relajar el criterio. Se hace con
+`apps/admin-e2e/firestore-gzip-proxy.mjs` delante del emulador, solo para la configuración `measure`
+del panel. Medido con el mismo arnés, el proxy transfiere 14 kB de este documento, contra los 25 kB
+reales: la medición queda unos 11 kB por debajo de producción en esa lectura, unos 55 ms a 1,6 Mbps,
+y así se informa junto con cada resultado (T094).
+
 ## Riesgos abiertos
 
 - El tope de **1.000 categorías por comercio** es nuevo; conviene registrarlo en los topes del spec.

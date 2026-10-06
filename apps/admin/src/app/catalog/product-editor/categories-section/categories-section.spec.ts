@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { categoryId, type Product } from '@ecommerce/domain';
+import { categoryId, type CategoryTree, type Product } from '@ecommerce/domain';
 import { CATALOG_COMMANDS } from '../../../core/client';
 import { PendingChanges } from '../../../shared/pending-changes/pending-changes';
 import { categoryTree, fakeCatalogCommands, product, provideAccess, READ_ONLY_ACCESS, T1, useAccess } from '../../../../testing/fakes';
@@ -33,12 +33,12 @@ describe('CategoriesSection', () => {
     });
   });
 
-  async function render(overrides: Partial<Product> = {}, tree = TREE) {
+  async function render(overrides: Partial<Product> = {}, tree: CategoryTree | null = TREE) {
     const fixture = TestBed.createComponent(CategoriesSection);
     fixture.componentRef.setInput('tenantId', T1);
     fixture.componentRef.setInput('product', product('p1', 'Camiseta', { version: 4, ...overrides }));
-    // El árbol lo lee el editor y llega como entrada: la sección no se muestra sin él.
-    fixture.componentRef.setInput('tree', tree);
+    // El árbol lo lee el editor y llega como entrada, después del resto (T094 de la 002).
+    fixture.componentRef.setInput('tree', tree ?? undefined);
     await settle();
     const root = fixture.nativeElement as HTMLElement;
     const chips = () => [...root.querySelectorAll('.chip-label')].map((chip) => chip.textContent?.trim());
@@ -141,5 +141,25 @@ describe('CategoriesSection', () => {
     expect(chips()).toEqual(['Calzado']);
     expect(root.querySelector('[data-field="addCategory"]')).toBeNull();
     expect(root.querySelector('button')).toBeNull();
+  });
+
+  // T094 de la 002: el editor pide el árbol después de las variantes y no lo espera. Hasta tenerlo, la
+  // sección conserva su forma: lo que llega después no corre lo de abajo.
+  describe('antes de que llegue el árbol', () => {
+    it('sin categorías, ya es la misma: la cuenta, "Sin categorías." y la fila de agregar, deshabilitada', async () => {
+      const { root, text } = await render({ categoryIds: [] }, null);
+      expect(text()).toContain('0 de 20');
+      expect(text()).toContain('Sin categorías.');
+      const select = root.querySelector<HTMLSelectElement>('[data-field="addCategory"]');
+      expect(select?.disabled).toBe(true);
+      expect(select?.options[0]?.textContent?.trim()).toBe('Cargando las categorías…');
+    });
+
+    it('con categorías, las cuenta y les reserva una fila', async () => {
+      const { root, text, chips } = await render({ categoryIds: ids('camisetas', 'calzado') }, null);
+      expect(text()).toContain('2 de 20');
+      expect(chips()).toEqual([]);
+      expect(root.querySelector('.chips-pending')).not.toBeNull();
+    });
   });
 });

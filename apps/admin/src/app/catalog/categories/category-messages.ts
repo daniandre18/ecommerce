@@ -26,9 +26,32 @@ export function pathLabel(tree: CategoryTree, id: CategoryId): string {
     .join(' › ');
 }
 
+const childrenIndexes = new WeakMap<CategoryTree, ReadonlyMap<CategoryId | null, readonly CategoryNode[]>>();
+
+/**
+ * Las hijas de cada categoría, ya ordenadas, calculadas una vez por árbol (T094 de la 002). Pedirle a
+ * `childrenOf` las de cada nodo recorre el árbol entero cada vez: dibujar 1.000 categorías costaba un
+ * millón de pasos por cada detección de cambios.
+ */
+export function childrenIn(tree: CategoryTree, parentId: CategoryId | null): readonly CategoryNode[] {
+  let index = childrenIndexes.get(tree);
+  if (!index) {
+    const grouped = new Map<CategoryId | null, CategoryNode[]>();
+    for (const node of Object.values(tree.nodes)) {
+      const siblings = grouped.get(node.parentId);
+      if (siblings) siblings.push(node);
+      else grouped.set(node.parentId, [node]);
+    }
+    for (const siblings of grouped.values()) siblings.sort((a, b) => a.position - b.position);
+    index = grouped;
+    childrenIndexes.set(tree, index);
+  }
+  return index.get(parentId) ?? [];
+}
+
 /** Todas, en el orden en que se leen: cada una seguida de sus subcategorías. */
 export function inTreeOrder(tree: CategoryTree, parentId: CategoryId | null = null): CategoryNode[] {
-  return childrenOf(tree, parentId).flatMap((node) => [node, ...inTreeOrder(tree, node.id)]);
+  return childrenIn(tree, parentId).flatMap((node) => [node, ...inTreeOrder(tree, node.id)]);
 }
 
 /** ¿Puede quedar dentro de `parentId`? Ni en su rama, ni a más de tres niveles con sus hijas (FR-019). */
@@ -42,6 +65,13 @@ function heightOf(tree: CategoryTree, id: CategoryId): number {
   return 1 + Math.max(0, ...childrenOf(tree, id).map((child) => heightOf(tree, child.id)));
 }
 
+/** Adónde va una categoría: su nueva madre (`null`, el primer nivel) y su lugar entre las hermanas. */
+export interface CategoryMove {
+  readonly categoryId: CategoryId;
+  readonly parentId: CategoryId | null;
+  readonly position: number;
+}
+
 /**
  * Mueve y lo anuncia: arrastrar no se oye, así que quien usa un lector de pantalla se entera por acá
  * de dónde quedó (WCAG 4.1.3).
@@ -50,7 +80,7 @@ export async function moveAndAnnounce(
   deps: { readonly commands: CatalogCommands; readonly announcer: LiveAnnouncer },
   tenantId: TenantId,
   tree: CategoryTree,
-  move: { readonly categoryId: CategoryId; readonly parentId: CategoryId | null; readonly position: number },
+  move: CategoryMove,
 ): Promise<CommandFailure | null> {
   const result = await deps.commands.moveCategory(tenantId, move);
   if (!result.ok) return result;
@@ -58,7 +88,7 @@ export async function moveAndAnnounce(
   return null;
 }
 
-function movedMessage(tree: CategoryTree, { categoryId, parentId, position }: { categoryId: CategoryId; parentId: CategoryId | null; position: number }): string {
+function movedMessage(tree: CategoryTree, { categoryId, parentId, position }: CategoryMove): string {
   const name = tree.nodes[categoryId]?.name ?? '';
   const parent = parentId === null ? null : (tree.nodes[parentId]?.name ?? '');
   if (tree.nodes[categoryId]?.parentId === parentId) {

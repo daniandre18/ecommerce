@@ -31,13 +31,16 @@ import { inTreeOrder, pathLabel } from '../../categories/category-messages';
     <p class="count">{{ shown().length }} de {{ max }}</p>
     @if (shown().length === 0) {
       <p class="none">Sin categorías.</p>
+    } @else if (!tree()) {
+      <!-- Sin el árbol no hay rutas que mostrar: una fila de chips reservada (T094 de la 002). -->
+      <div class="chips-pending" aria-hidden="true"></div>
     } @else {
       <mat-chip-set aria-label="Categorías del producto">
         @for (id of shown(); track id) {
           <mat-chip [removable]="canWrite()">
             <span class="chip-label">{{ label(id) }}</span>
             @if (canWrite()) {
-              <button matChipRemove type="button" [attr.aria-label]="'Quitar «' + path(id) + '»'" (click)="remove(id)">✕</button>
+              <button matChipRemove type="button" [attr.aria-label]="'Quitar «' + path(id) + '»'" (click)="remove(id)"><span class="chip-touch-target" aria-hidden="true"></span>✕</button>
             }
           </mat-chip>
         }
@@ -50,8 +53,8 @@ import { inTreeOrder, pathLabel } from '../../categories/category-messages';
         <div class="add">
           <div class="select">
             <label for="add-category">Agregar categoría</label>
-            <select id="add-category" data-field="addCategory" [value]="choice()" (change)="choice.set($any($event.target).value)">
-              <option value="">Elegí una</option>
+            <select id="add-category" data-field="addCategory" [disabled]="!tree()" [value]="choice()" (change)="choice.set($any($event.target).value)">
+              <option value="">{{ tree() ? 'Elegí una' : 'Cargando las categorías…' }}</option>
               @for (option of available(); track option.value) {
                 <option [value]="option.value">{{ option.label }}</option>
               }
@@ -85,6 +88,14 @@ import { inTreeOrder, pathLabel } from '../../categories/category-messages';
     mat-chip-set {
       display: block;
       margin-bottom: 8px;
+    }
+
+    /* Lo que ocupa una fila de chips: 32 px de alto y el mismo margen. */
+    .chips-pending {
+      height: 32px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      background: var(--mat-sys-surface-container-high);
     }
 
     .add {
@@ -130,8 +141,11 @@ import { inTreeOrder, pathLabel } from '../../categories/category-messages';
 export class CategoriesSection {
   readonly tenantId = input.required<TenantId>();
   readonly product = input.required<Product>();
-  /** Lo lee el editor, que espera a tenerlo antes de mostrarse: los chips no aparecen después. */
-  readonly tree = input.required<CategoryTree>();
+  /**
+   * Lo pide el editor después de las variantes y no lo espera (T094 de la 002): hasta tenerlo, la
+   * sección conserva su forma —la cuenta sale del producto— y solo los chips quedan reservados.
+   */
+  readonly tree = input<CategoryTree | undefined>();
 
   protected readonly max = MAX_CATEGORIES_PER_PRODUCT;
 
@@ -139,7 +153,10 @@ export class CategoriesSection {
   private readonly snackBar = inject(MatSnackBar);
   protected readonly canWrite = injectCan('catalog.write');
 
-  private readonly visibility = computed(() => effectiveVisibility(this.tree()));
+  private readonly visibility = computed(() => {
+    const tree = this.tree();
+    return tree ? effectiveVisibility(tree) : new Map<CategoryId, { visible: boolean }>();
+  });
 
   /** Las intenciones de quien edita, sobre lo que llegue del servidor. */
   private readonly added = signal<readonly CategoryId[]>([]);
@@ -150,13 +167,16 @@ export class CategoriesSection {
 
   /** Las vigentes del producto (sin las eliminadas), menos las que se quitan, más las que se agregan. */
   protected readonly shown = computed(() => {
-    const stored = resolveCategories(this.tree(), this.product().categoryIds).filter((id) => !this.removed().includes(id));
+    const tree = this.tree();
+    const assigned = tree ? resolveCategories(tree, this.product().categoryIds) : this.product().categoryIds;
+    const stored = assigned.filter((id) => !this.removed().includes(id));
     return [...new Set([...stored, ...this.added()])];
   });
   protected readonly dirty = computed(() => this.added().length > 0 || this.removed().length > 0);
 
   protected readonly available = computed(() => {
     const tree = this.tree();
+    if (!tree) return [];
     const shown = new Set(this.shown());
     return inTreeOrder(tree)
       .filter((node) => !shown.has(node.id))
@@ -168,7 +188,8 @@ export class CategoriesSection {
   }
 
   protected path(id: CategoryId): string {
-    return pathLabel(this.tree(), id);
+    const tree = this.tree();
+    return tree ? pathLabel(tree, id) : '';
   }
 
   protected label(id: CategoryId): string {

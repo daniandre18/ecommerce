@@ -4,7 +4,7 @@ import { OverlayContainer } from '@angular/cdk/overlay';
 import { By } from '@angular/platform-browser';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import type { CategoryId, CategoryTree, MemberAccess } from '@ecommerce/domain';
+import { categoryId, moveCategory, type CategoryId, type CategoryTree, type MemberAccess } from '@ecommerce/domain';
 import { CATALOG_COMMANDS, CATALOG_QUERIES } from '../../core/client';
 import { PendingChanges } from '../../shared/pending-changes/pending-changes';
 import { CURRENT_ACCESS } from '../../tenant/current-access';
@@ -288,6 +288,40 @@ describe('CategoriesPage', () => {
     });
   });
 
+  // T094 de la 002: lo que cuesta mostrar el árbol no depende de cuántas categorías tiene. Primero las
+  // que llenan la pantalla; el resto, por tandas, después de lo ya dibujado y sin correrlo.
+  describe('un árbol grande (T094)', () => {
+    /** 30 raíces de 2 hijas: 90 categorías, más de las que entran en la primera tanda. */
+    const BIG = categoryTree(
+      Array.from({ length: 30 }, (_, r) => [
+        [`r${r}`, null, `Raíz ${String(r).padStart(2, '0')}`] as [string, string | null, string],
+        [`r${r}-a`, `r${r}`, `Raíz ${r} A`] as [string, string | null, string],
+        [`r${r}-b`, `r${r}`, `Raíz ${r} B`] as [string, string | null, string],
+      ]).flat(),
+    );
+
+    it('dibuja primero las 40 primeras, en el orden del árbol, y después el resto a continuación', async () => {
+      const fixture = TestBed.createComponent(CategoriesPage);
+      fixture.componentRef.setInput('tenantId', 't1');
+      await settle();
+      queries.categoryTree.emit(BIG);
+      // Solo microtareas: las tandas siguientes esperan un turno de temporizador.
+      for (let i = 0; i < 5; i++) await Promise.resolve();
+      TestBed.tick();
+      const root = fixture.nativeElement as HTMLElement;
+      const drawn = () => [...root.querySelectorAll<HTMLElement>('li[data-category]')].map((li) => li.dataset['category']);
+      expect(drawn()).toHaveLength(40);
+      const first = drawn();
+      // Una tanda por cuadro pintado.
+      for (let i = 0; i < 5 && drawn().length < 90; i++) {
+        await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
+        await settle();
+      }
+      expect(drawn()).toHaveLength(90);
+      expect(drawn().slice(0, 40)).toEqual(first);
+    });
+  });
+
   describe('mover y reordenar (FR-019)', () => {
     it('subir y bajar reordenan entre hermanas, y se anuncia', async () => {
       const { act } = await render();
@@ -319,6 +353,44 @@ describe('CategoriesPage', () => {
       await click('Mover', row('hombre'));
       expect(commands.moveCategory).toHaveBeenCalledWith(T1, { categoryId: 'hombre', parentId: 'calzado', position: 0 });
       expect(announcer.announce).toHaveBeenCalledWith('«Hombre» quedó dentro de «Calzado».');
+    });
+
+    // T099 de la 002 (WCAG 2.4.3): la fila cambia de lugar, o se crea de nuevo bajo otra madre, recién
+    // cuando llega el árbol actualizado; quien usa el teclado no pierde su lugar.
+    it('después de subir, el foco vuelve a sus acciones cuando llega el árbol nuevo', async () => {
+      const { act, row } = await render();
+      await act('camisas', 'Subir');
+      queries.categoryTree.emit(moveCategory(STORE(), categoryId('camisas'), categoryId('hombre'), 0));
+      await settle();
+      expect(document.activeElement).toBe(row('camisas').querySelector(':scope > .row button.actions'));
+    });
+
+    it('después de mover a otra, el foco vuelve a sus acciones en el lugar nuevo', async () => {
+      const { act, row, type, click } = await render();
+      // El árbol nuevo llega antes que la respuesta del comando, como contra el servidor: la fila que
+      // pidió el movimiento ya no existe cuando el comando termina.
+      let respond: (result: typeof DONE) => void = () => undefined;
+      commands.moveCategory.mockImplementationOnce(() => new Promise((resolve) => (respond = resolve)));
+      await act('hombre', 'Mover a…');
+      await type('destination', 'calzado', row('hombre'));
+      await click('Mover', row('hombre'));
+      queries.categoryTree.emit(moveCategory(STORE(), categoryId('hombre'), categoryId('calzado'), 0));
+      await settle();
+      respond(DONE);
+      await settle();
+      expect(document.activeElement).toBe(row('hombre').querySelector(':scope > .row button.actions'));
+    });
+
+    it('si mover falla, el foco no salta después a ninguna parte', async () => {
+      const { act, row } = await render();
+      commands.moveCategory.mockResolvedValueOnce({ ok: false, code: 'unavailable', message: 'sin red' });
+      await act('camisas', 'Subir');
+      const actions = row('camisetas').querySelector<HTMLButtonElement>(':scope > .row button.actions');
+      actions?.focus();
+      // Más tarde llega un árbol donde Camisas sí quedó primera (la movió otra persona).
+      queries.categoryTree.emit(moveCategory(STORE(), categoryId('camisas'), categoryId('hombre'), 0));
+      await settle();
+      expect(document.activeElement).toBe(actions);
     });
 
     it('arrastrar a otra lista la mueve ahí, en el lugar donde se soltó', async () => {

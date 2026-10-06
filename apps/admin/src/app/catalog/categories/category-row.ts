@@ -1,17 +1,17 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { CdkDragHandle } from '@angular/cdk/drag-drop';
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
-import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
+import { MatMenu, MatMenuContent, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import type { CommandFailure } from '@ecommerce/application/client';
 import { childrenOf, descendantsOf, slugify, type CategoryId, type CategoryNode, type CategoryTree, type EffectiveVisibility, type TenantId } from '@ecommerce/domain';
 import { CATALOG_COMMANDS, CATALOG_QUERIES } from '../../core/client';
 import { trackUnsaved } from '../../shared/pending-changes/pending-changes';
 import { injectCan } from '../../tenant/current-access';
-import { canMoveInto, categoryErrorMessage, inTreeOrder, moveAndAnnounce, pathLabel } from './category-messages';
+import { canMoveInto, categoryErrorMessage, childrenIn, inTreeOrder, moveAndAnnounce, pathLabel, type CategoryMove } from './category-messages';
 
 type Mode = 'idle' | 'rename' | 'slug' | 'move' | 'hide' | 'delete' | 'delete-blocked';
 
@@ -21,7 +21,7 @@ type Mode = 'idle' | 'rename' | 'slug' | 'move' | 'hide' | 'delete' | 'delete-bl
  */
 @Component({
   selector: 'app-category-row',
-  imports: [CdkDragHandle, MatButton, MatFormField, MatLabel, MatInput, MatMenu, MatMenuItem, MatMenuTrigger],
+  imports: [CdkDragHandle, MatButton, MatFormField, MatLabel, MatInput, MatMenu, MatMenuContent, MatMenuItem, MatMenuTrigger],
   template: `
     <div class="line">
       @if (canWrite() && draggable()) {
@@ -39,19 +39,22 @@ type Mode = 'idle' | 'rename' | 'slug' | 'move' | 'hide' | 'delete' | 'delete-bl
       </div>
       @if (canWrite()) {
         <button matButton type="button" class="actions" [matMenuTriggerFor]="menu" [attr.aria-label]="'Acciones de «' + node().name + '»'">Acciones</button>
+        <!-- El menú se construye al abrirlo: con 1.000 categorías, 1.000 menús que nadie abrió (T094). -->
         <mat-menu #menu="matMenu">
-          <button mat-menu-item type="button" (click)="start('rename')">Renombrar</button>
-          <button mat-menu-item type="button" (click)="start('slug')">Cambiar URL</button>
-          <!-- Sigue la visibilidad PROPIA: la de una oculta solo por su padre es visible (FR-021a). -->
-          <button mat-menu-item type="button" (click)="toggleHidden()">{{ node().hidden ? 'Mostrar' : 'Ocultar' }}</button>
-          <button mat-menu-item type="button" (click)="start('move')">Mover a…</button>
-          @if (index() > 0) {
-            <button mat-menu-item type="button" (click)="shift(-1)">Subir</button>
-          }
-          @if (index() < siblings().length - 1) {
-            <button mat-menu-item type="button" (click)="shift(1)">Bajar</button>
-          }
-          <button mat-menu-item type="button" (click)="startDelete()">Eliminar</button>
+          <ng-template matMenuContent>
+            <button mat-menu-item type="button" (click)="start('rename')">Renombrar</button>
+            <button mat-menu-item type="button" (click)="start('slug')">Cambiar URL</button>
+            <!-- Sigue la visibilidad PROPIA: la de una oculta solo por su padre es visible (FR-021a). -->
+            <button mat-menu-item type="button" (click)="toggleHidden()">{{ node().hidden ? 'Mostrar' : 'Ocultar' }}</button>
+            <button mat-menu-item type="button" (click)="start('move')">Mover a…</button>
+            @if (index() > 0) {
+              <button mat-menu-item type="button" (click)="shift(-1)">Subir</button>
+            }
+            @if (index() < siblings().length - 1) {
+              <button mat-menu-item type="button" (click)="shift(1)">Bajar</button>
+            }
+            <button mat-menu-item type="button" (click)="startDelete()">Eliminar</button>
+          </ng-template>
         </mat-menu>
       }
     </div>
@@ -243,7 +246,14 @@ export class CategoryRow {
   protected readonly busy = signal(false);
   protected readonly failure = signal('');
 
-  protected readonly siblings = computed(() => childrenOf(this.tree(), this.node().parentId));
+  /**
+   * Adónde se mueve con el menú, antes de pedirlo: la página le devuelve el foco ahí cuando llega el
+   * árbol nuevo. Se avisa antes porque, al cambiar de madre, esta fila deja de existir apenas llega
+   * ese árbol, que puede ser antes que la respuesta del comando. `null`: no se movió.
+   */
+  readonly moving = output<CategoryMove | null>();
+
+  protected readonly siblings = computed(() => childrenIn(this.tree(), this.node().parentId));
   protected readonly index = computed(() => this.siblings().findIndex((sibling) => sibling.id === this.node().id));
   private readonly descendants = computed(() => descendantsOf(this.tree(), this.node().id));
 
@@ -345,7 +355,7 @@ export class CategoryRow {
 
   protected async moveTo(): Promise<void> {
     const parentId = (this.destination() || null) as CategoryId | null;
-    await this.move(parentId, childrenOf(this.tree(), parentId).length);
+    await this.move(parentId, childrenIn(this.tree(), parentId).length);
   }
 
   protected async startDelete(): Promise<void> {
@@ -372,15 +382,14 @@ export class CategoryRow {
   private async move(parentId: CategoryId | null, position: number): Promise<void> {
     this.busy.set(true);
     this.failure.set('');
-    const failed = await moveAndAnnounce(
-      { commands: this.commands, announcer: this.announcer },
-      this.tenantId(),
-      this.tree(),
-      { categoryId: this.node().id, parentId, position },
-    );
+    const move: CategoryMove = { categoryId: this.node().id, parentId, position };
+    this.moving.emit(move);
+    const failed = await moveAndAnnounce({ commands: this.commands, announcer: this.announcer }, this.tenantId(), this.tree(), move);
     this.busy.set(false);
-    if (failed) this.failure.set(categoryErrorMessage(failed));
-    else this.mode.set('idle');
+    if (failed) {
+      this.moving.emit(null);
+      this.failure.set(categoryErrorMessage(failed));
+    } else this.mode.set('idle');
   }
 
   private async run(command: () => Promise<{ ok: true } | CommandFailure>): Promise<boolean> {

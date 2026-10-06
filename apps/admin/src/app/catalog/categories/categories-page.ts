@@ -1,7 +1,7 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { CdkDrag, CdkDropList, CdkDropListGroup, type CdkDragDrop } from '@angular/cdk/drag-drop';
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { afterRenderEffect, Component, computed, ElementRef, inject, input, signal } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatFormField, MatHint, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
@@ -24,7 +24,7 @@ import { CATALOG_COMMANDS, CATALOG_QUERIES } from '../../core/client';
 import { liveResource } from '../../shared/live-resource';
 import { trackUnsaved } from '../../shared/pending-changes/pending-changes';
 import { CURRENT_ACCESS, injectCan } from '../../tenant/current-access';
-import { canMoveInto, categoryErrorMessage, inTreeOrder, moveAndAnnounce, pathLabel } from './category-messages';
+import { canMoveInto, categoryErrorMessage, childrenIn, inTreeOrder, moveAndAnnounce, pathLabel, type CategoryMove } from './category-messages';
 import { CategoryRow } from './category-row';
 
 type VisibilityFilter = 'all' | 'visible' | 'hidden';
@@ -129,13 +129,57 @@ export class CategoriesPage {
 
   protected readonly canCreate = computed(() => this.draft().name.trim() !== '' && this.slugPreview()?.ok === true && !this.creating());
 
+  /**
+   * Lo que cuesta mostrar el árbol no depende de cuántas categorías tiene (T094 de la 002, hasta 1.000):
+   * primero las que llenan la pantalla y el resto por tandas, cada una en su turno. Se dibujan en el
+   * orden del árbol, así que cada tanda queda después de todo lo dibujado —también dentro de cada
+   * lista de hermanas— y nada de lo que se ve se corre.
+   */
+  private static readonly FIRST_DRAWN = 40;
+  private static readonly DRAWN_PER_TURN = 50;
+  protected readonly drawn = signal(CategoriesPage.FIRST_DRAWN);
+  private readonly rank = computed(() => new Map(inTreeOrder(this.current() ?? { nodes: {}, pendingPrune: [] }).map((node, i) => [node.id, i] as const)));
+
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  /**
+   * La categoría que se está moviendo con el menú (T099 de la 002, WCAG 2.4.3). Su fila cambia de
+   * lugar —o se crea de nuevo bajo otra madre— recién cuando llega el árbol actualizado, y en ese
+   * momento el foco se perdía: quien usa el teclado volvía al principio de la página.
+   */
+  private readonly refocus = signal<CategoryMove | null>(null);
+
   constructor() {
     trackUnsaved(() => this.draft().name.trim() !== '' || this.draft().slug.trim() !== '');
+    // La tanda siguiente, después de pintar la anterior: entre una y otra, el navegador muestra lo
+    // dibujado y atiende a la persona. Con `setTimeout` solo, encadenaba tandas antes del primer cuadro.
+    afterRenderEffect(() => {
+      const [drawn, total] = [this.drawn(), this.rank().size];
+      if (drawn < total) requestAnimationFrame(() => setTimeout(() => this.drawn.set(drawn + CategoriesPage.DRAWN_PER_TURN)));
+    });
+    // Cuando el árbol ya la muestra en su lugar nuevo, el foco vuelve a sus acciones.
+    afterRenderEffect(() => {
+      const pending = this.refocus();
+      const tree = this.current();
+      if (!pending || !tree) return;
+      const node = tree.nodes[pending.categoryId];
+      const index = node ? childrenIn(tree, node.parentId).findIndex((sibling) => sibling.id === node.id) : -1;
+      if (node?.parentId !== pending.parentId || index !== pending.position) return;
+      this.refocus.set(null);
+      this.host.nativeElement.querySelector<HTMLElement>(`li[data-category="${pending.categoryId}"] > .row button.actions`)?.focus();
+    });
   }
 
-  protected children(parentId: CategoryId | null): CategoryNode[] {
+  protected refocusAfter(move: CategoryMove | null): void {
+    this.refocus.set(move);
+  }
+
+  protected isDrawn(id: CategoryId): boolean {
+    return (this.rank().get(id) ?? 0) < this.drawn();
+  }
+
+  protected children(parentId: CategoryId | null): readonly CategoryNode[] {
     const tree = this.current();
-    return tree ? childrenOf(tree, parentId) : [];
+    return tree ? childrenIn(tree, parentId) : [];
   }
 
   protected edit(field: keyof NewCategory, value: string): void {

@@ -33,7 +33,11 @@
         },
         "measure": {
           "outputHashing": "all",
-          "outputPath": "dist/apps/admin-measure"
+          "outputPath": "dist/apps/admin-measure",
+          "fileReplacements": [
+            { "replace": "apps/admin/src/environments/environment.ts", "with": "apps/admin/src/environments/environment.measure.ts" },
+            { "replace": "node_modules/re2js/build/index.js", "with": "apps/admin/src/vendor/re2js.js" }
+          ]
         },
         "development": {
           "optimization": false,

@@ -57,7 +57,7 @@
         <mat-chip>
           <span class="chip-label">{{ tag }}</span>
           @if (canWrite()) {
-            <button matChipRemove type="button" [attr.aria-label]="'Quitar ' + tag" (click)="removeTag(tag)">×</button>
+            <button matChipRemove type="button" [attr.aria-label]="'Quitar ' + tag" (click)="removeTag(tag)"><span class="chip-touch-target" aria-hidden="true"></span>×</button>
           }
         </mat-chip>
       } @empty {

@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { call, idTokenOf, MULTI, OWNER, productAsOwner, signIn } from './support';
+import { call, idTokenOf, MULTI, OWNER, productAsOwner, productWithVariants, signIn } from './support';
 
 /** Los criterios de nivel A y AA de WCAG 2.0, 2.1 y 2.2: lo que exige SC-014. */
 const WCAG_AA = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22a', 'wcag22aa'];
@@ -132,6 +132,92 @@ test.describe('accesibilidad', () => {
     await page.goto(url);
     await loaded(page);
     await expect(page.getByRole('heading', { name: 'Categorías', exact: true })).toBeVisible();
+    await expectAccessible(page);
+  });
+
+  // 002, Polish (T096): los estados que agregaron las historias después de T062.
+  test('categorías: el alta, una categoría moviéndose y otra por eliminarse, con su aviso', async ({ page }) => {
+    const run = Date.now();
+    const owner = await idTokenOf(OWNER);
+    const create = async (name: string) => {
+      const { body } = await call(owner, 'createCategory', { tenantId: 't1', requestId: crypto.randomUUID(), parentId: null, name });
+      return (body.result as { data: { categoryId: string } }).data.categoryId;
+    };
+    const moving = `Se mueve ${run}`;
+    const leaving = `Se elimina ${run}`;
+    await create(moving);
+    const leavingId = await create(leaving);
+    const { productId } = await productAsOwner(`En la que se elimina ${run}`);
+    await call(owner, 'setProductCategories', { tenantId: 't1', productId, add: [leavingId], remove: [] });
+    const act = async (name: string, action: string) => {
+      await page.getByRole('button', { name: `Acciones de «${name}»` }).click();
+      await page.getByRole('menuitem', { name: action, exact: true }).click();
+    };
+
+    await page.goto('/login');
+    await signIn(page, OWNER);
+    await page.goto('/t/t1/categories');
+    await loaded(page);
+    await act(moving, 'Mover a…');
+    await expect(page.getByRole('button', { name: 'Mover', exact: true })).toBeVisible();
+    await act(leaving, 'Eliminar');
+    await expect(page.getByText(`1 producto dejará de estar en «${leaving}»`)).toBeVisible();
+    await expectAccessible(page);
+  });
+
+  test('listado: filtrado por categoría, con las acciones masivas y su rechazo', async ({ page }) => {
+    const run = Date.now();
+    const owner = await idTokenOf(OWNER);
+    const { body } = await call(owner, 'createCategory', { tenantId: 't1', requestId: crypto.randomUUID(), parentId: null, name: `Masiva ${run}` });
+    const categoryId = (body.result as { data: { categoryId: string } }).data.categoryId;
+    const physical = `Físico ${run}`;
+    const digital = `Digital ${run}`;
+    for (const name of [physical, digital]) {
+      const { productId } = await productAsOwner(name);
+      await call(owner, 'setProductCategories', { tenantId: 't1', productId, add: [categoryId], remove: [] });
+      if (name === digital) await call(owner, 'setProductType', { tenantId: 't1', productId, version: 1, kind: 'digital' });
+    }
+
+    await page.goto('/t/t1/catalog');
+    await signIn(page, OWNER);
+    await loaded(page);
+    await page.getByLabel('Mostrar').selectOption('category');
+    await page.locator('[data-field="category"]').selectOption({ label: `Masiva ${run}` });
+    for (const name of [physical, digital]) await page.getByRole('checkbox', { name: `Seleccionar «${name}»` }).check();
+    await expect(page.getByText('2 seleccionados')).toBeVisible();
+    await page.getByRole('button', { name: 'Activar envío gratis' }).click();
+    await expect(page.getByRole('button', { name: 'Quitar de la selección y reintentar' })).toBeVisible();
+    await expectAccessible(page);
+  });
+
+  test('editor: variantes con el código de barras y el envío desplegados, un GTIN inválido y catálogos externos', async ({ page }) => {
+    const url = await productWithVariants(`Accesible con variantes ${Date.now()}`);
+    await call(await idTokenOf(OWNER), 'setProductShipping', {
+      tenantId: 't1',
+      productId: url.split('/').at(-1),
+      version: 2,
+      weightGrams: 300,
+      dimensionsMm: { length: 300, width: 200, height: 20 },
+    });
+
+    await page.goto(url);
+    await signIn(page, OWNER);
+    await loaded(page);
+    const row = page.getByRole('group', { name: /^Rojo \/ S/ });
+    await row.getByRole('button', { name: /^Código de barras/ }).click();
+    await row.getByLabel('GTIN', { exact: true }).fill('4006381333932');
+    await row.getByLabel('GTIN', { exact: true }).press('Enter');
+    await expect(row).toContainText('El dígito de control no corresponde');
+    // El mensaje entra animado: a mitad de camino, axe mide un rojo más claro que el que queda (3,61
+    // contra 5,84) y la prueba fallaba de a ratos. Se espera a que no quede ninguna animación ni
+    // transición en curso, y a que el mensaje tenga su color de error definitivo.
+    await expect
+      .poll(() => page.evaluate(() => document.getAnimations().filter((a) => a.playState === 'running' && a.effect?.getComputedTiming().endTime !== Infinity).length), { intervals: [50] })
+      .toBe(0);
+    // El rojo de error del tema claro, #ba1a1a.
+    await expect(row.locator('mat-error')).toHaveCSS('color', 'rgb(186, 26, 26)');
+    await expect(row).toContainText('Peso heredado del producto');
+    await expect(page.getByRole('heading', { name: 'Catálogos externos' })).toBeVisible();
     await expectAccessible(page);
   });
 });

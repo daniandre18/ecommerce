@@ -117,6 +117,9 @@ const SALE_DONE: Record<string, string> = {
     }
 
     fieldset {
+      /* Un fieldset toma por omisión el ancho de su contenido: el selector de categorías, el de la
+         ruta más larga, lo estiraba más allá de los 360 px (T098 de la 002). */
+      min-width: 0;
       margin: 0 0 12px;
       padding: 0;
       border: 0;

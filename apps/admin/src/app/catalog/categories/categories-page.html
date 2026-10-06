@@ -32,14 +32,20 @@
   </form>
 }
 
-<div class="select filter">
-  <label for="visibility">Mostrar</label>
-  <select id="visibility" data-field="visibility" [value]="filter()" (change)="filter.set($any($event.target).value)">
-    <option value="all">Todas, en su árbol</option>
-    <option value="visible">Visibles en la tienda</option>
-    <option value="hidden">Ocultas en la tienda</option>
-  </select>
-</div>
+<!--
+  Recién con el árbol y el acceso, como el alta: si estuviera desde antes, el alta aparecería encima
+  y lo empujaría al llegar los datos (T097 de la 002: 0,075 de CLS a 360 px).
+-->
+@if (ready()) {
+  <div class="select filter">
+    <label for="visibility">Mostrar</label>
+    <select id="visibility" data-field="visibility" [value]="filter()" (change)="filter.set($any($event.target).value)">
+      <option value="all">Todas, en su árbol</option>
+      <option value="visible">Visibles en la tienda</option>
+      <option value="hidden">Ocultas en la tienda</option>
+    </select>
+  </div>
+}
 
 <div role="alert" class="failure">{{ failure() }}</div>
 
@@ -57,10 +63,12 @@
       <p class="none">{{ filter() === 'hidden' ? 'No hay categorías ocultas.' : 'No hay categorías visibles.' }}</p>
     } @else {
       <ul class="flat">
-        @for (node of filtered(); track node.id) {
-          <li [attr.data-category]="node.id" aria-level="1">
-            <app-category-row class="row" [tenantId]="id()" [tree]="tree" [node]="node" [visibility]="visibility().get(node.id) ?? { visible: true }" [path]="path(node)" />
-          </li>
+        @for (node of filtered(); track node.id; let i = $index) {
+          @if (i < drawn()) {
+            <li [attr.data-category]="node.id" aria-level="1">
+              <app-category-row class="row" [tenantId]="id()" [tree]="tree" [node]="node" [visibility]="visibility().get(node.id) ?? { visible: true }" (moving)="refocusAfter($event)" [path]="path(node)" />
+            </li>
+          }
         }
       </ul>
     }
@@ -75,13 +83,16 @@
       [cdkDropListEnterPredicate]="canEnter"
       (cdkDropListDropped)="dropped($event)"
     >
+      <!-- Las dibujadas de cada lista son siempre las primeras: en el orden del árbol, la tanda que falta va al final. -->
       @for (node of children(parent); track node.id) {
-        <li cdkDrag [cdkDragData]="node.id" [cdkDragDisabled]="!canWrite()" [attr.data-category]="node.id" [attr.aria-level]="level">
-          <app-category-row class="row" [tenantId]="id()" [tree]="tree" [node]="node" [visibility]="visibility().get(node.id) ?? { visible: true }" [draggable]="true" />
-          @if (children(node.id).length > 0) {
-            <ng-container [ngTemplateOutlet]="branch" [ngTemplateOutletContext]="{ $implicit: node.id, level: level + 1 }" />
-          }
-        </li>
+        @if (isDrawn(node.id)) {
+          <li cdkDrag [cdkDragData]="node.id" [cdkDragDisabled]="!canWrite()" [attr.data-category]="node.id" [attr.aria-level]="level">
+            <app-category-row class="row" [tenantId]="id()" [tree]="tree" [node]="node" [visibility]="visibility().get(node.id) ?? { visible: true }" (moving)="refocusAfter($event)" [draggable]="true" />
+            @if (children(node.id).length > 0) {
+              <ng-container [ngTemplateOutlet]="branch" [ngTemplateOutletContext]="{ $implicit: node.id, level: level + 1 }" />
+            }
+          </li>
+        }
       }
     </ul>
   </ng-template>

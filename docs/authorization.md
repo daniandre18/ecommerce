@@ -2,7 +2,8 @@
 
 Cómo decide el sistema qué puede hacer cada cuenta en cada comercio, qué capa decide qué, y por qué
 los permisos no viajan en el token de sesión. Requisitos de origen: FR-003 a FR-016, FR-040 y
-FR-041 de `specs/001-catalog-rbac/spec.md`.
+FR-041 de `specs/001-catalog-rbac/spec.md`, y FR-001 a FR-003 de
+`specs/002-storefront-catalog/spec.md`.
 
 ## Las piezas
 
@@ -69,6 +70,36 @@ ni siquiera pide el costo sin `variant.cost.read`. No protege nada: una prueba e
 (`team-and-permissions.spec.ts`) llama a las callable y escribe directo en Firestore saltándose el
 panel, y las dos vías se niegan.
 
+## Lo que suma el catálogo de cara a la tienda (002)
+
+Las mismas tres capas, sin permisos nuevos: todo lo de la 002 cae bajo los de la 001.
+
+**Condiciones de venta, bajo `variant.price.write`.** Mostrar u ocultar el precio en la tienda y
+ofrecer el envío gratis (FR-003 de la 002) los cambia `setSaleConditions`, que exige
+`variant.price.write` y no `catalog.write`: quien no puede editar precios tampoco decide si se ven.
+No hay otro camino. `updateProductDetails` no acepta esos campos (su entrada se arma campo por
+campo y los descarta), y la escritura directa en Firestore la niega la regla (caso 48). Los dos
+campos viven en el documento del producto, legible por cualquier miembro: no son secretos como el
+costo, solo están protegidos al escribirse, y el panel los muestra en solo lectura a quien no tiene
+el permiso. En una acción masiva (FR-029) el permiso se exige una vez para el lote entero: si falta,
+no se aplica a ninguno, y la denegación queda como evento de seguridad.
+
+**Todo lo demás, bajo `catalog.write`**: la ficha de tienda, la URL amigable, el tipo y el envío del
+producto, el GTIN y el envío de cada variante, el árbol de categorías, asignarlas y las secciones
+destacadas.
+
+**Las lecturas nuevas** (`firestore.rules`, `specs/002-storefront-catalog/contracts/firestore-rules.md`):
+
+| Ruta | Quién la lee | Por qué así |
+|---|---|---|
+| `storefront/categoryTree`, `storefront/sections`, `storefront/vocabulary` | Cualquier miembro activo | Lo necesita el panel para operar el catálogo. Los tres documentos se **nombran**: uno nuevo en `storefront` (configuración reservada a la Propietaria, por ejemplo) no queda legible por heredar la regla. Es la lección del comodín de la 001. |
+| `slugIndex/{slug}` | Cualquier miembro activo, **de a una** (`get`, nunca `list`) | El panel pregunta si una URL está libre antes de guardarla (FR-007). Las URL son públicas por naturaleza, pero listarlas todas no hace falta. |
+| `gtinIndex/{gtin}` | Nadie desde el cliente | Lo consulta solo el servidor, como `skuIndex`. |
+
+Y ninguna escritura desde el cliente, tampoco en lo nuevo: ni el árbol, ni las secciones, ni las
+reservas de URL o de GTIN (casos 45 a 47), que el servidor crea con `create` dentro de la
+transacción para que dos reservas simultáneas no puedan ganar las dos.
+
 ## Por qué los permisos no viajan en el token
 
 La alternativa habitual es poner el rol o los permisos en *custom claims* del token de Firebase Auth
@@ -97,4 +128,4 @@ próxima lectura y en la próxima escritura, sin esperar a que venza un token.
 | Las escrituras | `apps/functions/src/bootstrap/guard.ts`, `libs/application/src/services/authorization.service.ts` |
 | Lo que exige cada operación | `requires` de cada caso de uso en `libs/application/src/use-cases/` |
 | El panel | `apps/admin/src/app/tenant/current-access.ts`, `apps/admin/src/app/shared/directives/has-permission.directive.ts` |
-| Las pruebas | `tests/rules/`, `libs/application/src/use-cases/authorization.spec.ts`, `apps/admin-e2e/src/team-and-permissions.spec.ts` |
+| Las pruebas | `tests/rules/` (casos 1 a 34 de la 001; 35 a 48 y 35a de la 002), `libs/application/src/use-cases/authorization.spec.ts`, `apps/admin-e2e/src/team-and-permissions.spec.ts` |
