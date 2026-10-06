@@ -83,7 +83,7 @@ describe('atomicidad de la bitácora en setVariantPrice', () => {
         ...tx.variants,
         save: async (variant) => {
           await tx.variants.save(variant);
-          await tx.products.updateVariantSummary(productId('no-existe'), { variantCount: 0, hasIncompleteVariants: false });
+          await tx.products.updateVariantSummary(productId('no-existe'), { variantCount: 0, hasIncompleteVariants: false, missingShippingData: false });
         },
       },
     }));

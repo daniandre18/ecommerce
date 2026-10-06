@@ -6,6 +6,8 @@ import type {
   SectionInput,
   SetProductCategoriesInput,
   SetSaleConditionsInput,
+  SetVariantGtinInput,
+  SetVariantShippingInput,
   SetProductOptionsInput,
   SetProductStatusInput,
   SetVariantCostInput,
@@ -19,7 +21,9 @@ import type {
   UpdateProductDetailsInput,
 } from '@ecommerce/application';
 import {
+  AGE_GROUPS,
   categoryId,
+  GENDERS,
   optionId,
   PRODUCT_KINDS,
   PRODUCT_STATUSES,
@@ -57,6 +61,10 @@ export function parseUpdateProductDetails(data: unknown): UpdateProductDetailsIn
     ...json.optional('tags', (key) => json.strings(key)),
     ...json.optional('brand', (key) => json.nullable(key, (k) => json.string(k))),
     ...json.optional('video', (key) => json.nullableObject(key, (video) => ({ url: video.string('url'), position: video.integer('position') }))),
+    // Catálogos externos (Historia 4, FR-031): el tope del MPN lo valida el caso de uso.
+    ...json.optional('mpn', (key) => json.nullable(key, (k) => json.string(k))),
+    ...json.optional('ageGroup', (key) => json.nullable(key, (k) => json.oneOf(k, AGE_GROUPS))),
+    ...json.optional('gender', (key) => json.nullable(key, (k) => json.oneOf(k, GENDERS))),
   };
 }
 
@@ -240,5 +248,34 @@ export function parseSetSaleConditions(data: unknown): SetSaleConditionsInput {
     changes: json.objects('changes', (entry) => ({ productId: entry.id('productId', productId), version: entry.integer('version') })),
     ...json.optional('priceVisible', (key) => json.boolean(key)),
     ...json.optional('freeShipping', (key) => json.boolean(key)),
+  };
+}
+
+// Historia 4: datos por variante.
+
+/** El código como lo escribió la persona, o `null` para quitarlo; ausente no se confunde con eso. */
+export function parseSetVariantGtin(data: unknown): SetVariantGtinInput {
+  const json = JsonObject.payload(data);
+  return {
+    productId: json.id('productId', productId),
+    variantId: json.id('variantId', variantId),
+    version: json.integer('version'),
+    gtin: json.nullable('gtin', (key) => json.string(key)),
+  };
+}
+
+/** Por variante: lo ausente no cambia; `null` vuelve a heredar del producto (FR-015). */
+export function parseSetVariantShipping(data: unknown): SetVariantShippingInput {
+  const json = JsonObject.payload(data);
+  return {
+    productId: json.id('productId', productId),
+    changes: json.objects('changes', (entry) => ({
+      variantId: entry.id('variantId', variantId),
+      version: entry.integer('version'),
+      ...entry.optional('weightGrams', (key) => entry.nullable(key, (k) => entry.integer(k))),
+      ...entry.optional('dimensionsMm', (key) =>
+        entry.nullableObject(key, (d) => ({ length: d.integer('length'), width: d.integer('width'), height: d.integer('height') })),
+      ),
+    })),
   };
 }

@@ -2,6 +2,7 @@ import type {
   AuditLogRepository,
   CategoryTreeRepository,
   FeaturedSectionsRepository,
+  GtinIndexRepository,
   InvitationRepository,
   MembershipRepository,
   ProductRepository,
@@ -32,6 +33,7 @@ export interface TransactionScope {
   readonly vocabulary: VocabularyRepository;
   readonly categories: CategoryTreeRepository;
   readonly sections: FeaturedSectionsRepository;
+  readonly gtinIndex: GtinIndexRepository;
 }
 
 /**

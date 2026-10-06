@@ -42,7 +42,11 @@ export function productRepository(t: Transaction, paths: TenantPaths): ProductRe
     },
     // `update` falla si el producto no existe: un resumen de variantes sin producto es un error.
     updateVariantSummary: async (id, summary) => {
-      t.update(products.doc(id), { variantCount: summary.variantCount, hasIncompleteVariants: summary.hasIncompleteVariants });
+      t.update(products.doc(id), {
+        variantCount: summary.variantCount,
+        hasIncompleteVariants: summary.hasIncompleteVariants,
+        missingShippingData: summary.missingShippingData,
+      });
     },
     updateCategories: async (id, categoryIds) => {
       t.update(products.doc(id), { categoryIds: [...categoryIds] });

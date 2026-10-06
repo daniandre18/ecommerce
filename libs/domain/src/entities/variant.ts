@@ -2,6 +2,7 @@ import type { OptionId, ProductId, TenantId, ValueId, VariantId } from '../value
 import type { Money } from '../value-objects/money';
 import type { Sku } from '../value-objects/sku';
 import { stockUndefined, type StockLevel } from '../value-objects/stock-level';
+import { missingShippingData, type ProductShippingSource } from '../services/shipping-data';
 import type { Gtin } from '../value-objects/gtin';
 import type { Dimensions, ImageRef } from './product';
 
@@ -56,7 +57,12 @@ export function hasVariantData(variant: Variant): boolean {
     variant.price !== null ||
     variant.compareAtPrice !== null ||
     variant.stock.kind !== 'undefined' ||
-    variant.images.length > 0
+    variant.images.length > 0 ||
+    // 002: también su GTIN y su peso y dimensiones propios. Una variante con GTIN que se borrara
+    // dejaría el código reservado sin variante de la cual quitarlo (FR-030).
+    variant.gtin !== null ||
+    variant.weightGrams !== null ||
+    variant.dimensionsMm !== null
   );
 }
 
@@ -90,9 +96,20 @@ export function createIncompleteVariant(input: {
 export interface VariantSummary {
   readonly variantCount: number;
   readonly hasIncompleteVariants: boolean;
+  /** "Faltan datos de envío" (FR-017 de la 002): depende del producto y de sus variantes en circulación. */
+  readonly missingShippingData: boolean;
 }
 
-export function summarizeVariants(variants: readonly Variant[]): VariantSummary {
+/**
+ * Lo que el producto resume de sus variantes, recalculado cada vez que cambian. Desde la 002 incluye
+ * los datos de envío faltantes: con peso y dimensiones por variante (FR-015), archivar una o agregar
+ * otra puede cambiar la marca.
+ */
+export function summarizeVariants(product: ProductShippingSource, variants: readonly Variant[]): VariantSummary {
   const live = variants.filter((variant) => !variant.archived);
-  return { variantCount: live.length, hasIncompleteVariants: live.some((variant) => !isVariantComplete(variant)) };
+  return {
+    variantCount: live.length,
+    hasIncompleteVariants: live.some((variant) => !isVariantComplete(variant)),
+    missingShippingData: missingShippingData(product, live),
+  };
 }

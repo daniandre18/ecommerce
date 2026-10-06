@@ -1,6 +1,13 @@
-import { SetProductShipping, SetProductSlug, SetProductType, SetSaleConditions } from '@ecommerce/application';
+import { SetProductShipping, SetProductSlug, SetProductType, SetSaleConditions, SetVariantGtin, SetVariantShipping } from '@ecommerce/application';
 import { callableFactory, type CallableDependencies } from '../bootstrap/callable';
-import { parseSetProductShipping, parseSetProductSlug, parseSetProductType, parseSetSaleConditions } from '../bootstrap/parse';
+import {
+  parseSetProductShipping,
+  parseSetProductSlug,
+  parseSetProductType,
+  parseSetSaleConditions,
+  parseSetVariantGtin,
+  parseSetVariantShipping,
+} from '../bootstrap/parse';
 
 /**
  * La ficha de tienda (`specs/002-storefront-catalog/contracts/callable-functions.md`): exigen
@@ -14,5 +21,8 @@ export function storefrontCallables(deps: CallableDependencies) {
     setProductShipping: defineCallable('setProductShipping', SetProductShipping, parseSetProductShipping),
     setProductType: defineCallable('setProductType', SetProductType, parseSetProductType, { writesAudit: true }),
     setSaleConditions: defineCallable('setSaleConditions', SetSaleConditions, parseSetSaleConditions, { writesAudit: true }),
+    // Historia 4: datos por variante, de catálogo.
+    setVariantGtin: defineCallable('setVariantGtin', SetVariantGtin, parseSetVariantGtin),
+    setVariantShipping: defineCallable('setVariantShipping', SetVariantShipping, parseSetVariantShipping),
   };
 }

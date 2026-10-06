@@ -22,7 +22,7 @@ function decorated(decorate: (tx: TransactionScope) => TransactionScope): Callab
 }
 
 /** Una escritura más, a un documento que no existe: la confirmación entera falla. */
-const failCommit = (tx: TransactionScope) => tx.products.updateVariantSummary(productId('no-existe'), { variantCount: 0, hasIncompleteVariants: false });
+const failCommit = (tx: TransactionScope) => tx.products.updateVariantSummary(productId('no-existe'), { variantCount: 0, hasIncompleteVariants: false, missingShippingData: false });
 
 const archived = async () => (await db.doc('tenants/t1/products/p1').get()).get('archived') as boolean;
 const sections = async () => (await db.doc('tenants/t1/storefront/sections').get()).data();

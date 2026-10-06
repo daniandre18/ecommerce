@@ -28,6 +28,8 @@ import type {
   CategoryPruner,
   CategoryTreeRepository,
   FeaturedSectionsRepository,
+  GtinIndexEntry,
+  GtinIndexRepository,
   InvitationRepository,
   MembershipRepository,
   ProductRepository,
@@ -63,6 +65,8 @@ export class InMemoryStore {
   vocabulary: Vocabulary = emptyVocabulary();
   categoryTree: CategoryTree = emptyCategoryTree();
   sections: FeaturedSections = emptySections();
+  /** Por GTIN normalizado a 14 dígitos. */
+  gtinIndex = new Map<string, GtinIndexEntry>();
 
   clone(): InMemoryStore {
     const copy = new InMemoryStore();
@@ -79,6 +83,7 @@ export class InMemoryStore {
     copy.vocabulary = this.vocabulary;
     copy.categoryTree = this.categoryTree;
     copy.sections = this.sections;
+    copy.gtinIndex = new Map(this.gtinIndex);
     return copy;
   }
 
@@ -226,7 +231,18 @@ function scopeOver(s: InMemoryStore): TransactionScope {
     },
   };
 
-  return { tenant, audit, members, invitations, roles, products, variants, costs, skuIndex, slugIndex, vocabulary, categories, sections };
+  const gtinIndex: GtinIndexRepository = {
+    find: async (value) => s.gtinIndex.get(value.normalized) ?? null,
+    reserve: async (entry) => {
+      if (s.gtinIndex.has(entry.gtin.normalized)) throw new DocumentAlreadyExistsError(entry.gtin.normalized);
+      s.gtinIndex.set(entry.gtin.normalized, entry);
+    },
+    release: async (value) => {
+      s.gtinIndex.delete(value.normalized);
+    },
+  };
+
+  return { tenant, audit, members, invitations, roles, products, variants, costs, skuIndex, slugIndex, vocabulary, categories, sections, gtinIndex };
 }
 
 /** Como `update` en Firestore: falla si la entrada no existe. */

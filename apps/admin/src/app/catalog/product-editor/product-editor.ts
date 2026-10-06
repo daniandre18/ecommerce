@@ -24,6 +24,7 @@ import { ProductVideo } from '../image-upload/product-video';
 import { VariantTable } from '../variant-table/variant-table';
 import { CategoriesSection } from './categories-section/categories-section';
 import { DetailsSection } from './details-section';
+import { ExternalCatalogsSection } from './external-catalogs-section/external-catalogs-section';
 import { OptionsEditor } from './options-editor/options-editor';
 import { PresentationSection } from './presentation-section/presentation-section';
 import { StatusControl } from './status-control/status-control';
@@ -52,6 +53,7 @@ const STATUS_LABELS: Record<Product['status'], string> = { draft: 'Borrador', ac
     ShippingSection,
     PresentationSection,
     CategoriesSection,
+    ExternalCatalogsSection,
     ImageUpload,
     ProductVideo,
     StatusControl,

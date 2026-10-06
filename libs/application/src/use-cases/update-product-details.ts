@@ -1,5 +1,8 @@
 import {
   adjustVocabulary,
+  AGE_GROUPS,
+  GENDERS,
+  MAX_MPN_LENGTH,
   canonicalTerm,
   MAX_BRAND_LENGTH,
   MAX_SEO_DESCRIPTION,
@@ -7,7 +10,9 @@ import {
   normalizeTags,
   parseVideoUrl,
   TagLimitError,
+  type AgeGroup,
   type ExternalVideo,
+  type Gender,
   type ImageRef,
   type Product,
   type ProductId,
@@ -34,6 +39,10 @@ export interface UpdateProductDetailsInput {
   readonly brand?: string | null;
   /** Un enlace de YouTube o Vimeo con su lugar entre las imágenes, o `null` para quitarlo. */
   readonly video?: { readonly url: string; readonly position: number } | null;
+  // Catálogos externos (002, Historia 4, FR-031): `null` los quita.
+  readonly mpn?: string | null;
+  readonly ageGroup?: AgeGroup | null;
+  readonly gender?: Gender | null;
 }
 
 const SUPPORTED_VIDEO = ['YouTube', 'Vimeo'];
@@ -63,6 +72,9 @@ export class UpdateProductDetails {
         ? {}
         : { seoDescription: optionalText(input.seoDescription, MAX_SEO_DESCRIPTION, 'La descripción para buscadores') }),
       ...(input.video === undefined ? {} : { video: video(input.video) }),
+      ...(input.mpn === undefined ? {} : { mpn: optionalText(input.mpn, MAX_MPN_LENGTH, 'El MPN') }),
+      ...(input.ageGroup === undefined ? {} : { ageGroup: closed(input.ageGroup, AGE_GROUPS, 'El rango de edad') }),
+      ...(input.gender === undefined ? {} : { gender: closed(input.gender, GENDERS, 'El género') }),
       ...(terms?.fields ?? {}),
       ...(slugChange ? { slug: slugChange.slug, slugNeedsReplacement: slugChange.needsReplacement } : {}),
       updatedAt: this.deps.clock.now(),
@@ -132,4 +144,12 @@ function video(input: { readonly url: string; readonly position: number } | null
     throw new BusinessRuleError('invalid-argument', 'La posición del video no es válida', { position: input.position });
   }
   return { ...parsed, position: input.position };
+}
+
+/** Un valor de una lista cerrada (FR-031), o `null`. El parseo ya lo filtra; esto lo garantiza. */
+function closed<T extends string>(value: T | null, allowed: readonly T[], field: string): T | null {
+  if (value !== null && !allowed.includes(value)) {
+    throw new BusinessRuleError('invalid-argument', `${field} no es uno de los valores admitidos`, { field, allowed });
+  }
+  return value;
 }

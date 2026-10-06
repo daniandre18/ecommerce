@@ -1,4 +1,5 @@
 import {
+  type Dimensions,
   fallbackSlug,
   nextSlugCandidate,
   slugify,
@@ -71,4 +72,13 @@ export function positiveInteger(value: number, field: string): number {
     throw new BusinessRuleError('invalid-argument', `${field} debe ser un entero mayor que cero`, { field, value });
   }
   return value;
+}
+
+/** Largo, ancho y alto en milímetros: los tres, enteros mayores que cero (FR-014, FR-015). */
+export function dimensions(value: Dimensions): Dimensions {
+  return {
+    length: positiveInteger(value.length, 'El largo'),
+    width: positiveInteger(value.width, 'El ancho'),
+    height: positiveInteger(value.height, 'El alto'),
+  };
 }

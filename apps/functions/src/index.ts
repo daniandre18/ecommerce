@@ -32,7 +32,7 @@ export const {
 
 export const { setVariantPrice, setVariantCost, setVariantStock } = pricingCallables(deps);
 
-export const { setProductSlug, setProductShipping, setProductType, setSaleConditions } = storefrontCallables(deps);
+export const { setProductSlug, setProductShipping, setProductType, setSaleConditions, setVariantGtin, setVariantShipping } = storefrontCallables(deps);
 
 export const { addToSection, removeFromSection } = sectionCallables(deps);
 

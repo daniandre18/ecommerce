@@ -77,7 +77,7 @@ export class SetProductOptions {
     const updated = bumped({
       ...product,
       options: input.options,
-      ...summarizeVariants([...preserved, ...created]),
+      ...summarizeVariants(product, [...preserved, ...created]),
       updatedAt: this.deps.clock.now(),
     });
     await tx.products.save(updated);

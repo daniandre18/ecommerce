@@ -13,6 +13,8 @@ export * from './use-cases/storefront/set-product-slug';
 export * from './use-cases/storefront/set-product-type';
 export * from './use-cases/storefront/set-product-shipping';
 export * from './use-cases/storefront/set-sale-conditions';
+export * from './use-cases/storefront/set-variant-gtin';
+export * from './use-cases/storefront/set-variant-shipping';
 export * from './use-cases/storefront/backfill';
 export * from './use-cases/categories/tree';
 export * from './use-cases/categories/assign';

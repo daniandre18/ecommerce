@@ -3,6 +3,7 @@ import type { TenantId } from '@ecommerce/domain';
 import type { Firestore, Transaction } from 'firebase-admin/firestore';
 import { auditLogRepository } from './repositories/audit-log.repository';
 import { categoryTreeRepository } from './repositories/category-tree.repository';
+import { gtinIndexRepository } from './repositories/gtin-index.repository';
 import { invitationRepository } from './repositories/invitation.repository';
 import {
   productRepository,
@@ -33,6 +34,7 @@ function transactionScope(t: Transaction, paths: TenantPaths): TransactionScope 
     vocabulary: vocabularyRepository(t, paths),
     categories: categoryTreeRepository(t, paths),
     sections: sectionsRepository(t, paths),
+    gtinIndex: gtinIndexRepository(t, paths),
   };
 }
 

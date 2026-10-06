@@ -68,7 +68,7 @@ describe('ProductEditor', () => {
     const root = await open();
     await arrive();
     expect(root.querySelector('h1')?.textContent).toContain('Camiseta');
-    expect([...root.querySelectorAll('h2')].map((h) => h.textContent?.trim())).toEqual(['Datos', 'En la tienda', 'Tipo y envío', 'Cómo se ofrece', 'Categorías', 'Estado', 'Opciones de variación', 'Variantes (1)']);
+    expect([...root.querySelectorAll('h2')].map((h) => h.textContent?.trim())).toEqual(['Datos', 'En la tienda', 'Tipo y envío', 'Cómo se ofrece', 'Categorías', 'Catálogos externos', 'Estado', 'Opciones de variación', 'Variantes (1)']);
     expect(root.querySelector('h3')?.textContent?.trim()).toBe('Imágenes del producto');
     expect(root.querySelector('[role="group"]')?.textContent).toContain('Única');
   });
@@ -78,7 +78,7 @@ describe('ProductEditor', () => {
     useAccess(READ_ONLY_ACCESS);
     const root = await open();
     await arrive();
-    expect([...root.querySelectorAll('h2')].map((h) => h.textContent?.trim())).toEqual(['Datos', 'En la tienda', 'Tipo y envío', 'Cómo se ofrece', 'Categorías', 'Variantes (1)']);
+    expect([...root.querySelectorAll('h2')].map((h) => h.textContent?.trim())).toEqual(['Datos', 'En la tienda', 'Tipo y envío', 'Cómo se ofrece', 'Categorías', 'Catálogos externos', 'Variantes (1)']);
   });
 
   // Hallado por loading-states.spec.ts (falló 1 de 6 con un salto de 0,029): si el acceso de la cuenta

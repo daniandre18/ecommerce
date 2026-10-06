@@ -33,6 +33,8 @@ export class CallableCatalogCommands implements CatalogCommands {
   setSaleConditions: CatalogCommands['setSaleConditions'] = (tenantId, input) => this.call('setSaleConditions', tenantId, input);
   addToSection: CatalogCommands['addToSection'] = (tenantId, input) => this.call('addToSection', tenantId, input);
   removeFromSection: CatalogCommands['removeFromSection'] = (tenantId, input) => this.call('removeFromSection', tenantId, input);
+  setVariantGtin: CatalogCommands['setVariantGtin'] = (tenantId, input) => this.call('setVariantGtin', tenantId, input);
+  setVariantShipping: CatalogCommands['setVariantShipping'] = (tenantId, input) => this.call('setVariantShipping', tenantId, input);
 
   private call<T>(name: string, tenantId: TenantId, input: object): Promise<CommandResult<T>> {
     return callCommand<T>(this.functions, name, { ...input, tenantId });

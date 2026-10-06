@@ -7,6 +7,8 @@ import {
   parseSection,
   parseSetProductCategories,
   parseSetSaleConditions,
+  parseSetVariantGtin,
+  parseSetVariantShipping,
   parseSetProductOptions,
   parseSetVariantPrice,
   parseSetVariantImages,
@@ -176,6 +178,44 @@ describe('parseo de la entrada de las callable', () => {
         field: 'changes[1].version',
       });
       expect(rejection(() => parseSetSaleConditions({ changes: [], priceVisible: 'no' })).details).toEqual({ field: 'priceVisible' });
+    });
+  });
+
+  describe('datos por variante y catálogos externos (002, Historia 4)', () => {
+    it('el GTIN viaja como texto; null lo quita; ausente se rechaza', () => {
+      expect(parseSetVariantGtin({ productId: 'p1', variantId: 'v1', version: 1, gtin: '4006381333931' })).toEqual({
+        productId: 'p1',
+        variantId: 'v1',
+        version: 1,
+        gtin: '4006381333931',
+      });
+      expect(parseSetVariantGtin({ productId: 'p1', variantId: 'v1', version: 1, gtin: null }).gtin).toBeNull();
+      expect(rejection(() => parseSetVariantGtin({ productId: 'p1', variantId: 'v1', version: 1 })).details).toEqual({ field: 'gtin' });
+    });
+
+    it('envío por variante: lo ausente no viaja, null vuelve a heredar', () => {
+      expect(parseSetVariantShipping({ productId: 'p1', changes: [{ variantId: 'v1', version: 2, weightGrams: 450 }, { variantId: 'v2', version: 1, dimensionsMm: null }] })).toEqual({
+        productId: 'p1',
+        changes: [
+          { variantId: 'v1', version: 2, weightGrams: 450 },
+          { variantId: 'v2', version: 1, dimensionsMm: null },
+        ],
+      });
+      expect(rejection(() => parseSetVariantShipping({ productId: 'p1', changes: [{ variantId: 'v1', version: 1, dimensionsMm: { length: 1, width: 2 } }] })).details).toEqual({
+        field: 'changes[0].dimensionsMm.height',
+      });
+    });
+
+    it('MPN, rango de edad y género en los datos del producto; fuera de las listas, inválido', () => {
+      expect(parseUpdateProductDetails({ productId: 'p1', version: 1, mpn: 'X-1', ageGroup: 'adult', gender: null })).toEqual({
+        productId: 'p1',
+        version: 1,
+        mpn: 'X-1',
+        ageGroup: 'adult',
+        gender: null,
+      });
+      expect(rejection(() => parseUpdateProductDetails({ productId: 'p1', version: 1, ageGroup: 'teen' })).details).toEqual({ field: 'ageGroup' });
+      expect(rejection(() => parseUpdateProductDetails({ productId: 'p1', version: 1, gender: 'otro' })).details).toEqual({ field: 'gender' });
     });
   });
 });

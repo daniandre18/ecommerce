@@ -58,8 +58,9 @@ export class CreateProduct {
       productId: id,
       optionValues: {},
     });
+    const defaults = storefrontDefaults();
     await tx.products.save({
-      ...storefrontDefaults(),
+      ...defaults,
       slug,
       slugNeedsReplacement: needsReplacement,
       id,
@@ -71,7 +72,7 @@ export class CreateProduct {
       options: [],
       status: 'draft',
       archived: false,
-      ...summarizeVariants([implicit]),
+      ...summarizeVariants(defaults, [implicit]),
       createdAt: now,
       updatedAt: now,
       version: 1,

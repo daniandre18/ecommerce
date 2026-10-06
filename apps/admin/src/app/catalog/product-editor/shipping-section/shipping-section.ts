@@ -18,6 +18,7 @@ import { commandErrorMessage } from '../../../shared/command-errors';
 import { keepUnsaved } from '../../../shared/keep-unsaved';
 import { trackUnsaved } from '../../../shared/pending-changes/pending-changes';
 import { injectCan } from '../../../tenant/current-access';
+import { amount, show } from '../../shared/shipping-units';
 
 /** Lo que se escribe: kilos y centímetros, como texto, para no pelear con la coma decimal. */
 interface Measures {
@@ -27,7 +28,6 @@ interface Measures {
   height: string;
 }
 
-const show = (value: number | null | undefined, unit: number) => (value == null ? '' : String(value / unit));
 const measuresOf = (product: Product): Measures => ({
   weight: show(product.weightGrams, 1000),
   length: show(product.dimensionsMm?.length, 10),
@@ -150,11 +150,4 @@ function parseMeasures(m: Measures): { weightGrams: number | null; dimensionsMm:
     weightGrams: weight,
     dimensionsMm: length != null && width != null && height != null ? { length, width, height } : null,
   };
-}
-
-function amount(written: string, unit: number): number | null | 'invalid' {
-  const text = written.trim().replace(',', '.');
-  if (text === '') return null;
-  const value = Math.round(Number(text) * unit);
-  return Number.isFinite(value) && value > 0 ? value : 'invalid';
 }

@@ -43,6 +43,7 @@ export class ArchiveVariant {
     _ctx: OperationContext,
     input: { readonly productId: ProductId; readonly variantId: VariantId; readonly version: number },
   ): Promise<{ version: number }> {
+    const product = await loadProduct(tx, input.productId);
     const variants = await tx.variants.findByProduct(input.productId);
     const variant = findLiveVariant(variants, input.variantId);
     assertVersion(variant, input.version);
@@ -58,7 +59,7 @@ export class ArchiveVariant {
     const updated = bumped({ ...variant, archived: true });
     await tx.variants.save(updated);
     if (variant.sku) await tx.skuIndex.markArchived(variant.sku.normalized);
-    await tx.products.updateVariantSummary(input.productId, summarizeVariants(remaining));
+    await tx.products.updateVariantSummary(input.productId, summarizeVariants(product, remaining));
     return { version: updated.version };
   }
 }

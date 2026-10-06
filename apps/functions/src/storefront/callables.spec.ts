@@ -32,7 +32,7 @@ describe('callable de la ficha de tienda', () => {
     );
   });
 
-  it.each(['setProductSlug', 'setProductShipping', 'setProductType'] as const)(
+  it.each(['setProductSlug', 'setProductShipping', 'setProductType', 'setVariantGtin', 'setVariantShipping'] as const)(
     '%s: un miembro sin catalog.write recibe permission-denied y queda el evento',
     async (name) => {
       addReader(h);
@@ -43,7 +43,7 @@ describe('callable de la ficha de tienda', () => {
   );
 
   // SC-004: una cuenta que no es del comercio no opera sobre él aunque mande su id.
-  it.each(['setProductSlug', 'setProductShipping', 'setProductType'] as const)(
+  it.each(['setProductSlug', 'setProductShipping', 'setProductType', 'setVariantGtin', 'setVariantShipping'] as const)(
     '%s: con el tenantId de otro comercio, permission-denied y evento cross-tenant-access',
     async (name) => {
       const code = await httpsErrorCode(
@@ -53,6 +53,25 @@ describe('callable de la ficha de tienda', () => {
       expect(h.securityEvents.events).toEqual([expect.objectContaining({ kind: 'cross-tenant-access' })]);
     },
   );
+
+  // T086 (002, Historia 4): el rol de Catálogo carga el GTIN y el envío por variante.
+  it('el rol de Catálogo carga el GTIN y el peso propio de una variante', async () => {
+    const variantId = [...h.t1.store.variants.values()][0]?.id;
+    await expect(storefront.setVariantGtin.run(callAs('ana', { productId: 'p1', variantId, version: 1, gtin: '4006381333931' }))).resolves.toEqual({
+      ok: true,
+      data: { version: 2 },
+    });
+    await expect(
+      storefront.setVariantShipping.run(callAs('ana', { productId: 'p1', changes: [{ variantId, version: 2, weightGrams: 450 }] })),
+    ).resolves.toEqual(expect.objectContaining({ ok: true }));
+  });
+
+  it('un GTIN inválido viaja en la envoltura con su motivo', async () => {
+    const variantId = [...h.t1.store.variants.values()][0]?.id;
+    await expect(storefront.setVariantGtin.run(callAs('ana', { productId: 'p1', variantId, version: 1, gtin: '4006381333932' }))).resolves.toEqual(
+      expect.objectContaining({ ok: false, code: 'invalid-gtin', details: { reason: 'check-digit' } }),
+    );
+  });
 
   // T067 (002, Historia 3) — FR-003 y SC-002: precio visible y envío gratis son decisiones de precio.
   // El rol de Catálogo, que sí edita el catálogo, recibe permission-denied y queda el evento.

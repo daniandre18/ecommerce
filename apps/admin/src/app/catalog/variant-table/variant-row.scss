@@ -6,7 +6,9 @@
 
 .header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  column-gap: 4px;
   margin-bottom: 8px;
 }
 
@@ -38,4 +40,20 @@
 
 mat-form-field {
   min-width: 0;
+}
+
+/* Historia 4 de la 002: el código de barras y el envío, plegados después de los campos de siempre. */
+.more-summary {
+  margin: 8px 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+  overflow-wrap: anywhere;
+}
+
+.more-fields {
+  margin-top: 8px;
+}
+
+.release {
+  align-self: center;
 }

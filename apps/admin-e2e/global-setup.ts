@@ -23,6 +23,8 @@ const CALLABLES = [
   'setProductSlug',
   'setProductShipping',
   'setProductType',
+  'setVariantGtin',
+  'setVariantShipping',
   'setSaleConditions',
   'addToSection',
   'removeFromSection',

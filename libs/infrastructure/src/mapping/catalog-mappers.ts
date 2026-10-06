@@ -3,6 +3,7 @@ import {
   AGE_GROUPS,
   categoryId,
   GENDERS,
+  gtin,
   money,
   optionId,
   PRODUCT_KINDS,
@@ -289,13 +290,12 @@ function videoFromDoc(value: unknown): ExternalVideo | null {
 }
 
 /**
- * Permisivo por ahora, solo porque la factoría `gtin()` todavía no existe: llega con T087
- * (Historia 4), que cambia esto por ella, como se hizo con `slug()` en T027.
+ * Con la factoría `gtin()` (T087), como la URL con `slug()`: uno inválido es corrupción y falla al
+ * leerlo, y la forma normalizada se recalcula desde la escrita.
  */
 function gtinFromDoc(value: unknown): Gtin | null {
   if (value == null) return null;
-  const { raw, normalized } = value as { raw: unknown; normalized: unknown };
-  return { raw: String(raw), normalized: String(normalized) };
+  return gtin(String((value as { raw: unknown }).raw));
 }
 
 export function stockFromDoc(value: unknown): StockLevel {

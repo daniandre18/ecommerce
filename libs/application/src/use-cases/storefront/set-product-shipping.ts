@@ -4,7 +4,7 @@ import { requirePermission } from '../../ports/authorization';
 import type { OperationContext } from '../../ports/operation-context';
 import type { TransactionScope } from '../../ports/unit-of-work';
 import { assertVersion, bumped, loadProduct, type UseCaseDependencies } from '../shared';
-import { positiveInteger } from './shared';
+import { dimensions, positiveInteger } from './shared';
 
 export interface SetProductShippingInput {
   readonly productId: ProductId;
@@ -39,12 +39,4 @@ export class SetProductShipping {
     await tx.products.save(updated);
     return { version: updated.version };
   }
-}
-
-function dimensions(value: Dimensions): Dimensions {
-  return {
-    length: positiveInteger(value.length, 'El largo'),
-    width: positiveInteger(value.width, 'El ancho'),
-    height: positiveInteger(value.height, 'El alto'),
-  };
 }

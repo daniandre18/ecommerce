@@ -34,7 +34,7 @@ export class SetVariantSku {
     input: SetVariantSkuInput,
   ): Promise<{ version: number; complete: boolean }> {
     const sku = parseSku(input.sku);
-    await loadProduct(tx, input.productId);
+    const product = await loadProduct(tx, input.productId);
     const variants = await tx.variants.findByProduct(input.productId);
     const occupant = await tx.skuIndex.find(sku.normalized);
 
@@ -54,7 +54,7 @@ export class SetVariantSku {
     await tx.variants.save(updated);
     await tx.products.updateVariantSummary(
       input.productId,
-      summarizeVariants(variants.map((v) => (v.id === updated.id ? updated : v))),
+      summarizeVariants(product, variants.map((v) => (v.id === updated.id ? updated : v))),
     );
     return { version: updated.version, complete: isVariantComplete(updated) };
   }

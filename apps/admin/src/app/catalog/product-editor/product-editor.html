@@ -40,6 +40,10 @@
     <app-categories-section [tenantId]="current.tenantId" [product]="current" [tree]="view.tree" />
   </section>
 
+  <section aria-labelledby="catalogos-externos">
+    <app-external-catalogs-section [tenantId]="current.tenantId" [product]="current" />
+  </section>
+
   <section>
     <app-image-upload
       heading="Imágenes del producto"

@@ -3,6 +3,7 @@ import type {
   CategoryId,
   CategoryTree,
   FeaturedSections,
+  Gtin,
   Invitation,
   InvitationId,
   Membership,
@@ -171,4 +172,25 @@ export interface FeaturedSectionsRepository {
   /** Las dos vacías si todavía no existe. */
   get(): Promise<FeaturedSections>;
   save(sections: FeaturedSections): Promise<void>;
+}
+
+/** Un GTIN reservado (FR-030 de la 002). El id de cada entrada es el GTIN normalizado a 14 dígitos. */
+export interface GtinIndexEntry {
+  /** La forma escrita, para mostrar. */
+  readonly gtin: Gtin;
+  readonly productId: ProductId;
+  readonly variantId: VariantId;
+}
+
+/**
+ * Unicidad del GTIN dentro del comercio, como `SkuIndexRepository`, con una diferencia: no hay marca
+ * de archivada, porque archivar no libera. El GTIN de una variante archivada sigue reservado, y la
+ * única forma de liberarlo es quitárselo (FR-030).
+ */
+export interface GtinIndexRepository {
+  find(gtin: Gtin): Promise<GtinIndexEntry | null>;
+  /** Crea la reserva. Si el GTIN ya existe, falla al confirmar: la colisión es atómica (`tx.create`). */
+  reserve(entry: { gtin: Gtin; productId: ProductId; variantId: VariantId }): Promise<void>;
+  /** Único camino para liberarlo: quitar el GTIN de su variante, archivada o no. */
+  release(gtin: Gtin): Promise<void>;
 }

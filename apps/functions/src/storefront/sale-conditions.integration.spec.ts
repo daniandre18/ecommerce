@@ -83,7 +83,7 @@ describe('atomicidad de setSaleConditions con su bitácora', () => {
         ...tx.products,
         save: async (product) => {
           await tx.products.save(product);
-          await tx.products.updateVariantSummary(productId('no-existe'), { variantCount: 0, hasIncompleteVariants: false });
+          await tx.products.updateVariantSummary(productId('no-existe'), { variantCount: 0, hasIncompleteVariants: false, missingShippingData: false });
         },
       },
     }));

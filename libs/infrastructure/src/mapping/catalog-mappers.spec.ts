@@ -1,11 +1,12 @@
 import {
   categoryId,
+  gtin,
+  InvalidGtinError,
   InvalidSlugError,
   productId,
   stockUndefined,
   tenantId,
   variantId,
-  type Gtin,
   type Product,
   type Slug,
   type Variant,
@@ -147,7 +148,7 @@ describe('ida y vuelta de los campos de la 002', () => {
       images: [],
       archived: false,
       version: 1,
-      gtin: { raw: '7501031311309', normalized: '07501031311309' } as Gtin,
+      gtin: gtin('7501031311309'),
       weightGrams: 450,
       dimensionsMm: { length: 600, width: 400, height: 30 },
     };
@@ -165,6 +166,28 @@ describe('URL amigable guardada', () => {
 
   it.each(['Camiseta Básica', 'camiseta--basica', 'a/b', ''])('una mal formada (%j) falla fuerte', (value) => {
     expect(() => productFromDoc('p1', 't1', { ...PRODUCT_001, slug: value })).toThrow(InvalidSlugError);
+  });
+});
+
+// T087: el GTIN se reconstruye con la factoría `gtin()`, como la URL con `slug()`. Uno con el dígito
+// de control mal es corrupción y falla al leerlo; la forma normalizada se recalcula desde la escrita,
+// así nunca puede discrepar de la que es id en `gtinIndex`.
+describe('GTIN guardado', () => {
+  const variantDoc = (stored: unknown) => ({ optionValues: {}, sku: null, price: null, compareAtPrice: null, stock: { kind: 'undefined' }, images: [], archived: false, version: 1, gtin: stored });
+
+  it('uno válido se lee con su forma normalizada', () => {
+    expect(variantFromDoc('v1', 't1', 'p1', variantDoc({ raw: '4006381333931', normalized: 'otra-cosa' })).gtin).toEqual({
+      raw: '4006381333931',
+      normalized: '04006381333931',
+    });
+  });
+
+  it('sin GTIN se lee como null', () => {
+    expect(variantFromDoc('v1', 't1', 'p1', variantDoc(null)).gtin).toBeNull();
+  });
+
+  it.each(['4006381333932', '12345', 'abc'])('uno inválido (%j) falla fuerte', (raw) => {
+    expect(() => variantFromDoc('v1', 't1', 'p1', variantDoc({ raw, normalized: raw }))).toThrow(InvalidGtinError);
   });
 });
 

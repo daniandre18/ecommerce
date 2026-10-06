@@ -228,6 +228,8 @@ export function fakeCatalogCommands(): Mocked<CatalogCommands> {
     setSaleConditions: pending(),
     addToSection: pending(),
     removeFromSection: pending(),
+    setVariantGtin: pending(),
+    setVariantShipping: pending(),
   } as unknown as Mocked<CatalogCommands>;
 }
 

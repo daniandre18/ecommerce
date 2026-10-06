@@ -3,6 +3,8 @@ import type { BusinessErrorCode } from '../errors';
 import type { BulkCategoryInput, SetProductCategoriesInput } from '../use-cases/categories/assign';
 import type { SectionInput, SectionOutput } from '../use-cases/sections/sections';
 import type { SetSaleConditionsInput, SetSaleConditionsOutput } from '../use-cases/storefront/set-sale-conditions';
+import type { SetVariantGtinInput } from '../use-cases/storefront/set-variant-gtin';
+import type { SetVariantShippingInput } from '../use-cases/storefront/set-variant-shipping';
 import type { CreateCategoryInput, MoveCategoryInput } from '../use-cases/categories/tree';
 import type { CreateProductInput } from '../use-cases/create-product';
 import type { SetProductOptionsInput, SetProductOptionsOutput } from '../use-cases/set-product-options';
@@ -91,4 +93,8 @@ export interface CatalogCommands {
   setSaleConditions(tenantId: TenantId, input: SetSaleConditionsInput): Promise<CommandResult<SetSaleConditionsOutput>>;
   addToSection(tenantId: TenantId, input: SectionInput): Promise<CommandResult<SectionOutput>>;
   removeFromSection(tenantId: TenantId, input: SectionInput): Promise<CommandResult<SectionOutput>>;
+  // Historia 4: datos por variante.
+  /** `gtin-conflict` nombra el producto que lo tiene y si está archivado (FR-030). */
+  setVariantGtin(tenantId: TenantId, input: SetVariantGtinInput): Promise<CommandResult<Version>>;
+  setVariantShipping(tenantId: TenantId, input: SetVariantShippingInput): Promise<CommandResult<{ readonly versions: Readonly<Record<VariantId, number>> }>>;
 }

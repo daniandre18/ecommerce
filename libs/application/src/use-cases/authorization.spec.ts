@@ -18,6 +18,8 @@ import { SetProductShipping } from './storefront/set-product-shipping';
 import { SetProductSlug } from './storefront/set-product-slug';
 import { SetProductType } from './storefront/set-product-type';
 import { SetSaleConditions } from './storefront/set-sale-conditions';
+import { SetVariantGtin } from './storefront/set-variant-gtin';
+import { SetVariantShipping } from './storefront/set-variant-shipping';
 import { ctx, NOW, T1 } from './testing/fixture';
 import { UpdateProductDetails } from './update-product-details';
 
@@ -47,6 +49,9 @@ const CATALOG = [
   // 002, Historia 3 (T067): las secciones destacadas son de catálogo; las condiciones de venta, no.
   AddToSection,
   RemoveFromSection,
+  // 002, Historia 4 (T086): el GTIN y el envío por variante son datos de catálogo.
+  SetVariantGtin,
+  SetVariantShipping,
 ];
 
 /** ¿Pasa la autorización una cuenta con exactamente estos permisos? */
