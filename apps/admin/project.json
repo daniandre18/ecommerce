@@ -15,7 +15,8 @@
         "tsConfig": "apps/admin/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
         "assets": [{ "glob": "**/*", "input": "apps/admin/public" }],
-        "styles": ["apps/admin/src/styles.scss"]
+        "styles": ["apps/admin/src/styles.scss"],
+        "fileReplacements": [{ "replace": "node_modules/re2js/build/index.js", "with": "apps/admin/src/vendor/re2js.js" }]
       },
       "configurations": {
         "production": {
@@ -25,8 +26,13 @@
           ],
           "outputHashing": "all",
           "fileReplacements": [
-            { "replace": "apps/admin/src/environments/environment.ts", "with": "apps/admin/src/environments/environment.production.ts" }
+            { "replace": "apps/admin/src/environments/environment.ts", "with": "apps/admin/src/environments/environment.production.ts" },
+            { "replace": "node_modules/re2js/build/index.js", "with": "apps/admin/src/vendor/re2js.js" }
           ]
+        },
+        "measure": {
+          "outputHashing": "all",
+          "outputPath": "dist/apps/admin-measure"
         },
         "development": {
           "optimization": false,

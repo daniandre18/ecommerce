@@ -10,6 +10,10 @@
       "executor": "nx:run-commands",
       "options": { "command": "playwright test --config apps/admin-e2e/playwright.config.ts" }
     },
+    "perf": {
+      "executor": "nx:run-commands",
+      "options": { "command": "playwright test --config apps/admin-e2e/playwright.perf.config.ts" }
+    },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": { "command": "tsc -p apps/admin-e2e/tsconfig.json --noEmit" }

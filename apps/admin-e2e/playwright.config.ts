@@ -8,6 +8,8 @@ const APP_URL = 'http://localhost:4200';
  */
 export default defineConfig({
   testDir: './src',
+  // El rendimiento se mide aparte, sobre el build optimizado: `nx run admin-e2e:perf`.
+  testIgnore: 'performance.spec.ts',
   globalSetup: './global-setup.ts',
   // En serie: todas las pruebas comparten el comercio sembrado en los emuladores. Con varios
   // navegadores a la vez se observaron cuelgues intermitentes —navegadores ociosos esperando, con

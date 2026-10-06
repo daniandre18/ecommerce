@@ -207,8 +207,8 @@ intención.
 
 Ninguno bloquea la implementación. Para la feature de observabilidad: objetivo de disponibilidad,
 señales más allá de los eventos de seguridad, y límites de abuso en el envío de invitaciones.
-Quedan sin cuantificar "conexión móvil típica" (SC-009) y "sin degradación perceptible" (SC-008);
-conviene fijarlos al escribir las pruebas de rendimiento. Y la búsqueda arranca sin motor dedicado,
+"Conexión móvil típica" (SC-009) es el perfil móvil de Lighthouse —Slow 4G, CPU ×4— y "sin
+degradación perceptible" (SC-008), a lo sumo +20% o +100 ms; los fija `performance.spec.ts` (T099). Y la búsqueda arranca sin motor dedicado,
 con un disparador explícito para sumarlo (`research.md` §7).
 
 ### Nota para la implementación
