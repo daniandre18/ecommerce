@@ -105,4 +105,33 @@ test.describe('accesibilidad', () => {
     await loaded(page);
     await expectAccessible(page);
   });
+
+  // 002, Historia 2 (T062): el árbol de categorías, con un aviso abierto y la sección del producto.
+  test('categorías: el árbol, sus avisos y la sección del producto', async ({ page }) => {
+    const run = Date.now();
+    const owner = await idTokenOf(OWNER);
+    const create = async (name: string, parentId: string | null) => {
+      const { body } = await call(owner, 'createCategory', { tenantId: 't1', requestId: crypto.randomUUID(), parentId, name });
+      return (body.result as { data: { categoryId: string } }).data.categoryId;
+    };
+    const parent = await create(`Accesible ${run}`, null);
+    const child = await create(`Hija ${run}`, parent);
+    await call(owner, 'setCategoryHidden', { tenantId: 't1', categoryId: child, hidden: true });
+    const { url } = await productAsOwner(`Con categorías ${run}`);
+
+    await page.goto('/login');
+    await signIn(page, OWNER);
+    await page.goto('/t/t1/categories');
+    await loaded(page);
+    await expectAccessible(page);
+    await page.getByRole('button', { name: `Acciones de «Accesible ${run}»` }).click();
+    await page.getByRole('menuitem', { name: 'Ocultar', exact: true }).click();
+    await expect(page.getByText('También queda oculta en la tienda su subcategoría.')).toBeVisible();
+    await expectAccessible(page);
+
+    await page.goto(url);
+    await loaded(page);
+    await expect(page.getByRole('heading', { name: 'Categorías', exact: true })).toBeVisible();
+    await expectAccessible(page);
+  });
 });

@@ -5,11 +5,22 @@ import { MatRadioButton, MatRadioGroup } from '@angular/material/radio';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import type { CommandFailure } from '@ecommerce/application';
-import { canChangeStatus, type Product, type ProductStatus, type TenantId, type Variant, type VariantId } from '@ecommerce/domain';
+import {
+  canChangeStatus,
+  emptySections,
+  SECTION_IDS,
+  type FeaturedSections,
+  type Product,
+  type ProductStatus,
+  type TenantId,
+  type Variant,
+  type VariantId,
+} from '@ecommerce/domain';
 import { firstValueFrom } from 'rxjs';
 import { CATALOG_COMMANDS } from '../../../core/client';
 import { commandErrorMessage } from '../../../shared/command-errors';
 import { ConfirmDialog, type ConfirmData } from '../../../shared/confirm-dialog';
+import { SECTION_LABELS } from '../../shared/sections';
 import { combinationLabel } from '../../shared/variant-labels';
 
 const STATUS_NAMES: Record<ProductStatus, string> = { draft: 'Borrador', active: 'Activo', unlisted: 'No listado' };
@@ -29,6 +40,8 @@ export class StatusControl {
   readonly tenantId = input.required<TenantId>();
   readonly product = input.required<Product>();
   readonly variants = input.required<readonly Variant[]>();
+  /** En qué secciones está: el aviso de archivado dice de cuáles sale (FR-028 de la 002). */
+  readonly sections = input<FeaturedSections>(emptySections());
 
   private readonly commands = inject(CATALOG_COMMANDS);
   private readonly dialog = inject(MatDialog);
@@ -91,7 +104,9 @@ export class StatusControl {
     const product = this.product();
     const data: ConfirmData = {
       title: `¿Archivar «${product.name}»?`,
-      message: 'Sale del catálogo sin borrarse: sus variantes, su historial y sus SKU se conservan, y los SKU quedan reservados.',
+      message: ['Sale del catálogo sin borrarse: sus variantes, su historial y sus SKU se conservan, y los SKU quedan reservados.', leavesSections(this.sections(), product)]
+        .filter(Boolean)
+        .join(' '),
       confirm: 'Archivar producto',
     };
     const confirmed = await firstValueFrom(this.dialog.open<ConfirmDialog, ConfirmData, boolean>(ConfirmDialog, { data }).afterClosed());
@@ -110,4 +125,11 @@ export class StatusControl {
 function rejectedVariants(failure: CommandFailure): readonly VariantId[] {
   const details = failure.details as { variantIds?: unknown } | undefined;
   return Array.isArray(details?.variantIds) ? (details.variantIds as VariantId[]) : [];
+}
+
+/** "Sale de Destacados y de Ofertas, y libera sus lugares." o nada, si no está en ninguna. */
+function leavesSections(sections: FeaturedSections, product: Product): string {
+  const names = SECTION_IDS.filter((section) => sections[section].includes(product.id)).map((section) => SECTION_LABELS[section]);
+  if (names.length === 0) return '';
+  return names.length === 1 ? `Sale de ${names[0]}, y libera su lugar.` : `Sale de ${names.join(' y de ')}, y libera sus lugares.`;
 }

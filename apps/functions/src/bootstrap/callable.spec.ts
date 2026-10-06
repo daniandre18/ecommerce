@@ -99,4 +99,27 @@ describe('defineCallable', () => {
       expect(await httpsErrorCode(echo({ writesAudit: true }).run(callAs('ana', { text: 'hola' })))).toBe('resource-exhausted');
     });
   });
+
+  // 002, Historia 2: la poda de las categorías eliminadas corre DESPUÉS de confirmar (research §2).
+  describe('lo que corre después de confirmar', () => {
+    it('corre con el comercio de la operación, una vez confirmada', async () => {
+      const after = vi.fn().mockResolvedValue(undefined);
+      await expect(echo({ after }).run(callAs('ana', { text: 'hola' }))).resolves.toEqual(expect.objectContaining({ ok: true }));
+      expect(after).toHaveBeenCalledWith('t1');
+    });
+
+    it('no corre si la operación no se confirmó', async () => {
+      const after = vi.fn().mockResolvedValue(undefined);
+      Echo.failure = new BusinessRuleError('not-found', 'no está');
+      await echo({ after }).run(callAs('ana', { text: 'hola' }));
+      expect(after).not.toHaveBeenCalled();
+    });
+
+    it('si falla, la respuesta sigue siendo la de la operación confirmada, y queda en el log', async () => {
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const after = vi.fn().mockRejectedValue(new Error('se cortó'));
+      await expect(echo({ after }).run(callAs('ana', { text: 'hola' }))).resolves.toEqual({ ok: true, data: { text: 'hola', actor: 'ana' } });
+      expect(logged).toHaveBeenCalled();
+    });
+  });
 });

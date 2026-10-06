@@ -54,6 +54,36 @@ describe('callable de la ficha de tienda', () => {
     },
   );
 
+  // T067 (002, Historia 3) — FR-003 y SC-002: precio visible y envío gratis son decisiones de precio.
+  // El rol de Catálogo, que sí edita el catálogo, recibe permission-denied y queda el evento.
+  it('setSaleConditions: el rol de Catálogo recibe permission-denied y queda el evento de seguridad', async () => {
+    const code = await httpsErrorCode(storefront.setSaleConditions.run(callAs('ana', { changes: [{ productId: 'p1', version: version() }], priceVisible: false })));
+    expect(code).toBe('permission-denied');
+    expect(h.securityEvents.events).toEqual([expect.objectContaining({ kind: 'permission-denied', actorUid: 'ana' })]);
+    expect(h.t1.store.products.get(productId('p1'))?.priceVisible).toBe(true);
+  });
+
+  it('setSaleConditions: la Propietaria oculta el precio y queda la entrada', async () => {
+    const result = await storefront.setSaleConditions.run(callAs('owner', { changes: [{ productId: 'p1', version: version() }], priceVisible: false }));
+    expect(result).toEqual(expect.objectContaining({ ok: true, data: expect.objectContaining({ updated: 1 }) }));
+    expect(h.t1.store.audit).toEqual([expect.objectContaining({ type: 'sale-conditions.changed', field: 'price' })]);
+  });
+
+  it('setSaleConditions: con el tenantId de otro comercio, permission-denied y evento cross-tenant-access', async () => {
+    const code = await httpsErrorCode(
+      storefront.setSaleConditions.run(callRequest({ auth: { uid: 'owner' }, data: { tenantId: 't2', changes: [{ productId: 'p1', version: 1 }], priceVisible: false } })),
+    );
+    expect(code).toBe('permission-denied');
+    expect(h.securityEvents.events).toEqual([expect.objectContaining({ kind: 'cross-tenant-access' })]);
+  });
+
+  it('setSaleConditions: los digitales con envío gratis viajan nombrados en la envoltura', async () => {
+    const current = h.t1.store.products.get(productId('p1'));
+    if (current) h.t1.store.products.set(current.id, { ...current, kind: 'digital' });
+    const result = await storefront.setSaleConditions.run(callAs('owner', { changes: [{ productId: 'p1', version: version() }], freeShipping: true }));
+    expect(result).toEqual(expect.objectContaining({ ok: false, code: 'digital-products', details: { productIds: ['p1'], names: ['Camiseta'] } }));
+  });
+
   it('una URL en uso viaja en la envoltura con el producto que la tiene', async () => {
     await catalogCallables(h.deps).createProduct.run(callAs('owner', { requestId: 'p2', name: 'Remera', description: '' }));
     const result = await storefront.setProductSlug.run(callAs('owner', { productId: 'p2', version: 1, slug: 'camiseta' }));

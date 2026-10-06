@@ -19,8 +19,9 @@ const { indexes } = JSON.parse(readFileSync(resolve(import.meta.dirname, '../../
 const matches = (field: IndexField | undefined, expected: IndexField) =>
   field?.fieldPath === expected.fieldPath && field.order === expected.order && field.arrayConfig === expected.arrayConfig;
 
-// T036 — como la bitácora en la 001: el emulador no exige índices compuestos, así que una consulta
-// sin su índice solo falla en producción. Cada filtro del listado, con y sin estado, tiene el suyo.
+// T036 y T057 — como la bitácora en la 001: el emulador no exige índices compuestos, así que una
+// consulta sin su índice solo falla en producción. Cada filtro del listado, con y sin estado, tiene el
+// suyo; el de categoría también, con cada grupo de hasta 30 ids de una rama (research §2).
 describe('índices del listado del catálogo', () => {
   const shapes = Object.entries(PRODUCT_ATTRIBUTE_FILTERS).flatMap(([name, field]) => [
     [`${name}`, [field]] as const,
@@ -60,7 +61,7 @@ describe('índices del listado del catálogo', () => {
     expect(found).toBe(true);
   });
 
-  it('los filtros son los de la Historia 1: etiqueta, marca y datos de envío faltantes', () => {
-    expect(Object.keys(PRODUCT_ATTRIBUTE_FILTERS).sort()).toEqual(['brand', 'missingShippingData', 'tag']);
+  it('los filtros son los de las historias 1 y 2: etiqueta, marca, datos de envío faltantes y categoría', () => {
+    expect(Object.keys(PRODUCT_ATTRIBUTE_FILTERS).sort()).toEqual(['brand', 'categoryIds', 'missingShippingData', 'tag']);
   });
 });

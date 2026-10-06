@@ -88,6 +88,11 @@ export class JsonObject {
     return fromDomain(this.field(key), () => factory(raw));
   }
 
+  /** Una lista de identificadores de dominio; el que no sirve se nombra por su lugar. */
+  ids<T>(key: string, factory: (raw: string) => T): T[] {
+    return this.strings(key).map((raw, index) => fromDomain(`${this.field(key)}[${index}]`, () => factory(raw)));
+  }
+
   /** Importe entero en la unidad mínima de la moneda, nunca negativo. */
   money(key: string): Money {
     const value = this.object(key);

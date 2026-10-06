@@ -1,5 +1,8 @@
 import type {
   AuditEntry,
+  CategoryId,
+  CategoryTree,
+  FeaturedSections,
   Invitation,
   InvitationId,
   Membership,
@@ -82,6 +85,12 @@ export interface ProductRepository {
    * editando su nombre o su descripción.
    */
   updateVariantSummary(id: ProductId, summary: VariantSummary): Promise<void>;
+  /**
+   * Solo `categoryIds`, SIN tocar la versión ni la fecha de edición (research §2 de la 002): asignar
+   * y quitar categorías son operaciones de conjunto, conmutativas, que no deben provocar un conflicto
+   * a quien está editando el producto.
+   */
+  updateCategories(id: ProductId, categoryIds: readonly CategoryId[]): Promise<void>;
 }
 
 export interface VariantRepository {
@@ -135,4 +144,31 @@ export interface VocabularyRepository {
   /** Vacío si todavía no existe. */
   get(): Promise<Vocabulary>;
   save(vocabulary: Vocabulary): Promise<void>;
+}
+
+/** El árbol entero de categorías, en un solo documento (research §1 de la 002). */
+export interface CategoryTreeRepository {
+  /** Vacío si todavía no existe. */
+  get(): Promise<CategoryTree>;
+  save(tree: CategoryTree): Promise<void>;
+}
+
+/**
+ * Quita de los productos los ids de categorías eliminadas (research §2 de la 002). Corre FUERA de la
+ * transacción, después de confirmar, en lotes: escribe solo `categoryIds`. Es idempotente y puede
+ * cortarse a la mitad; lo que queda sin podar se ignora al leer y lo termina la operación siguiente.
+ */
+export interface CategoryPruner {
+  prune(ids: readonly CategoryId[]): Promise<void>;
+}
+
+/**
+ * Destacados y Ofertas, en un solo documento (research §4 de la 002). El tope de 40 se verifica
+ * dentro de la transacción sobre la misma lista que se escribe: dos agregados simultáneos se
+ * serializan, y el segundo ve la lista ya actualizada.
+ */
+export interface FeaturedSectionsRepository {
+  /** Las dos vacías si todavía no existe. */
+  get(): Promise<FeaturedSections>;
+  save(sections: FeaturedSections): Promise<void>;
 }

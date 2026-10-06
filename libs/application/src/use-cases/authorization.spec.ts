@@ -5,6 +5,9 @@ import type { OperationContext } from '../ports/operation-context';
 import { RoleBasedAuthorizationService } from '../services/authorization.service';
 import { InMemoryUnitOfWork } from '../testing/in-memory';
 import { ArchiveProduct, ArchiveVariant } from './archive';
+import { AddToSection, RemoveFromSection } from './sections/sections';
+import { AssignCategory, SetProductCategories, UnassignCategory } from './categories/assign';
+import { CreateCategory, DeleteCategory, MoveCategory, RenameCategory, SetCategoryHidden, SetCategorySlug } from './categories/tree';
 import { CreateProduct } from './create-product';
 import { SetProductOptions } from './set-product-options';
 import { SetProductStatus } from './set-product-status';
@@ -14,6 +17,7 @@ import { SetVariantSku } from './set-variant-sku';
 import { SetProductShipping } from './storefront/set-product-shipping';
 import { SetProductSlug } from './storefront/set-product-slug';
 import { SetProductType } from './storefront/set-product-type';
+import { SetSaleConditions } from './storefront/set-sale-conditions';
 import { ctx, NOW, T1 } from './testing/fixture';
 import { UpdateProductDetails } from './update-product-details';
 
@@ -30,6 +34,19 @@ const CATALOG = [
   SetProductSlug,
   SetProductShipping,
   SetProductType,
+  // 002, Historia 2 (T047): el árbol, su visibilidad y la asignación son decisiones de catálogo.
+  CreateCategory,
+  RenameCategory,
+  SetCategorySlug,
+  MoveCategory,
+  SetCategoryHidden,
+  DeleteCategory,
+  SetProductCategories,
+  AssignCategory,
+  UnassignCategory,
+  // 002, Historia 3 (T067): las secciones destacadas son de catálogo; las condiciones de venta, no.
+  AddToSection,
+  RemoveFromSection,
 ];
 
 /** ¿Pasa la autorización una cuenta con exactamente estos permisos? */
@@ -74,6 +91,13 @@ describe('aislamiento de permisos en los casos de uso', () => {
 
   it('leer el costo no permite cambiarlo', async () => {
     await expect(allowed(['variant.cost.read'], SetVariantCost.requires)).resolves.toBe(false);
+  });
+
+  // T067 (002) — FR-003: mostrar u ocultar el precio y el envío gratis son decisiones de precio.
+  it('las condiciones de venta exigen variant.price.write, y editar el catálogo no alcanza', async () => {
+    expect(SetSaleConditions.requires).toEqual({ kind: 'permission', permission: 'variant.price.write' });
+    await expect(allowed(['variant.price.write'], SetSaleConditions.requires)).resolves.toBe(true);
+    await expect(allowed(['catalog.read', 'catalog.write', 'variant.stock.write', 'variant.cost.write'], SetSaleConditions.requires)).resolves.toBe(false);
   });
 
   it('el rol de Catálogo predefinido no cambia precios ni costo, y sí existencias (FR-016)', async () => {

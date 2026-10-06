@@ -53,7 +53,9 @@ precios), contraseña `test-1234`.
 5. Mover Camisetas dentro de Mujer → su URL y su visibilidad propia no cambian.
 6. Eliminar una categoría con productos → el aviso dice cuántos la pierden; los productos no cambian
    en nada más.
-7. Como `catalogo@t1.test`: ve el árbol y filtra, sin acciones de edición.
+7. Como un colaborador con un rol que solo lee el catálogo (sin `catalog.write`): ve el árbol y filtra,
+   sin acciones de edición. `catalogo@t1.test` no sirve para esto: el rol de Catálogo sí edita el
+   catálogo (FR-016 de la 001).
 
 ### Historia 3 — Cómo se ofrece cada producto
 

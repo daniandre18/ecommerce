@@ -294,5 +294,48 @@ describe('casos de uso de catálogo', () => {
         expect.objectContaining({ code: 'not-found' }),
       );
     });
+
+    // T068 (002, Historia 3) — FR-028: archivar saca el producto de las secciones destacadas, en la
+    // misma transacción. Es la única parte de la 002 que cambia código de la 001 ya en uso.
+    describe('y las secciones destacadas', () => {
+      const sections = () => t.uow.store.sections;
+
+      it('archivar uno que está en Destacados y en Ofertas lo saca de las dos', async () => {
+        const { productId } = await t.run(create, { name: 'Camiseta', description: '' });
+        t.uow.store.sections = { featured: [pid('otro'), productId], offers: [productId] };
+        await t.run(new ArchiveProduct(t.deps), { productId, version: 1 });
+        expect(t.product(productId).archived).toBe(true);
+        expect(sections()).toEqual({ featured: ['otro'], offers: [] });
+      });
+
+      it('si archivar falla, las secciones no cambian: van en la misma transacción', async () => {
+        const { productId } = await t.run(create, { name: 'Camiseta', description: '' });
+        const before = { featured: [productId], offers: [] };
+        t.uow.store.sections = before;
+        expect(await failureOf(t.run(new ArchiveProduct(t.deps), { productId, version: 7 }))).toEqual(
+          expect.objectContaining({ code: 'version-conflict' }),
+        );
+        expect(sections()).toBe(before);
+      });
+
+      it('archivar uno que no está en ninguna no escribe el documento de secciones', async () => {
+        const { productId } = await t.run(create, { name: 'Camiseta', description: '' });
+        const before = { featured: [pid('otro')], offers: [] };
+        t.uow.store.sections = before;
+        await t.run(new ArchiveProduct(t.deps), { productId, version: 1 });
+        expect(sections()).toBe(before);
+      });
+
+      it('archivar uno ya archivado no cambia nada', async () => {
+        const { productId } = await t.run(create, { name: 'Camiseta', description: '' });
+        await t.run(new ArchiveProduct(t.deps), { productId, version: 1 });
+        const archived = t.product(productId);
+        const before = { featured: [productId], offers: [] };
+        t.uow.store.sections = before;
+        await t.run(new ArchiveProduct(t.deps), { productId, version: 2 });
+        expect([t.product(productId), sections()]).toEqual([archived, before]);
+        expect(sections()).toBe(before);
+      });
+    });
   });
 });

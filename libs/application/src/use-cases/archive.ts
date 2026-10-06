@@ -1,11 +1,16 @@
-import { summarizeVariants, type ProductId, type VariantId } from '@ecommerce/domain';
+import { summarizeVariants, withoutProduct, type ProductId, type VariantId } from '@ecommerce/domain';
 import { BusinessRuleError } from '../errors';
 import { requirePermission } from '../ports/authorization';
 import type { OperationContext } from '../ports/operation-context';
 import type { TransactionScope } from '../ports/unit-of-work';
 import { assertVersion, bumped, findLiveVariant, loadProduct, type UseCaseDependencies } from './shared';
 
-/** Archiva en lugar de borrar (FR-023). El archivado es independiente del estado (FR-023a). */
+/**
+ * Archiva en lugar de borrar (FR-023). El archivado es independiente del estado (FR-023a). Desde la
+ * 002 (FR-028), además saca el producto de Destacados y Ofertas en la misma transacción, y libera sus
+ * lugares: el documento de secciones se lee antes de cualquier escritura y se escribe solo si el
+ * producto figuraba en alguna.
+ */
 export class ArchiveProduct {
   static readonly requires = requirePermission('catalog.write');
 
@@ -17,11 +22,14 @@ export class ArchiveProduct {
     input: { readonly productId: ProductId; readonly version: number },
   ): Promise<{ version: number }> {
     const product = await loadProduct(tx, input.productId);
+    const sections = await tx.sections.get();
     assertVersion(product, input.version);
     if (product.archived) return { version: product.version };
 
     const updated = bumped({ ...product, archived: true, updatedAt: this.deps.clock.now() });
     await tx.products.save(updated);
+    const remaining = withoutProduct(sections, product.id);
+    if (remaining !== sections) await tx.sections.save(remaining);
     return { version: updated.version };
   }
 }

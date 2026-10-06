@@ -1,5 +1,9 @@
-import type { ProductId, Slug, TenantId, VariantId } from '@ecommerce/domain';
+import type { CategoryId, ProductId, Slug, TenantId, VariantId } from '@ecommerce/domain';
 import type { BusinessErrorCode } from '../errors';
+import type { BulkCategoryInput, SetProductCategoriesInput } from '../use-cases/categories/assign';
+import type { SectionInput, SectionOutput } from '../use-cases/sections/sections';
+import type { SetSaleConditionsInput, SetSaleConditionsOutput } from '../use-cases/storefront/set-sale-conditions';
+import type { CreateCategoryInput, MoveCategoryInput } from '../use-cases/categories/tree';
 import type { CreateProductInput } from '../use-cases/create-product';
 import type { SetProductOptionsInput, SetProductOptionsOutput } from '../use-cases/set-product-options';
 import type { SetProductStatusInput } from '../use-cases/set-product-status';
@@ -35,6 +39,7 @@ export interface CommandFailure<C extends string = CommandErrorCode> {
 export type CommandResult<T, C extends string = CommandErrorCode> = { readonly ok: true; readonly data: T } | CommandFailure<C>;
 
 type Version = { readonly version: number };
+type Done = Record<string, never>;
 
 /**
  * Las órdenes de catálogo que el panel envía al servidor, una por callable. Toda escritura pasa por
@@ -65,4 +70,25 @@ export interface CatalogCommands {
   setProductShipping(tenantId: TenantId, input: SetProductShippingInput): Promise<CommandResult<Version>>;
   /** Devuelve lo que cambió para el comprador, lo mismo que quedó en la bitácora (FR-016, FR-032). */
   setProductType(tenantId: TenantId, input: SetProductTypeInput): Promise<CommandResult<Version & { readonly changes: readonly BuyerChange[] }>>;
+  // Categorías (002, Historia 2). Ninguna lleva versión: las del árbol son de intención y se validan
+  // contra el árbol fresco; las de asignación son de conjunto y conmutan (research §1 y §2).
+  /** `requestId`, como al crear un producto: el reintento no duplica la categoría. */
+  createCategory(
+    tenantId: TenantId,
+    input: CreateCategoryInput & { readonly requestId: string },
+  ): Promise<CommandResult<{ readonly categoryId: CategoryId; readonly slug: Slug }>>;
+  renameCategory(tenantId: TenantId, input: { readonly categoryId: CategoryId; readonly name: string }): Promise<CommandResult<Done>>;
+  setCategorySlug(tenantId: TenantId, input: { readonly categoryId: CategoryId; readonly slug: string }): Promise<CommandResult<{ readonly slug: Slug }>>;
+  moveCategory(tenantId: TenantId, input: MoveCategoryInput): Promise<CommandResult<Done>>;
+  setCategoryHidden(tenantId: TenantId, input: { readonly categoryId: CategoryId; readonly hidden: boolean }): Promise<CommandResult<Done>>;
+  deleteCategory(tenantId: TenantId, input: { readonly categoryId: CategoryId }): Promise<CommandResult<Done>>;
+  /** Lo que agrega y lo que quita, nunca el conjunto completo. */
+  setProductCategories(tenantId: TenantId, input: SetProductCategoriesInput): Promise<CommandResult<{ readonly categoryIds: readonly CategoryId[] }>>;
+  assignCategory(tenantId: TenantId, input: BulkCategoryInput): Promise<CommandResult<{ readonly changed: number }>>;
+  unassignCategory(tenantId: TenantId, input: BulkCategoryInput): Promise<CommandResult<{ readonly changed: number }>>;
+  // Historia 3: cómo se ofrece cada producto.
+  /** Precio visible y envío gratis; exige `variant.price.write` y deja su bitácora (FR-003, FR-032). */
+  setSaleConditions(tenantId: TenantId, input: SetSaleConditionsInput): Promise<CommandResult<SetSaleConditionsOutput>>;
+  addToSection(tenantId: TenantId, input: SectionInput): Promise<CommandResult<SectionOutput>>;
+  removeFromSection(tenantId: TenantId, input: SectionInput): Promise<CommandResult<SectionOutput>>;
 }

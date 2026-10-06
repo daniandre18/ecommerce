@@ -1,6 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const APP_URL = 'http://localhost:4200';
+/**
+ * Un puerto propio, no el 4200 que usa `nx serve` por omisión: con `reuseExistingServer`, cualquier
+ * servidor que ya escuche en ese puerto —otro proyecto, una sesión de desarrollo— se tomaría por el
+ * panel, y la e2e probaría otra cosa o fallaría sin explicación.
+ */
+const APP_PORT = 4320;
+const APP_URL = `http://localhost:${APP_PORT}`;
 
 /**
  * Recorridos de extremo a extremo contra el panel servido localmente y los emuladores de Firebase.
@@ -46,7 +52,7 @@ export default defineConfig({
       gracefulShutdown: { signal: 'SIGINT', timeout: 15_000 },
     },
     {
-      command: 'npx nx serve admin',
+      command: `npx nx serve admin --port ${APP_PORT}`,
       url: APP_URL,
       cwd: '../..',
       reuseExistingServer: !process.env['CI'],

@@ -1,8 +1,11 @@
-import { mergePages, type CatalogQueries, type ProductListQuery, type SlugIndexEntry, type Unsubscribe, type Watcher } from '@ecommerce/application';
+import { chunkIds, mergePages, type CatalogQueries, type ProductListQuery, type SlugIndexEntry, type Unsubscribe, type Watcher } from '@ecommerce/application';
 import {
   normalizeName,
   productId as toProductId,
   slugify,
+  type CategoryId,
+  type CategoryTree,
+  type FeaturedSections,
   type Money,
   type Product,
   type ProductId,
@@ -16,6 +19,8 @@ import {
 import {
   collection,
   doc,
+  documentId,
+  getCountFromServer,
   getDoc,
   limit,
   orderBy,
@@ -26,6 +31,8 @@ import {
   type QueryConstraint,
 } from 'firebase/firestore';
 import { productFromDoc, tenantFromDoc, variantCostsFromDoc, variantFromDoc } from '../mapping/catalog-mappers';
+import { categoryTreeFromDoc } from '../mapping/category-mappers';
+import { sectionsFromDoc } from '../mapping/sections-mappers';
 import { vocabularyFromDoc } from '../firestore/repositories/vocabulary.repository';
 import { listenToDoc, listenToQuery } from './listen';
 
@@ -42,15 +49,34 @@ export class FirestoreCatalogQueries implements CatalogQueries {
 
   /**
    * Con búsqueda, además de los nombres que empiezan con lo escrito, el producto cuya URL amigable
-   * es exactamente eso (FR-035 de la 002): dos consultas en tiempo real, combinadas sin repetidos.
+   * es exactamente eso (FR-035 de la 002). Filtrado por una rama de categorías de más de 30 ids, una
+   * consulta por cada grupo de hasta 30 (research §2). Todas en tiempo real, combinadas sin
+   * repetidos, en el orden del listado y cortadas al tamaño de página.
    */
   watchProducts(tenantId: TenantId, request: ProductListQuery, watcher: Watcher<readonly Product[]>): Unsubscribe {
-    const queries = [productList(this.db, tenantId, request), ...slugMatch(this.db, tenantId, request)];
+    if (request.categoryIds?.length === 0 || request.productIds?.length === 0) {
+      watcher.next([]);
+      return () => undefined;
+    }
+    const lists = request.productIds
+      ? chunkIds(request.productIds).map((chunk) => byIds(this.db, tenantId, chunk))
+      : request.categoryIds
+        ? chunkIds(request.categoryIds).map((chunk) => productList(this.db, tenantId, { ...request, categoryIds: chunk }))
+        : [productList(this.db, tenantId, request)];
+    // Por id no se puede filtrar ni ordenar en la consulta sin un índice por combinación: con a lo
+    // sumo 40 productos, el estado se aplica sobre lo que llega, y el corte después. Un archivado no
+    // está en ninguna sección: archivar lo saca en la misma transacción (FR-028).
+    const select = (p: Product) => !request.status || p.status === request.status;
+    const queries = [...lists, ...slugMatch(this.db, tenantId, request)];
     const pages: (Product[] | undefined)[] = queries.map(() => undefined);
     const byName = (a: Product, b: Product) => a.nameNormalized.localeCompare(b.nameNormalized);
-    // Cada consulta espera al servidor antes de su primera página (`listenToQuery`), como las demás.
+    const byEdition = (a: Product, b: Product) => b.updatedAt.getTime() - a.updatedAt.getTime();
+    const compare = normalizeName(request.search ?? '') ? byName : byEdition;
+    // Cada consulta espera al servidor antes de su primera página (`listenToQuery`). Así no se combina
+    // lo que una consulta nueva encuentra en la caché local, que es solo lo que trajo otra (hallado por
+    // T049), con una página del servidor: esa vista parcial dejaría afuera productos que sí están.
     const stops = queries.map((q, i) =>
-      listenToQuery(
+      listenToQuery<Product[]>(
         q,
         {
           next: (page) => {
@@ -58,7 +84,12 @@ export class FirestoreCatalogQueries implements CatalogQueries {
             // Hasta que llegue la primera página de cada consulta, no hay nada completo que mostrar.
             if (pages.some((p) => p === undefined)) return;
             const ready = pages as Product[][];
-            watcher.next(ready.length === 1 ? (ready[0] ?? []) : mergePages(ready, { key: (p) => p.id, compare: byName, limit: request.limit }));
+            if (request.productIds) {
+              const all = mergePages(ready, { key: (p) => p.id, compare, limit: Number.MAX_SAFE_INTEGER });
+              watcher.next(all.filter(select).slice(0, request.limit));
+              return;
+            }
+            watcher.next(ready.length === 1 ? (ready[0] ?? []) : mergePages(ready, { key: (p) => p.id, compare, limit: request.limit }));
           },
           error: (error) => watcher.error(error),
         },
@@ -87,6 +118,20 @@ export class FirestoreCatalogQueries implements CatalogQueries {
     return { productId: toProductId(String(data['productId'])), kind: data['kind'] === 'previous' ? 'previous' : 'current' };
   }
 
+  watchCategoryTree(tenantId: TenantId, watcher: Watcher<CategoryTree>): Unsubscribe {
+    return listenToDoc(doc(this.db, 'tenants', tenantId, 'storefront', 'categoryTree'), watcher, (snapshot) => categoryTreeFromDoc(snapshot.data()));
+  }
+
+  watchSections(tenantId: TenantId, watcher: Watcher<FeaturedSections>): Unsubscribe {
+    return listenToDoc(doc(this.db, 'tenants', tenantId, 'storefront', 'sections'), watcher, (snapshot) => sectionsFromDoc(snapshot.data()));
+  }
+
+  /** Una agregación: no lee los productos, los cuenta (research §2). */
+  async countInCategory(tenantId: TenantId, categoryId: CategoryId): Promise<number> {
+    const counted = await getCountFromServer(query(collection(this.db, 'tenants', tenantId, 'products'), where('categoryIds', 'array-contains', categoryId)));
+    return counted.data().count;
+  }
+
   watchCosts(tenantId: TenantId, productId: ProductId, watcher: Watcher<ReadonlyMap<VariantId, Money>>): Unsubscribe {
     return listenToDoc(doc(this.db, 'tenants', tenantId, 'products', productId, 'private', 'costs'), watcher, (snapshot) => variantCostsFromDoc(snapshot.data()));
   }
@@ -97,6 +142,7 @@ export class FirestoreCatalogQueries implements CatalogQueries {
  * de cada combinación con y sin estado lo verifica `catalog-indexes.spec.ts`.
  */
 export const PRODUCT_ATTRIBUTE_FILTERS = {
+  categoryIds: { fieldPath: 'categoryIds', arrayConfig: 'CONTAINS' },
   tag: { fieldPath: 'tagsNormalized', arrayConfig: 'CONTAINS' },
   brand: { fieldPath: 'brandNormalized', order: 'ASCENDING' },
   missingShippingData: { fieldPath: 'missingShippingData', order: 'ASCENDING' },
@@ -120,12 +166,21 @@ export function productList(db: Firestore, tenantId: TenantId, request: ProductL
   return query(collection(db, 'tenants', tenantId, 'products'), ...constraints, limit(max));
 }
 
-/** A lo sumo uno de los filtros de la ficha: el primero que venga, en este orden. */
-function attributeFilter({ tag, brand, missingShippingData }: ProductListQuery): QueryConstraint[] {
+/**
+ * A lo sumo uno de los filtros de la ficha o la categoría: el primero que venga, en este orden.
+ * `categoryIds` llega ya partido en grupos de hasta 30.
+ */
+function attributeFilter({ categoryIds, tag, brand, missingShippingData }: ProductListQuery): QueryConstraint[] {
+  if (categoryIds) return [where(PRODUCT_ATTRIBUTE_FILTERS.categoryIds.fieldPath, 'array-contains-any', [...categoryIds])];
   if (tag) return [where(PRODUCT_ATTRIBUTE_FILTERS.tag.fieldPath, 'array-contains', normalizeName(tag))];
   if (brand) return [where(PRODUCT_ATTRIBUTE_FILTERS.brand.fieldPath, '==', normalizeName(brand))];
   if (missingShippingData) return [where(PRODUCT_ATTRIBUTE_FILTERS.missingShippingData.fieldPath, '==', true)];
   return [];
+}
+
+/** Hasta 30 productos por id: los de una sección destacada (FR-027c). */
+function byIds(db: Firestore, tenantId: TenantId, ids: readonly ProductId[]): Query {
+  return query(collection(db, 'tenants', tenantId, 'products'), where(documentId(), 'in', [...ids]));
 }
 
 /** La búsqueda por URL amigable: igualdad sobre `slug`, si lo escrito produce una. */

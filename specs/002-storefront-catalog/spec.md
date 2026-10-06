@@ -547,7 +547,9 @@ Se verifican con pruebas de usuario y no bloquean el despliegue.
 - **Topes**: 3 niveles de categoría, 1.000 categorías por comercio, 20 categorías por producto, 30
   etiquetas por producto. Son límites de producto, ajustables en el plan si la experiencia lo pide.
   El de 1.000 categorías sale del plan: el árbol entero vive en un solo documento, con tope de
-  1 MiB (`research.md` §1).
+  1 MiB (`research.md` §1). Por la misma razón, el nombre de una categoría admite hasta 70
+  caracteres (`MAX_CATEGORY_NAME_LENGTH`): con 1.000 nodos, un nombre sin tope podría llevar el
+  documento del árbol a su límite.
 - **El GTIN se reserva al archivar**, igual que el SKU (001) y la URL amigable (FR-005): los tres
   identificadores siguen una sola regla. Quien archiva un producto y lo vuelve a cargar quita el
   GTIN de la variante archivada para reusarlo (FR-030).

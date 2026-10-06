@@ -1,5 +1,11 @@
 import type {
+  BulkCategoryInput,
+  CreateCategoryInput,
   CreateProductInput,
+  MoveCategoryInput,
+  SectionInput,
+  SetProductCategoriesInput,
+  SetSaleConditionsInput,
   SetProductOptionsInput,
   SetProductStatusInput,
   SetVariantCostInput,
@@ -13,12 +19,15 @@ import type {
   UpdateProductDetailsInput,
 } from '@ecommerce/application';
 import {
+  categoryId,
   optionId,
   PRODUCT_KINDS,
   PRODUCT_STATUSES,
   productId,
+  SECTION_IDS,
   valueId,
   variantId,
+  type CategoryId,
   type ProductId,
   type VariantId,
 } from '@ecommerce/domain';
@@ -163,4 +172,73 @@ function imagesOf(json: JsonObject) {
 
 function variantRef(json: JsonObject) {
   return { productId: json.id('productId', productId), variantId: json.id('variantId', variantId), version: json.integer('version') };
+}
+
+// Categorías (002, Historia 2). `parentId` es obligatorio: `null` es el primer nivel, y ausente no se
+// confunde con eso.
+
+export function parseCreateCategory(data: unknown): CreateCategoryInput {
+  const json = JsonObject.payload(data);
+  return {
+    parentId: json.nullable('parentId', (key) => json.id(key, categoryId)),
+    name: json.string('name'),
+    ...json.optional('slug', (key) => json.string(key)),
+  };
+}
+
+export function parseRenameCategory(data: unknown): { categoryId: CategoryId; name: string } {
+  const json = JsonObject.payload(data);
+  return { categoryId: json.id('categoryId', categoryId), name: json.string('name') };
+}
+
+export function parseSetCategorySlug(data: unknown): { categoryId: CategoryId; slug: string } {
+  const json = JsonObject.payload(data);
+  return { categoryId: json.id('categoryId', categoryId), slug: json.string('slug') };
+}
+
+export function parseMoveCategory(data: unknown): MoveCategoryInput {
+  const json = JsonObject.payload(data);
+  return {
+    categoryId: json.id('categoryId', categoryId),
+    parentId: json.nullable('parentId', (key) => json.id(key, categoryId)),
+    position: json.integer('position'),
+  };
+}
+
+export function parseSetCategoryHidden(data: unknown): { categoryId: CategoryId; hidden: boolean } {
+  const json = JsonObject.payload(data);
+  return { categoryId: json.id('categoryId', categoryId), hidden: json.boolean('hidden') };
+}
+
+export function parseDeleteCategory(data: unknown): { categoryId: CategoryId } {
+  return { categoryId: JsonObject.payload(data).id('categoryId', categoryId) };
+}
+
+/** Lo que agrega y lo que quita, las dos listas: nunca el conjunto completo (research §2). */
+export function parseSetProductCategories(data: unknown): SetProductCategoriesInput {
+  const json = JsonObject.payload(data);
+  return { productId: json.id('productId', productId), add: json.ids('add', categoryId), remove: json.ids('remove', categoryId) };
+}
+
+export function parseBulkCategory(data: unknown): BulkCategoryInput {
+  const json = JsonObject.payload(data);
+  return { categoryId: json.id('categoryId', categoryId), productIds: json.ids('productIds', productId) };
+}
+
+// Historia 3: secciones destacadas y condiciones de venta.
+
+/** Una de las dos secciones de la plataforma, y los productos (FR-027). */
+export function parseSection(data: unknown): SectionInput {
+  const json = JsonObject.payload(data);
+  return { section: json.oneOf('section', SECTION_IDS), productIds: json.ids('productIds', productId) };
+}
+
+/** Cada producto con su versión; los dos campos son opcionales, y el que falta no se toca. */
+export function parseSetSaleConditions(data: unknown): SetSaleConditionsInput {
+  const json = JsonObject.payload(data);
+  return {
+    changes: json.objects('changes', (entry) => ({ productId: entry.id('productId', productId), version: entry.integer('version') })),
+    ...json.optional('priceVisible', (key) => json.boolean(key)),
+    ...json.optional('freeShipping', (key) => json.boolean(key)),
+  };
 }

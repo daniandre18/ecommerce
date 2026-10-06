@@ -8,6 +8,7 @@ import {
   type TransactionScope,
   type UseCaseDependencies,
 } from '@ecommerce/application';
+import type { TenantId } from '@ecommerce/domain';
 import { HttpsError, onCall, type CallableFunction } from 'firebase-functions/https';
 import { guarded, type GuardDependencies } from './guard';
 
@@ -36,6 +37,12 @@ export interface CallableOptions {
    * comercio viene en el enlace. Lo que devuelva igual pasa por la verificación de la guarda.
    */
   readonly tenantFrom?: (data: unknown) => unknown;
+  /**
+   * Lo que corre DESPUÉS de confirmar, fuera de la transacción: la poda de las categorías eliminadas
+   * (research §2 de la 002). Si falla, la operación igual quedó confirmada: la respuesta es la suya,
+   * y lo pendiente lo termina la próxima.
+   */
+  readonly after?: (tenantId: TenantId) => Promise<void>;
 }
 
 const NOT_APPLIED = 'La operación no pudo completarse y no se aplicó ningún cambio';
@@ -59,15 +66,26 @@ export function callableFactory(deps: CallableDependencies) {
       try {
         // Se parsea después de autorizar: a quien no puede operar no se le dice qué está mal en su pedido.
         const tenanted = options.tenantFrom ? { ...request, data: { ...(request.data as object), tenantId: options.tenantFrom(request.data) } } : request;
-        const data = await guarded(tenanted, { operation, requires: UseCase.requires }, deps, (tx, ctx) =>
-          useCase.execute(tx, ctx, parse(request.data)),
-        );
+        let tenant: TenantId | undefined;
+        const data = await guarded(tenanted, { operation, requires: UseCase.requires }, deps, (tx, ctx) => {
+          tenant = ctx.tenantId;
+          return useCase.execute(tx, ctx, parse(request.data));
+        });
+        if (options.after && tenant) await afterCommit(options.after, tenant, operation);
         return { ok: true, data };
       } catch (error) {
         return failure(error, operation, options);
       }
     });
   };
+}
+
+async function afterCommit(after: (tenantId: TenantId) => Promise<void>, tenant: TenantId, operation: string): Promise<void> {
+  try {
+    await after(tenant);
+  } catch (error) {
+    console.error(`${operation}: confirmada; lo que corre después falló y queda pendiente`, error);
+  }
 }
 
 function failure(error: unknown, operation: string, { writesAudit = false }: CallableOptions): CallableResult<never> {

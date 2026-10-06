@@ -1,5 +1,7 @@
 import type {
   AuditLogRepository,
+  CategoryTreeRepository,
+  FeaturedSectionsRepository,
   InvitationRepository,
   MembershipRepository,
   ProductRepository,
@@ -28,6 +30,8 @@ export interface TransactionScope {
   readonly skuIndex: SkuIndexRepository;
   readonly slugIndex: SlugIndexRepository;
   readonly vocabulary: VocabularyRepository;
+  readonly categories: CategoryTreeRepository;
+  readonly sections: FeaturedSectionsRepository;
 }
 
 /**

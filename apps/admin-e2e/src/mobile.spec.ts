@@ -1,12 +1,16 @@
 import { expect, test, type Page } from '@playwright/test';
-import { OWNER, productWithVariants, signIn } from './support';
+import { call, idTokenOf, OWNER, productWithVariants, signIn } from './support';
 
 /** El objetivo táctil mínimo de los flujos frecuentes: el de Material, 48 px, con 4 de tolerancia. */
 const TOUCH = 44;
 
-/** Nada de la página sobresale a los costados: no hay desplazamiento horizontal (FR-038). */
+/**
+ * Nada de la página sobresale a los costados: no hay desplazamiento horizontal (FR-038). Se mide
+ * contra el viewport visual: con la emulación móvil, Chrome agranda el de diseño hasta el ancho del
+ * contenido, y `innerWidth` crece junto con lo que desborda (hallado en la 002, Historia 2).
+ */
 async function expectNoHorizontalScroll(page: Page) {
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - (window.visualViewport?.width ?? window.innerWidth));
   expect(overflow).toBe(0);
 }
 
@@ -81,5 +85,40 @@ test.describe('en el teléfono', () => {
     await page.goto('/t/t1/audit');
     await expect(page.locator('ui-skeleton')).toHaveCount(0);
     await expectNoHorizontalScroll(page);
+  });
+
+  // 002, Historia 2 (T062): el árbol, con sus tres niveles, cabe a 360 px y se toca con una mano.
+  test('las categorías caben sin desplazamiento horizontal', async ({ page }) => {
+    const run = Date.now();
+    const owner = await idTokenOf(OWNER);
+    let parentId: string | null = null;
+    // Nombres largos: el selector de dónde crear toma el ancho de la ruta más larga si no se lo acota.
+    for (const name of [`Primer nivel con un nombre largo ${run}`, `Segundo nivel con otro nombre largo ${run}`, `Tercer nivel ${run}`]) {
+      const { body } = await call(owner, 'createCategory', { tenantId: 't1', requestId: crypto.randomUUID(), parentId, name });
+      parentId = (body.result as { data: { categoryId: string } }).data.categoryId;
+    }
+    await page.goto('/t/t1/categories');
+    await signIn(page, OWNER);
+    await expect(page.locator('ui-skeleton')).toHaveCount(0);
+    await expectNoHorizontalScroll(page);
+    await expectTouchTargets(page);
+  });
+
+  test('la sección de categorías del producto cabe con rutas largas', async ({ page }) => {
+    const run = Date.now();
+    const owner = await idTokenOf(OWNER);
+    let parentId: string | null = null;
+    for (const name of [`Una categoría de nombre largo ${run}`, `Otra subcategoría de nombre largo ${run}`, `Y la última ${run}`]) {
+      const { body } = await call(owner, 'createCategory', { tenantId: 't1', requestId: crypto.randomUUID(), parentId, name });
+      parentId = (body.result as { data: { categoryId: string } }).data.categoryId;
+    }
+    const url = await productWithVariants(`Remera con categorías ${run}`);
+    await page.goto(url);
+    await signIn(page, OWNER);
+    await expect(page.getByRole('heading', { name: 'Categorías', exact: true })).toBeVisible();
+    // Se mide con el árbol ya cargado: el ancho lo pone la ruta más larga del selector.
+    await expect(page.locator('[data-field="addCategory"] option', { hasText: `Y la última ${run}` })).toHaveCount(1);
+    await expectNoHorizontalScroll(page);
+    await expectTouchTargets(page);
   });
 });

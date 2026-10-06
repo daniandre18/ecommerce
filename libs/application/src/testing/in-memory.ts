@@ -1,8 +1,13 @@
 import {
   assertCanDeleteRole,
+  emptyCategoryTree,
+  emptySections,
   emptyVocabulary,
   normalizeEmail,
   type AuditEntry,
+  type CategoryId,
+  type CategoryTree,
+  type FeaturedSections,
   type Invitation,
   type InvitationId,
   type Membership,
@@ -20,6 +25,9 @@ import {
 } from '@ecommerce/domain';
 import type {
   AuditLogRepository,
+  CategoryPruner,
+  CategoryTreeRepository,
+  FeaturedSectionsRepository,
   InvitationRepository,
   MembershipRepository,
   ProductRepository,
@@ -53,6 +61,8 @@ export class InMemoryStore {
   skuIndex = new Map<string, SkuIndexEntry>();
   slugIndex = new Map<Slug, SlugIndexEntry>();
   vocabulary: Vocabulary = emptyVocabulary();
+  categoryTree: CategoryTree = emptyCategoryTree();
+  sections: FeaturedSections = emptySections();
 
   clone(): InMemoryStore {
     const copy = new InMemoryStore();
@@ -67,6 +77,8 @@ export class InMemoryStore {
     copy.skuIndex = new Map(this.skuIndex);
     copy.slugIndex = new Map(this.slugIndex);
     copy.vocabulary = this.vocabulary;
+    copy.categoryTree = this.categoryTree;
+    copy.sections = this.sections;
     return copy;
   }
 
@@ -144,6 +156,10 @@ function scopeOver(s: InMemoryStore): TransactionScope {
       const product = s.products.get(id);
       if (product) s.products.set(id, { ...product, ...summary });
     },
+    updateCategories: async (id, categoryIds) => {
+      const product = s.products.get(id);
+      if (product) s.products.set(id, { ...product, categoryIds: [...categoryIds] });
+    },
   };
 
   const variants: VariantRepository = {
@@ -196,7 +212,21 @@ function scopeOver(s: InMemoryStore): TransactionScope {
     },
   };
 
-  return { tenant, audit, members, invitations, roles, products, variants, costs, skuIndex, slugIndex, vocabulary };
+  const categories: CategoryTreeRepository = {
+    get: async () => s.categoryTree,
+    save: async (value) => {
+      s.categoryTree = value;
+    },
+  };
+
+  const sections: FeaturedSectionsRepository = {
+    get: async () => s.sections,
+    save: async (value) => {
+      s.sections = value;
+    },
+  };
+
+  return { tenant, audit, members, invitations, roles, products, variants, costs, skuIndex, slugIndex, vocabulary, categories, sections };
 }
 
 /** Como `update` en Firestore: falla si la entrada no existe. */
@@ -214,6 +244,31 @@ export class InMemoryUnitOfWork implements UnitOfWork {
     const result = await work(scopeOver(draft));
     this.store = draft; // solo se confirma si `work` no lanzó
     return result;
+  }
+}
+
+/**
+ * La poda en memoria, sobre lo ya confirmado: como la de Firestore, fuera de la transacción, en lotes
+ * y escribiendo solo `categoryIds`. `failAfterBatches` la corta a propósito después de ese número de
+ * lotes, para probar que una poda interrumpida converge.
+ */
+export class InMemoryCategoryPruner implements CategoryPruner {
+  constructor(
+    private readonly uow: InMemoryUnitOfWork,
+    private readonly options: { readonly batchSize?: number; readonly failAfterBatches?: number } = {},
+  ) {}
+
+  async prune(ids: readonly CategoryId[]): Promise<void> {
+    const { batchSize = 500, failAfterBatches } = this.options;
+    for (let batches = 0; ; batches++) {
+      if (failAfterBatches !== undefined && batches >= failAfterBatches) throw new Error('Poda cortada a propósito');
+      const store = this.uow.store;
+      const batch = [...store.products.values()].filter((p) => p.categoryIds.some((id) => ids.includes(id))).slice(0, batchSize);
+      if (batch.length === 0) return;
+      for (const product of batch) {
+        store.products.set(product.id, { ...product, categoryIds: product.categoryIds.filter((id) => !ids.includes(id)) });
+      }
+    }
   }
 }
 

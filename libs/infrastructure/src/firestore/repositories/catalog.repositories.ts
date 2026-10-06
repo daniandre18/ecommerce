@@ -44,6 +44,9 @@ export function productRepository(t: Transaction, paths: TenantPaths): ProductRe
     updateVariantSummary: async (id, summary) => {
       t.update(products.doc(id), { variantCount: summary.variantCount, hasIncompleteVariants: summary.hasIncompleteVariants });
     },
+    updateCategories: async (id, categoryIds) => {
+      t.update(products.doc(id), { categoryIds: [...categoryIds] });
+    },
   };
 }
 

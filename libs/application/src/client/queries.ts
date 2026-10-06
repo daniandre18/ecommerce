@@ -1,4 +1,18 @@
-import type { Money, Product, ProductId, ProductStatus, Slug, Tenant, TenantId, Variant, VariantId, Vocabulary } from '@ecommerce/domain';
+import type {
+  CategoryId,
+  CategoryTree,
+  FeaturedSections,
+  Money,
+  Product,
+  ProductId,
+  ProductStatus,
+  Slug,
+  Tenant,
+  TenantId,
+  Variant,
+  VariantId,
+  Vocabulary,
+} from '@ecommerce/domain';
 import type { SlugIndexEntry } from '../ports/repositories';
 
 /** Corta la suscripción. Llamarla dos veces no hace nada. */
@@ -26,6 +40,16 @@ export interface ProductListQuery {
   readonly brand?: string;
   /** Solo los físicos a los que les falta peso o dimensiones (FR-017). */
   readonly missingShippingData?: true;
+  /**
+   * Una categoría con sus subcategorías (FR-023): la rama ya calculada con `descendantsOf` sobre el
+   * árbol que el panel ya escucha. Con más de 30 ids se parte en consultas que se combinan.
+   */
+  readonly categoryIds?: readonly CategoryId[];
+  /**
+   * Los productos de una sección destacada (FR-027c): los ids de su lista, que el panel ya escucha.
+   * Se piden por id, de a 30; el estado y el archivado se aplican sobre lo que llega.
+   */
+  readonly productIds?: readonly ProductId[];
   readonly limit: number;
 }
 
@@ -58,4 +82,10 @@ export interface CatalogQueries {
    * vista previa: la que decide es la reserva en el servidor, al confirmar.
    */
   findSlug(tenantId: TenantId, slug: Slug): Promise<SlugIndexEntry | null>;
+  /** El árbol entero de categorías: un documento, una lectura (research §1 de la 002). */
+  watchCategoryTree(tenantId: TenantId, watcher: Watcher<CategoryTree>): Unsubscribe;
+  /** Cuántos productos tienen la categoría, archivados incluidos: el aviso antes de eliminarla (FR-024). */
+  countInCategory(tenantId: TenantId, categoryId: CategoryId): Promise<number>;
+  /** Destacados y Ofertas: un documento con las dos listas, que son además sus contadores. */
+  watchSections(tenantId: TenantId, watcher: Watcher<FeaturedSections>): Unsubscribe;
 }

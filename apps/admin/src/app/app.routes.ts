@@ -39,6 +39,12 @@ export const routes: Routes = [
             loadComponent: () => import('./catalog/product-editor/product-editor').then((m) => m.ProductEditor),
             canDeactivate: [confirmUnsaved],
           },
+          {
+            path: 'categories',
+            title: 'Categorías',
+            loadComponent: () => import('./catalog/categories/categories-page').then((m) => m.CategoriesPage),
+            canDeactivate: [confirmUnsaved],
+          },
           { path: 'team', title: 'Equipo', loadComponent: () => import('./team/team-page').then((m) => m.TeamPage) },
           { path: 'audit', title: 'Bitácora', loadComponent: () => import('./audit/audit-log/audit-log').then((m) => m.AuditLog) },
           {

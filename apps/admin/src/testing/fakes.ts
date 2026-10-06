@@ -24,17 +24,24 @@ import type {
 import { signal, type Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
+  categoryId,
   createCatalogRole,
+  createCategory,
   createInvitation,
+  emptyCategoryTree,
   createOwnerRole,
   invitationId,
   normalizeName,
   storefrontDefaults,
   PRESET_CATALOG_PERMISSIONS,
   productId,
+  setCategoryHidden,
   tenantId,
   uid,
+  type CategoryId,
+  type CategoryTree,
   type CurrencyCode,
+  type FeaturedSections,
   type Invitation,
   type MemberAccess,
   type Membership,
@@ -121,6 +128,11 @@ export class FakeCatalogQueries implements CatalogQueries {
   /** Las URL reservadas que conoce `findSlug`; la prueba las agrega. */
   readonly slugs = new Map<string, SlugIndexEntry>();
   readonly findSlug = vi.fn(async (_tenantId: TenantId, slug: Slug) => this.slugs.get(slug) ?? null);
+  readonly categoryTrees: Subscription<CategoryTree, TenantId>[] = [];
+  /** Cuántos productos tiene cada categoría, para el aviso previo a eliminarla; la prueba los fija. */
+  readonly categoryCounts = new Map<string, number>();
+  readonly countInCategory = vi.fn(async (_tenantId: TenantId, id: CategoryId) => this.categoryCounts.get(id) ?? 0);
+  readonly sectionLists: Subscription<FeaturedSections, TenantId>[] = [];
 
   watchTenant(id: TenantId, watcher: Watcher<Tenant | null>): Unsubscribe {
     return this.open(this.tenants, new Subscription(id, watcher));
@@ -144,6 +156,28 @@ export class FakeCatalogQueries implements CatalogQueries {
 
   watchVocabulary(id: TenantId, watcher: Watcher<Vocabulary>): Unsubscribe {
     return this.open(this.vocabularies, new Subscription(id, watcher));
+  }
+
+  watchCategoryTree(id: TenantId, watcher: Watcher<CategoryTree>): Unsubscribe {
+    return this.open(this.categoryTrees, new Subscription(id, watcher));
+  }
+
+  watchSections(id: TenantId, watcher: Watcher<FeaturedSections>): Unsubscribe {
+    return this.open(this.sectionLists, new Subscription(id, watcher));
+  }
+
+  /** La suscripción abierta más reciente a las secciones destacadas. */
+  get sections(): Subscription<FeaturedSections, TenantId> {
+    const last = this.sectionLists.filter((s) => !s.closed).at(-1);
+    if (!last) throw new Error('No hay ninguna suscripción abierta a las secciones');
+    return last;
+  }
+
+  /** La suscripción abierta más reciente al árbol de categorías. */
+  get categoryTree(): Subscription<CategoryTree, TenantId> {
+    const last = this.categoryTrees.filter((s) => !s.closed).at(-1);
+    if (!last) throw new Error('No hay ninguna suscripción abierta al árbol de categorías');
+    return last;
   }
 
   /** La suscripción abierta más reciente al listado. */
@@ -182,6 +216,18 @@ export function fakeCatalogCommands(): Mocked<CatalogCommands> {
     setProductSlug: pending(),
     setProductShipping: pending(),
     setProductType: pending(),
+    createCategory: pending(),
+    renameCategory: pending(),
+    setCategorySlug: pending(),
+    moveCategory: pending(),
+    setCategoryHidden: pending(),
+    deleteCategory: pending(),
+    setProductCategories: pending(),
+    assignCategory: pending(),
+    unassignCategory: pending(),
+    setSaleConditions: pending(),
+    addToSection: pending(),
+    removeFromSection: pending(),
   } as unknown as Mocked<CatalogCommands>;
 }
 
@@ -390,4 +436,15 @@ export class FakeAuditQueries implements AuditQueries {
     if (!last) throw new Error('No se pidió ninguna página de la bitácora');
     return last;
   }
+}
+
+/**
+ * Un árbol de categorías armado con las operaciones del dominio: `[id, padre, nombre]`, en orden.
+ * `hidden` lista las ocultas por decisión propia.
+ */
+export function categoryTree(specs: readonly [string, string | null, string][], hidden: readonly string[] = []): CategoryTree {
+  let tree = emptyCategoryTree();
+  for (const [id, parent, name] of specs) tree = createCategory(tree, { id: categoryId(id), parentId: parent === null ? null : categoryId(parent), name });
+  for (const id of hidden) tree = setCategoryHidden(tree, categoryId(id), true);
+  return tree;
 }

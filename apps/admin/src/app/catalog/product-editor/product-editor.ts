@@ -5,6 +5,8 @@ import {
   InvalidIdentifierError,
   productId,
   tenantId,
+  type CategoryTree,
+  type FeaturedSections,
   type ImageRef,
   type Product,
   type ProductId,
@@ -20,8 +22,10 @@ import { CURRENT_TENANT } from '../../tenant/current-tenant';
 import { ImageUpload } from '../image-upload/image-upload';
 import { ProductVideo } from '../image-upload/product-video';
 import { VariantTable } from '../variant-table/variant-table';
+import { CategoriesSection } from './categories-section/categories-section';
 import { DetailsSection } from './details-section';
 import { OptionsEditor } from './options-editor/options-editor';
+import { PresentationSection } from './presentation-section/presentation-section';
 import { StatusControl } from './status-control/status-control';
 import { ShippingSection } from './shipping-section/shipping-section';
 import { StorefrontSection } from './storefront-section/storefront-section';
@@ -46,6 +50,8 @@ const STATUS_LABELS: Record<Product['status'], string> = { draft: 'Borrador', ac
     DetailsSection,
     StorefrontSection,
     ShippingSection,
+    PresentationSection,
+    CategoriesSection,
     ImageUpload,
     ProductVideo,
     StatusControl,
@@ -72,6 +78,32 @@ export class ProductEditor {
   protected readonly variants = liveResource<readonly Variant[], Ids>({
     params: () => this.ids(),
     subscribe: (ids, watcher) => this.queries.watchVariants(ids.tenantId, ids.productId, watcher),
+  });
+  /** Las categorías del producto se muestran con su ruta: sin el árbol, no hay qué mostrar. */
+  protected readonly categoryTree = liveResource<CategoryTree, TenantId>({
+    params: () => this.ids()?.tenantId,
+    subscribe: (tenant, watcher) => this.queries.watchCategoryTree(tenant, watcher),
+  });
+
+  /** En qué secciones destacadas está: el aviso de "en borrador" y el del archivado dependen de eso. */
+  protected readonly sections = liveResource<FeaturedSections, TenantId>({
+    params: () => this.ids()?.tenantId,
+    subscribe: (tenant, watcher) => this.queries.watchSections(tenant, watcher),
+  });
+
+  /**
+   * El editor se muestra cuando llegó todo lo que cambia su forma: el producto, el árbol de
+   * categorías, las secciones destacadas y qué puede hacer la cuenta. Si algo de eso llegara después,
+   * lo que depende de ello —el enlace a la bitácora, los botones de guardar, los chips de categorías,
+   * el aviso de una sección— aparecería de golpe y empujaría lo demás (hallado por
+   * `loading-states.spec.ts`, SC-009 de la 001).
+   */
+  protected readonly loaded = computed(() => {
+    if (this.access() === undefined || !this.product.hasValue() || !this.categoryTree.hasValue() || !this.sections.hasValue()) return undefined;
+    const product = this.product.value();
+    const tree = this.categoryTree.value();
+    const sections = this.sections.value();
+    return product && tree && sections ? { product, tree, sections } : undefined;
   });
 
   protected readonly currency = computed(() => this.tenant()?.currency);
