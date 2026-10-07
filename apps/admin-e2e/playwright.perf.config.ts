@@ -27,6 +27,14 @@ export default defineConfig({
       gracefulShutdown: { signal: 'SIGINT', timeout: 15_000 },
     },
     {
+      // Firestore comprimido, como en producción (research §14 de la 002); el panel medido apunta acá.
+      command: 'node apps/admin-e2e/firestore-gzip-proxy.mjs 8090 8080',
+      url: 'http://127.0.0.1:8090/',
+      cwd: '../..',
+      reuseExistingServer: false,
+      timeout: 30_000,
+    },
+    {
       command: 'npx nx run admin:build:measure --skip-nx-cache && node apps/admin-e2e/perf-server.mjs dist/apps/admin-measure/browser 4300',
       url: APP_URL,
       cwd: '../..',

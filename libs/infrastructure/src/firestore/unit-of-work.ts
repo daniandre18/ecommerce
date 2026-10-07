@@ -2,6 +2,9 @@ import type { TransactionScope, UnitOfWork } from '@ecommerce/application';
 import type { TenantId } from '@ecommerce/domain';
 import type { Firestore, Transaction } from 'firebase-admin/firestore';
 import { auditLogRepository } from './repositories/audit-log.repository';
+import { categorySlugRepository } from './repositories/category-slug.repository';
+import { categoryTreeRepository } from './repositories/category-tree.repository';
+import { gtinIndexRepository } from './repositories/gtin-index.repository';
 import { invitationRepository } from './repositories/invitation.repository';
 import {
   productRepository,
@@ -11,7 +14,10 @@ import {
 } from './repositories/catalog.repositories';
 import { membershipRepository } from './repositories/membership.repository';
 import { roleRepository } from './repositories/role.repository';
+import { sectionsRepository } from './repositories/sections.repository';
+import { slugIndexRepository } from './repositories/slug-index.repository';
 import { variantCostsRepository } from './repositories/variant-costs.repository';
+import { vocabularyRepository } from './repositories/vocabulary.repository';
 import { TenantPaths } from './tenant-paths';
 
 function transactionScope(t: Transaction, paths: TenantPaths): TransactionScope {
@@ -25,6 +31,12 @@ function transactionScope(t: Transaction, paths: TenantPaths): TransactionScope 
     variants: variantRepository(t, paths),
     costs: variantCostsRepository(t, paths),
     skuIndex: skuIndexRepository(t, paths),
+    slugIndex: slugIndexRepository(t, paths),
+    vocabulary: vocabularyRepository(t, paths),
+    categories: categoryTreeRepository(t, paths),
+    categorySlugs: categorySlugRepository(t, paths),
+    sections: sectionsRepository(t, paths),
+    gtinIndex: gtinIndexRepository(t, paths),
   };
 }
 

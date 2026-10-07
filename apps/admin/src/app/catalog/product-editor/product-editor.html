@@ -1,12 +1,13 @@
 <a class="back" [routerLink]="catalogLink()">← Catálogo</a>
 
-@if (product.error()) {
-  <ui-error-state heading="No pudimos cargar el producto" (retry)="product.reload(); variants.reload()" />
+@if (product.error() || categoryTree.error() || sections.error()) {
+  <ui-error-state heading="No pudimos cargar el producto" (retry)="product.reload(); variants.reload(); categoryTree.reload(); sections.reload()" />
 } @else if (missing()) {
   <ui-empty-state heading="Este producto no existe" message="Puede que el enlace esté mal escrito.">
     <a matButton [routerLink]="catalogLink()">Volver al catálogo</a>
   </ui-empty-state>
-} @else if (product.hasValue() && product.value(); as current) {
+} @else if (loaded(); as view) {
+  @let current = view.product;
   <h1>{{ current.name }}</h1>
   <p class="status">
     {{ statusLabel(current) }}
@@ -23,6 +24,26 @@
     <app-details-section [tenantId]="current.tenantId" [product]="current" />
   </section>
 
+  <section aria-labelledby="tienda">
+    <app-storefront-section [tenantId]="current.tenantId" [product]="current" />
+  </section>
+
+  <section aria-labelledby="envio">
+    <app-shipping-section [tenantId]="current.tenantId" [product]="current" />
+  </section>
+
+  <section aria-labelledby="como-se-ofrece">
+    <app-presentation-section [tenantId]="current.tenantId" [product]="current" [sections]="view.sections" />
+  </section>
+
+  <section aria-labelledby="categorias">
+    <app-categories-section [tenantId]="current.tenantId" [product]="current" [tree]="view.tree" />
+  </section>
+
+  <section aria-labelledby="catalogos-externos">
+    <app-external-catalogs-section [tenantId]="current.tenantId" [product]="current" />
+  </section>
+
   <section>
     <app-image-upload
       heading="Imágenes del producto"
@@ -31,6 +52,7 @@
       [images]="current.images"
       [save]="saveProductImages"
     />
+    <app-product-video [tenantId]="current.tenantId" [product]="current" />
   </section>
 
   @if (variants.error()) {
@@ -38,7 +60,7 @@
   } @else if (variants.hasValue() && currency(); as money) {
     <!-- Sin catalog.write, el estado se lee en el encabezado y las opciones en las variantes (T079). -->
     <section *appHasPermission="'catalog.write'" aria-labelledby="estado">
-      <app-status-control [tenantId]="current.tenantId" [product]="current" [variants]="variants.value()" />
+      <app-status-control [tenantId]="current.tenantId" [product]="current" [variants]="variants.value()" [sections]="view.sections" />
     </section>
     <section *appHasPermission="'catalog.write'" aria-labelledby="opciones">
       <app-options-editor [tenantId]="current.tenantId" [product]="current" [variants]="variants.value()" />

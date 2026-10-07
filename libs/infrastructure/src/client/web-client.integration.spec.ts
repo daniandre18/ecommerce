@@ -1,4 +1,4 @@
-import type { AuditCursor, AuditFilter, ProductListQuery, TenantAccess, Watcher } from '@ecommerce/application';
+import type { AuditCursor, AuditFilter, ProductListQuery, TenantAccess, Watcher } from '@ecommerce/application/client';
 import {
   activateMembership,
   auditEntryId,
@@ -15,6 +15,8 @@ import {
   money,
   optionId,
   normalizeName,
+  slug,
+  storefrontDefaults,
   productId,
   roleId,
   tenantId,
@@ -90,6 +92,7 @@ const AUDIT: AuditEntry[] = [
 ];
 
 const product = (id: string, name: string, minute: number, overrides: Partial<Product> = {}): Product => ({
+  ...storefrontDefaults(),
   id: productId(id),
   tenantId: T1,
   name,
@@ -158,14 +161,24 @@ describe('cliente web contra los emuladores', () => {
       await tx.variants.save(variant('v-viva', false));
       await tx.variants.save(variant('v-archivada', true));
       for (const p of [
-        product('p1', 'Camiseta', 1, { options: [color] }),
-        product('p2', 'Café con leche', 3, { status: 'active' }),
+        product('p1', 'Camiseta', 1, { options: [color], slug: slug('camiseta-roja'), tags: ['Verano'], tagsNormalized: ['verano'] }),
+        // Con peso y dimensiones: el único al que no le faltan datos de envío (FR-017).
+        product('p2', 'Café con leche', 3, {
+          status: 'active',
+          brand: 'Nativa',
+          brandNormalized: 'nativa',
+          weightGrams: 500,
+          dimensionsMm: { length: 100, width: 100, height: 100 },
+          missingShippingData: false,
+        }),
         product('p3', 'Taza', 2),
         product('p4', 'Cafetera vieja', 4, { archived: true }),
       ]) {
         await tx.products.save(p);
       }
       await tx.costs.setMany(productId('p1'), { [variantId('v-viva')]: money(1200, 'USD') });
+      await tx.slugIndex.reserve(slug('camiseta-roja'), productId('p1'));
+      await tx.vocabulary.save({ tags: { verano: { label: 'Verano', count: 1 } }, brands: { nativa: { label: 'Nativa', count: 1 } } });
       for (const role of presetRoles(T1, AT)) await tx.roles.save(role);
       const invite = (id: string, email: string) => createInvitation({ id: invitationId(id), tenantId: T1, email, roleId: roleId('catalog'), createdBy: uid(OWNER.uid), at: AT });
       await tx.invitations.save(invite('i-pendiente', 'pendiente@t1.test'));
@@ -289,6 +302,37 @@ describe('cliente web contra los emuladores', () => {
       ['draft', ['Taza', 'Camiseta']],
     ])('filtra por estado %s', async (status, expected) => {
       await expect(names({ status, limit: 10 })).resolves.toEqual(expected);
+    });
+
+    // T037 (002) — los filtros de la ficha de tienda, cada uno con su índice (catalog-indexes.spec.ts).
+    it('filtra por etiqueta, comparada sin mayúsculas ni acentos', async () => {
+      await expect(names({ tag: 'VERANO', limit: 10 })).resolves.toEqual(['Camiseta']);
+    });
+
+    it('filtra por marca, también junto con el estado', async () => {
+      await expect(names({ brand: 'nativa', limit: 10 })).resolves.toEqual(['Café con leche']);
+      await expect(names({ status: 'active', brand: 'Nativa', limit: 10 })).resolves.toEqual(['Café con leche']);
+      await expect(names({ status: 'draft', brand: 'Nativa', limit: 10 })).resolves.toEqual([]);
+    });
+
+    it('filtra los físicos a los que les faltan datos de envío (FR-017)', async () => {
+      await expect(names({ missingShippingData: true, limit: 10 })).resolves.toEqual(['Taza', 'Camiseta']);
+    });
+
+    // FR-035: la búsqueda encuentra también por la URL amigable exacta, aunque el nombre no empiece así.
+    it('la búsqueda encuentra un producto por su URL amigable', async () => {
+      await expect(names({ search: 'camiseta-roja', limit: 10 })).resolves.toEqual(['Camiseta']);
+      await expect(names({ search: 'Camiseta Roja', limit: 10 })).resolves.toEqual(['Camiseta']);
+    });
+
+    it('la reserva de una URL se lee para la vista previa; una libre, como null (FR-007)', async () => {
+      await expect(queries.findSlug(T1, slug('camiseta-roja'))).resolves.toEqual({ productId: 'p1', kind: 'current' });
+      await expect(queries.findSlug(T1, slug('libre'))).resolves.toBeNull();
+    });
+
+    it('el vocabulario del comercio llega para sugerir (FR-011, FR-012)', async () => {
+      const vocabulary = await first((watcher) => queries.watchVocabulary(T1, watcher));
+      expect(vocabulary).toEqual({ tags: { verano: { label: 'Verano', count: 1 } }, brands: { nativa: { label: 'Nativa', count: 1 } } });
     });
 
     it('respeta el tope pedido', async () => {

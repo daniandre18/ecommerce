@@ -1,3 +1,6 @@
+// Barril del servidor: casos de uso, puertos de repositorio y autorización, más todo el cliente. Lo
+// importan las Functions y la infraestructura de servidor; el panel no (usa `@ecommerce/application/client`).
+export * from '@ecommerce/application/client';
 export * from './errors';
 export * from './ports/operation-context';
 export * from './ports/repositories';
@@ -9,19 +12,23 @@ export * from './services/authorization.service';
 export * from './use-cases/shared';
 export * from './use-cases/create-product';
 export * from './use-cases/update-product-details';
+export * from './use-cases/storefront/set-product-slug';
+export * from './use-cases/storefront/set-product-type';
+export * from './use-cases/storefront/set-product-shipping';
+export * from './use-cases/storefront/set-sale-conditions';
+export * from './use-cases/storefront/set-variant-gtin';
+export * from './use-cases/storefront/set-variant-shipping';
+export * from './use-cases/storefront/backfill';
+export * from './use-cases/categories/tree';
+export * from './use-cases/categories/assign';
+export * from './use-cases/categories/prune';
+export * from './use-cases/sections/sections';
 export * from './use-cases/set-product-options';
 export * from './use-cases/set-variant-sku';
 export * from './use-cases/set-variant-images';
 export * from './use-cases/set-product-status';
 export * from './use-cases/archive';
 export * from './use-cases/set-variant-amounts';
-export * from './client/commands';
-export * from './client/queries';
-export * from './client/session';
-export * from './client/images';
-export * from './client/tenants';
-export * from './client/team';
-export * from './client/audit';
 export * from './use-cases/team/roles';
 export * from './use-cases/team/invitations';
 export * from './use-cases/team/memberships';

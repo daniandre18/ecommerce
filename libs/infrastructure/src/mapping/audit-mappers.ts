@@ -10,12 +10,16 @@ import {
   type PriceField,
   type RoleChangeKind,
   type RoleSnapshot,
+  type SaleConditionField,
+  type SaleConditionValue,
   type Uid,
 } from '@ecommerce/domain';
 import { moneyFromDoc, stockFromDoc } from './catalog-mappers';
 import { toDate, type DocumentData } from './document';
 
 const PRICE_FIELDS: readonly PriceField[] = ['price', 'compareAtPrice', 'cost'];
+const SALE_CONDITION_FIELDS: readonly SaleConditionField[] = ['price', 'shipping'];
+const SALE_CONDITION_VALUES: readonly SaleConditionValue[] = ['shown', 'hidden', 'none', 'charged', 'free'];
 const ENTITY_KINDS: readonly AuditEntity['kind'][] = ['variant', 'product', 'role', 'membership', 'invitation', 'tenant'];
 
 /**
@@ -40,6 +44,14 @@ export function auditEntryFromDoc(id: string, tid: string, d: DocumentData): Aud
       return { ...base, type: 'stock.adjusted', before: stockFromDoc(d['before']), after: stockFromDoc(d['after']) };
     case 'role.changed':
       return { ...base, type: 'role.changed', change: String(d['change']) as RoleChangeKind, before: snapshotFromDoc(d['before']), after: snapshotFromDoc(d['after']) };
+    case 'sale-conditions.changed':
+      return {
+        ...base,
+        type: 'sale-conditions.changed',
+        field: oneOf(SALE_CONDITION_FIELDS, d['field'], 'Condición de venta'),
+        before: oneOf(SALE_CONDITION_VALUES, d['before'], 'Valor de condición de venta'),
+        after: oneOf(SALE_CONDITION_VALUES, d['after'], 'Valor de condición de venta'),
+      };
     case 'platform.action':
       return { ...base, type: 'platform.action', before: recordOrNull(d['before']), after: recordOrNull(d['after']) };
     default:
@@ -52,6 +64,12 @@ function entityFromDoc(value: unknown): AuditEntity {
   const kind = ENTITY_KINDS.find((k) => k === entity.kind);
   if (!kind) throw new TypeError(`Entidad de bitácora desconocida: ${String(entity.kind)}`);
   return { kind, id: String(entity.id), ...(typeof entity.productId === 'string' ? { productId: productId(entity.productId) } : {}) };
+}
+
+function oneOf<T extends string>(allowed: readonly T[], value: unknown, label: string): T {
+  const found = allowed.find((candidate) => candidate === value);
+  if (!found) throw new TypeError(`${label} desconocida en la bitácora: ${String(value)}`);
+  return found;
 }
 
 function priceField(value: unknown): PriceField {

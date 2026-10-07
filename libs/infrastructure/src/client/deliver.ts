@@ -1,4 +1,4 @@
-import type { Watcher } from '@ecommerce/application';
+import type { Watcher } from '@ecommerce/application/client';
 
 /** Un documento corrupto que no pasa las factorías del dominio llega como error, no como excepción suelta. */
 export function deliver<T>(watcher: Watcher<T>, read: () => T): void {

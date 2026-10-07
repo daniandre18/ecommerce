@@ -1,5 +1,9 @@
 import type {
   AuditEntry,
+  CategoryId,
+  CategoryTree,
+  FeaturedSections,
+  Gtin,
   Invitation,
   InvitationId,
   Membership,
@@ -9,12 +13,15 @@ import type {
   Role,
   RoleId,
   Sku,
+  Slug,
   Tenant,
   Uid,
   Variant,
   VariantId,
   VariantSummary,
+  Vocabulary,
 } from '@ecommerce/domain';
+import type { SlugIndexEntry } from '@ecommerce/application/client';
 
 /**
  * Solo anexado. No existe `update` ni `delete`: la inmutabilidad de la bitácora (FR-032) no es una
@@ -80,6 +87,12 @@ export interface ProductRepository {
    * editando su nombre o su descripción.
    */
   updateVariantSummary(id: ProductId, summary: VariantSummary): Promise<void>;
+  /**
+   * Solo `categoryIds`, SIN tocar la versión ni la fecha de edición (research §2 de la 002): asignar
+   * y quitar categorías son operaciones de conjunto, conmutativas, que no deben provocar un conflicto
+   * a quien está editando el producto.
+   */
+  updateCategories(id: ProductId, categoryIds: readonly CategoryId[]): Promise<void>;
 }
 
 export interface VariantRepository {
@@ -106,4 +119,84 @@ export interface SkuIndexRepository {
   release(normalized: string): Promise<void>;
   /** El SKU de una variante archivada queda reservado para siempre (FR-023). */
   markArchived(normalized: string): Promise<void>;
+}
+
+/** Unicidad de la URL amigable de un producto dentro del comercio. Como `SkuIndexRepository`. */
+export interface SlugIndexRepository {
+  find(slug: Slug): Promise<SlugIndexEntry | null>;
+  /** Crea la reserva como vigente. Si la URL ya existe, falla al confirmar: la colisión es atómica. */
+  reserve(slug: Slug, productId: ProductId): Promise<void>;
+  /** Solo para la URL de un producto que nunca se publicó: nadie la enlazó (FR-008). */
+  release(slug: Slug): Promise<void>;
+  /** La que deja de ser vigente de un producto publicado alguna vez: queda reservada (FR-008). */
+  markPrevious(slug: Slug): Promise<void>;
+  /** Volver a una anterior propia la recupera como vigente. */
+  markCurrent(slug: Slug): Promise<void>;
+}
+
+/** Etiquetas y marcas del comercio, en un solo documento (research §7 de la 002). */
+export interface VocabularyRepository {
+  /** Vacío si todavía no existe. */
+  get(): Promise<Vocabulary>;
+  save(vocabulary: Vocabulary): Promise<void>;
+}
+
+/**
+ * Las URL anteriores de las categorías, una entrada por URL con la categoría que la reserva (T110 de
+ * la 002). Fuera del árbol: dentro, cada cambio de URL agrandaba un documento con límite de 1 MiB. Una
+ * reserva de una categoría eliminada está libre, así que se escribe con `set` y no con `create`.
+ */
+export interface CategorySlugRepository {
+  /** Quién la tiene reservada, o `null`. */
+  find(slug: Slug): Promise<CategoryId | null>;
+  reserve(slug: Slug, categoryId: CategoryId): Promise<void>;
+  release(slug: Slug): Promise<void>;
+}
+
+/** El árbol entero de categorías, en un solo documento (research §1 de la 002). */
+export interface CategoryTreeRepository {
+  /** Vacío si todavía no existe. */
+  get(): Promise<CategoryTree>;
+  save(tree: CategoryTree): Promise<void>;
+}
+
+/**
+ * Quita de los productos los ids de categorías eliminadas (research §2 de la 002). Corre FUERA de la
+ * transacción, después de confirmar, en lotes: escribe solo `categoryIds`. Es idempotente y puede
+ * cortarse a la mitad; lo que queda sin podar se ignora al leer y lo termina la operación siguiente.
+ */
+export interface CategoryPruner {
+  prune(ids: readonly CategoryId[]): Promise<void>;
+}
+
+/**
+ * Destacados y Ofertas, en un solo documento (research §4 de la 002). El tope de 40 se verifica
+ * dentro de la transacción sobre la misma lista que se escribe: dos agregados simultáneos se
+ * serializan, y el segundo ve la lista ya actualizada.
+ */
+export interface FeaturedSectionsRepository {
+  /** Las dos vacías si todavía no existe. */
+  get(): Promise<FeaturedSections>;
+  save(sections: FeaturedSections): Promise<void>;
+}
+
+/** Un GTIN reservado (FR-030 de la 002). El id de cada entrada es el GTIN normalizado a 14 dígitos. */
+export interface GtinIndexEntry {
+  /** La forma escrita, para mostrar. */
+  readonly gtin: Gtin;
+  readonly productId: ProductId;
+  readonly variantId: VariantId;
+}
+
+/**
+ * Unicidad del GTIN dentro del comercio, como `SkuIndexRepository`, con una diferencia: no hay marca
+ * de archivada, porque archivar no libera. El GTIN de una variante archivada sigue reservado, y la
+ * única forma de liberarlo es quitárselo (FR-030).
+ */
+export interface GtinIndexRepository {
+  find(gtin: Gtin): Promise<GtinIndexEntry | null>;
+  /** Crea la reserva. Si el GTIN ya existe, falla al confirmar: la colisión es atómica (`tx.create`). */
+  reserve(entry: { gtin: Gtin; productId: ProductId; variantId: VariantId }): Promise<void>;
+  /** Único camino para liberarlo: quitar el GTIN de su variante, archivada o no. */
+  release(gtin: Gtin): Promise<void>;
 }

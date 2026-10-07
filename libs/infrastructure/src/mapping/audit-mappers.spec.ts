@@ -28,14 +28,16 @@ const roundTrip = (entry: AuditEntry) => auditEntryFromDoc(entry.id, 't1', { ...
 
 // T084 — lo que el servidor escribe en la bitácora, el panel lo lee igual, tipo por tipo (FR-031).
 describe('auditEntryFromDoc', () => {
-  const [price, stock] = buildAuditEntries(
+  const [price, stock, saleConditions] = buildAuditEntries(
     actor,
     [
       { type: 'price.changed', field: 'cost', productId: productId('p1'), variantId: variantId('v1'), before: null, after: money(800, 'COP') },
       { type: 'stock.adjusted', productId: productId('p1'), variantId: variantId('v1'), before: stockUndefined(), after: stockQuantity(0) },
+      // T017 (002): condiciones de venta, sobre el producto (FR-032).
+      { type: 'sale-conditions.changed', field: 'shipping', productId: productId('p1'), before: 'none', after: 'charged' },
     ],
     { batchId: batchId('b1'), at: AT, newEntryId: ids },
-  );
+  ) as [AuditEntry, AuditEntry, AuditEntry];
   const role = buildTeamAuditEntry(
     actor,
     { change: 'role.updated', entity: { kind: 'role', id: 'catalog' }, before: { roleId: 'catalog', permissions: ['catalog.read'] }, after: { roleId: 'catalog', permissions: [] } },
@@ -43,11 +45,17 @@ describe('auditEntryFromDoc', () => {
   );
 
   it.each([
-    ['un cambio de costo, sin importe anterior', price!],
-    ['un ajuste de existencias, de sin definir a cero', stock!],
+    ['un cambio de costo, sin importe anterior', price],
+    ['un ajuste de existencias, de sin definir a cero', stock],
     ['un cambio de permisos de un rol', role],
+    ['un cambio de condiciones de venta, de sin envío a envío con cargo', saleConditions],
   ])('%s', (_label, entry) => {
     expect(roundTrip(entry)).toEqual(entry);
+  });
+
+  it('una condición de venta desconocida no se adivina', () => {
+    expect(() => auditEntryFromDoc('x', 't1', { ...saleConditions, after: 'gratis-a-veces' })).toThrow(TypeError);
+    expect(() => auditEntryFromDoc('x', 't1', { ...saleConditions, field: 'color' })).toThrow(TypeError);
   });
 
   it('un tipo de evento desconocido no se adivina', () => {

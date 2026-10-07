@@ -9,6 +9,10 @@
       "executor": "nx:run-commands",
       "options": { "command": "tsx --tsconfig tools/tsconfig.json tools/seed/src/main.ts" }
     },
+    "migrate": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsx --tsconfig tools/tsconfig.json tools/migrate/src/main.ts" }
+    },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": { "command": "tsc -p tools/tsconfig.json --noEmit" }

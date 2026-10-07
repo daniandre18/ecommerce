@@ -127,4 +127,26 @@ describe('StatusControl', () => {
     await settle();
     expect(commands.archiveProduct).not.toHaveBeenCalled();
   });
+
+  // T080 (002, Historia 3) — FR-028: el aviso de archivado dice de qué secciones sale, antes de confirmar.
+  it.each([
+    [{ featured: ['p1'], offers: ['p1'] }, 'Sale de Destacados y de Ofertas, y libera sus lugares.'],
+    [{ featured: [], offers: ['p1'] }, 'Sale de Ofertas, y libera su lugar.'],
+  ])('archivar uno que está en secciones lo avisa (%o)', async (sections, warning) => {
+    dialog.open.mockReturnValue({ afterClosed: () => of(false) });
+    const { button } = await render([variantOf('v1', 'rojo', 'R')]);
+    fixtureRef.componentRef.setInput('sections', { featured: sections.featured.map(productId), offers: sections.offers.map(productId) });
+    await settle();
+    button('Archivar producto')?.click();
+    await settle();
+    expect(dialog.open.mock.calls[0]?.[1]?.data?.message).toContain(warning);
+  });
+
+  it('archivar uno que no está en ninguna sección no menciona secciones', async () => {
+    dialog.open.mockReturnValue({ afterClosed: () => of(false) });
+    const { button } = await render([variantOf('v1', 'rojo', 'R')]);
+    button('Archivar producto')?.click();
+    await settle();
+    expect(dialog.open.mock.calls[0]?.[1]?.data?.message).not.toContain('libera');
+  });
 });

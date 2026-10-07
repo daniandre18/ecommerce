@@ -1,0 +1,98 @@
+h1 {
+  margin: 0 0 16px;
+  font: var(--mat-sys-headline-small);
+}
+
+h2 {
+  margin: 0 0 8px;
+  font: var(--mat-sys-title-medium);
+}
+
+.create {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container-low);
+}
+
+.fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Sin min-width: 0, el selector toma el ancho de su ruta más larga y desborda a 360 px. */
+.fields > * {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.select {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font: var(--mat-sys-body-medium);
+}
+
+.select select {
+  min-height: 48px;
+  max-width: 100%;
+  font: inherit;
+}
+
+.filter {
+  max-width: 320px;
+  margin-bottom: 16px;
+}
+
+.slug-preview {
+  margin: 8px 0;
+  font: var(--mat-sys-body-medium);
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Cada nivel, un poco más adentro; a 360 px, tres niveles siguen entrando (FR-038 de la 001). */
+li ul {
+  padding-left: 16px;
+  border-left: 1px solid var(--mat-sys-outline-variant);
+}
+
+li {
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface);
+}
+
+li li:last-child {
+  border-bottom: 0;
+}
+
+.cdk-drag-preview {
+  box-shadow: var(--mat-sys-level3);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.4;
+}
+
+.none {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.failure {
+  color: var(--mat-sys-error);
+}
+
+.failure:empty {
+  display: none;
+}

@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+  parseBulkCategory,
+  parseCreateCategory,
   parseCreateProduct,
+  parseMoveCategory,
+  parseSection,
+  parseSetProductCategories,
+  parseSetSaleConditions,
+  parseSetVariantGtin,
+  parseSetVariantShipping,
   parseSetProductOptions,
   parseSetVariantPrice,
   parseSetVariantImages,
@@ -125,6 +133,89 @@ describe('parseo de la entrada de las callable', () => {
     it('exige el id de cada opción y de cada valor: los propone el cliente', () => {
       const withoutId = { ...input, options: [{ name: 'Talla', values: [{ id: 'v-s', label: 'S' }] }] };
       expect(rejection(() => parseSetProductOptions(withoutId)).details).toEqual({ field: 'options[0].id' });
+    });
+  });
+
+  describe('categorías (002, Historia 2)', () => {
+    it('una de primer nivel lleva parentId null; ausente se rechaza, para no confundirlo', () => {
+      expect(parseCreateCategory({ parentId: null, name: 'Ropa' })).toEqual({ parentId: null, name: 'Ropa' });
+      expect(parseCreateCategory({ parentId: 'ropa', name: 'Hombre', slug: 'hombre' })).toEqual({ parentId: 'ropa', name: 'Hombre', slug: 'hombre' });
+      expect(rejection(() => parseCreateCategory({ name: 'Ropa' })).details).toEqual({ field: 'parentId' });
+    });
+
+    it('mover exige el padre, o null, y la posición entera', () => {
+      expect(parseMoveCategory({ categoryId: 'c', parentId: null, position: 2 })).toEqual({ categoryId: 'c', parentId: null, position: 2 });
+      expect(rejection(() => parseMoveCategory({ categoryId: 'c', parentId: null, position: '2' })).details).toEqual({ field: 'position' });
+    });
+
+    it('el editor manda lo que agrega y lo que quita: las dos listas, de ids', () => {
+      expect(parseSetProductCategories({ productId: 'p1', add: ['a'], remove: [] })).toEqual({ productId: 'p1', add: ['a'], remove: [] });
+      expect(rejection(() => parseSetProductCategories({ productId: 'p1', add: ['a'] })).details).toEqual({ field: 'remove' });
+      expect(rejection(() => parseSetProductCategories({ productId: 'p1', categoryIds: ['a'] })).details).toEqual({ field: 'add' });
+    });
+
+    it('un id de la lista que no es un único segmento se rechaza nombrando su lugar', () => {
+      expect(rejection(() => parseBulkCategory({ categoryId: 'c', productIds: ['p1', 'p1/../p2'] })).details).toEqual({ field: 'productIds[1]' });
+    });
+  });
+
+  describe('secciones y condiciones de venta (002, Historia 3)', () => {
+    it('una sección es una de las dos de la plataforma', () => {
+      expect(parseSection({ section: 'offers', productIds: ['p1'] })).toEqual({ section: 'offers', productIds: ['p1'] });
+      expect(rejection(() => parseSection({ section: 'novedades', productIds: ['p1'] })).details).toEqual({ field: 'section' });
+    });
+
+    it('condiciones de venta: cada producto con su versión; el campo ausente no viaja', () => {
+      expect(parseSetSaleConditions({ changes: [{ productId: 'p1', version: 2 }], freeShipping: true })).toEqual({
+        changes: [{ productId: 'p1', version: 2 }],
+        freeShipping: true,
+      });
+      expect(parseSetSaleConditions({ changes: [{ productId: 'p1', version: 2 }], priceVisible: false })).toEqual({
+        changes: [{ productId: 'p1', version: 2 }],
+        priceVisible: false,
+      });
+      expect(rejection(() => parseSetSaleConditions({ changes: [{ productId: 'p1', version: 2 }, { productId: 'p2' }] })).details).toEqual({
+        field: 'changes[1].version',
+      });
+      expect(rejection(() => parseSetSaleConditions({ changes: [], priceVisible: 'no' })).details).toEqual({ field: 'priceVisible' });
+    });
+  });
+
+  describe('datos por variante y catálogos externos (002, Historia 4)', () => {
+    it('el GTIN viaja como texto; null lo quita; ausente se rechaza', () => {
+      expect(parseSetVariantGtin({ productId: 'p1', variantId: 'v1', version: 1, gtin: '4006381333931' })).toEqual({
+        productId: 'p1',
+        variantId: 'v1',
+        version: 1,
+        gtin: '4006381333931',
+      });
+      expect(parseSetVariantGtin({ productId: 'p1', variantId: 'v1', version: 1, gtin: null }).gtin).toBeNull();
+      expect(rejection(() => parseSetVariantGtin({ productId: 'p1', variantId: 'v1', version: 1 })).details).toEqual({ field: 'gtin' });
+    });
+
+    it('envío por variante: lo ausente no viaja, null vuelve a heredar', () => {
+      expect(parseSetVariantShipping({ productId: 'p1', changes: [{ variantId: 'v1', version: 2, weightGrams: 450 }, { variantId: 'v2', version: 1, dimensionsMm: null }] })).toEqual({
+        productId: 'p1',
+        changes: [
+          { variantId: 'v1', version: 2, weightGrams: 450 },
+          { variantId: 'v2', version: 1, dimensionsMm: null },
+        ],
+      });
+      expect(rejection(() => parseSetVariantShipping({ productId: 'p1', changes: [{ variantId: 'v1', version: 1, dimensionsMm: { length: 1, width: 2 } }] })).details).toEqual({
+        field: 'changes[0].dimensionsMm.height',
+      });
+    });
+
+    it('MPN, rango de edad y género en los datos del producto; fuera de las listas, inválido', () => {
+      expect(parseUpdateProductDetails({ productId: 'p1', version: 1, mpn: 'X-1', ageGroup: 'adult', gender: null })).toEqual({
+        productId: 'p1',
+        version: 1,
+        mpn: 'X-1',
+        ageGroup: 'adult',
+        gender: null,
+      });
+      expect(rejection(() => parseUpdateProductDetails({ productId: 'p1', version: 1, ageGroup: 'teen' })).details).toEqual({ field: 'ageGroup' });
+      expect(rejection(() => parseUpdateProductDetails({ productId: 'p1', version: 1, gender: 'otro' })).details).toEqual({ field: 'gender' });
     });
   });
 });

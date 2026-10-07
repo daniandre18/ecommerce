@@ -39,6 +39,7 @@ import { VariantRow } from './variant-row';
             [variant]="row.variant"
             [label]="row.label"
             [currency]="currency()"
+            [shipping]="product()"
             [labelOf]="labelOf"
             [cost]="costOf(row.variant.id)"
             [selectable]="bulkEditable()"

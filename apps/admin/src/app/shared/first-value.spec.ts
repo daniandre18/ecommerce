@@ -1,4 +1,4 @@
-import type { Watcher } from '@ecommerce/application';
+import type { Watcher } from '@ecommerce/application/client';
 import { firstValue } from './first-value';
 
 describe('firstValue', () => {

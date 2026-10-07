@@ -1,4 +1,4 @@
-import type { Unsubscribe, Watcher } from '@ecommerce/application';
+import type { Unsubscribe, Watcher } from '@ecommerce/application/client';
 import {
   onSnapshot,
   type DocumentReference,

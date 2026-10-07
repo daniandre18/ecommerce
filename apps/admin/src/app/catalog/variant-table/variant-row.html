@@ -19,6 +19,17 @@
     >
       Imágenes ({{ variant().images.length }})
     </button>
+    <button
+      matButton
+      type="button"
+      class="more"
+      [attr.aria-expanded]="expanded()"
+      [attr.aria-controls]="detailsId()"
+      [attr.aria-label]="moreLabel() + ' de ' + label()"
+      (click)="expanded.set(!expanded())"
+    >
+      {{ moreLabel() }}
+    </button>
   </div>
 
   <div class="fields">
@@ -95,5 +106,69 @@
         <mat-error>{{ error.message }}</mat-error>
       }
     </mat-form-field>
+
   </div>
+
+  <p class="more-summary">{{ summary() }}</p>
+  @if (expanded()) {
+    <div class="fields more-fields" [id]="detailsId()">
+      <!-- Historia 4 de la 002: el código de barras, reservado como el SKU (FR-030). -->
+      <mat-form-field subscriptSizing="dynamic" floatLabel="always">
+        <mat-label>GTIN</mat-label>
+        <input
+          matInput
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="Sin GTIN"
+          [formField]="rowForm.gtin"
+          (blur)="commit('gtin')"
+          (keydown.enter)="commit('gtin')"
+        />
+        @if (rowForm.gtin().errors()[0]; as error) {
+          <mat-error>{{ error.message }}</mat-error>
+        }
+      </mat-form-field>
+      @if (canReleaseHolder()) {
+        <button matButton type="button" class="release" (click)="releaseHolder()">Quitárselo a la archivada y usarlo acá</button>
+      }
+
+      <!-- Peso y dimensiones propios, solo en un físico; vacíos, heredan los del producto (FR-015). -->
+      @if (physical()) {
+        <mat-form-field subscriptSizing="dynamic" floatLabel="always">
+          <mat-label>Peso (kg)</mat-label>
+          <input
+            matInput
+            inputmode="decimal"
+            autocomplete="off"
+            [placeholder]="inheritedWeight() || 'Sin peso'"
+            [formField]="rowForm.weight"
+            (blur)="commit('weight')"
+            (keydown.enter)="commit('weight')"
+          />
+          @if (rowForm.weight().errors()[0]; as error) {
+            <mat-error>{{ error.message }}</mat-error>
+          } @else if (draft().weight === '' && inheritedWeight()) {
+            <mat-hint>Peso heredado del producto</mat-hint>
+          }
+        </mat-form-field>
+
+        <mat-form-field subscriptSizing="dynamic" floatLabel="always">
+          <mat-label>Dimensiones (cm)</mat-label>
+          <input
+            matInput
+            autocomplete="off"
+            [placeholder]="inheritedDimensions() || 'Largo × ancho × alto'"
+            [formField]="rowForm.dimensions"
+            (blur)="commit('dimensions')"
+            (keydown.enter)="commit('dimensions')"
+          />
+          @if (rowForm.dimensions().errors()[0]; as error) {
+            <mat-error>{{ error.message }}</mat-error>
+          } @else if (draft().dimensions === '' && inheritedDimensions()) {
+            <mat-hint>Dimensiones heredadas del producto</mat-hint>
+          }
+        </mat-form-field>
+      }
+    </div>
+  }
 </div>

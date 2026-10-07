@@ -1,4 +1,4 @@
-import type { Session, SessionUser, SignInFailure, SignInResult, SignUpFailure, SignUpResult, Unsubscribe, Watcher } from '@ecommerce/application';
+import type { Session, SessionUser, SignInFailure, SignInResult, SignUpFailure, SignUpResult, Unsubscribe, Watcher } from '@ecommerce/application/client';
 import { uid } from '@ecommerce/domain';
 import {
   createUserWithEmailAndPassword,

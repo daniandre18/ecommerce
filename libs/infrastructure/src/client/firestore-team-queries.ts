@@ -1,4 +1,4 @@
-import type { TeamQueries, Unsubscribe, Watcher } from '@ecommerce/application';
+import type { TeamQueries, Unsubscribe, Watcher } from '@ecommerce/application/client';
 import type { Invitation, Membership, Role, TenantId } from '@ecommerce/domain';
 import { collection, query, where, type Firestore } from 'firebase/firestore';
 import { invitationFromDoc, membershipFromDoc, roleFromDoc } from '../mapping/team-mappers';

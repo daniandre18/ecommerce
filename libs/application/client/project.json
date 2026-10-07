@@ -1,0 +1,27 @@
+{
+  "name": "application-client",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/application/client/src",
+  "projectType": "library",
+  "tags": ["layer:application-client"],
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run --config libs/application/client/vite.config.mts"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint libs/application/client --no-error-on-unmatched-pattern --pass-on-no-patterns"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc -p libs/application/client/tsconfig.json --noEmit"
+      }
+    }
+  }
+}

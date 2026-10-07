@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import type { AuditPage } from '@ecommerce/application';
+import type { AuditPage } from '@ecommerce/application/client';
 import {
   auditEntryId,
   buildAuditEntries,
@@ -118,6 +118,14 @@ describe('AuditLog', () => {
       from: new Date(2026, 8, 1),
       to: new Date(2026, 9, 1),
     });
+  });
+
+  // T019 (002) — FR-033: el filtro por tipo incluye las condiciones de venta.
+  it('el filtro por tipo ofrece "Condiciones de venta" y lo consulta', async () => {
+    const { select } = await open('/t/t1/audit?type=sale-conditions.changed');
+    expect(audit.last.filter).toEqual({ type: 'sale-conditions.changed' });
+    const options = [...select('Tipo de evento').options].map((option) => option.textContent?.trim());
+    expect(options).toContain('Condiciones de venta');
   });
 
   it('elegir una persona la lleva a la dirección y vuelve a consultar', async () => {

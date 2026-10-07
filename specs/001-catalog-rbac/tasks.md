@@ -336,3 +336,13 @@ cumplido desde el día uno; lo que se difiere es la pantalla, no la garantía. S
 - Las cuatro compuertas de CI (T010) rigen desde el primer commit, no al final
 - Los criterios SC-001, SC-002 y SC-011 del spec son **objetivos de producto**: se verifican con
   pruebas de usuario y **no** bloquean el despliegue
+
+---
+
+## Decisiones pendientes
+
+Defectos de la 001 encontrados después de cerrarla. Se deciden antes de planear la feature
+siguiente que los toque.
+
+- [ ] T102 [Decisión pendiente] **`catalog.read` se puede conceder y no restringe nada.** El constructor de roles lo ofrece como permiso activable, pero ninguna parte de la 001 lo exige: las reglas de `firestore.rules` abren `products` y `variants` a cualquier miembro activo (`isActiveMember`), y ningún caso de uso lo pide. Un Propietario que arma un rol sin `catalog.read` cree estar restringiendo el acceso al catálogo, y no lo restringe. Es un defecto, no una característica. Dos salidas: **(a)** exigir `catalog.read` en las reglas de `products` y `variants` con `hasPermission`, a +1 lectura por solicitud, con sus casos en `tests/rules/catalog-read.spec.ts`; o **(b)** quitar `catalog.read` del enumerado `Permission` en `libs/domain/src/value-objects/permission.ts` y del constructor de roles, porque si todo miembro activo lee el catálogo por diseño, un permiso que no hace nada confunde al Propietario. Hallado en `/speckit-analyze` de la 002 (hallazgo I1). La 002 adopta el modelo actual —lectura con membresía activa, FR-002— y su caso de reglas 35a lo fija a la espera de esta decisión
+- [X] T103 [Defecto corregido] **Faltaba el índice `(archived, status, nameNormalized)`.** El listado del catálogo (T053) combina la búsqueda por nombre con el filtro de estado, y esa combinación no tenía índice compuesto: en el emulador funcionaba —no exige índices—, pero en producción la consulta fallaba. Hallado en la Historia 1 de la 002. **Este sí quedó corregido**: el índice está en `firestore.indexes.json`, y `libs/infrastructure/src/client/catalog-indexes.spec.ts` lo verifica junto con el de la búsqueda sola, así que un índice faltante vuelve a fallar en CI y no en producción

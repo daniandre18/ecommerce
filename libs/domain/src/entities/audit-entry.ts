@@ -10,8 +10,8 @@ import type { Money } from '../value-objects/money';
 import type { Permission } from '../value-objects/permission';
 import type { StockLevel } from '../value-objects/stock-level';
 
-/** Los cuatro tipos mínimos de FR-031. */
-export type AuditEventType = 'price.changed' | 'stock.adjusted' | 'role.changed' | 'platform.action';
+/** Los cuatro tipos mínimos de FR-031, más las condiciones de venta de la 002 (FR-032). */
+export type AuditEventType = 'price.changed' | 'stock.adjusted' | 'role.changed' | 'platform.action' | 'sale-conditions.changed';
 
 export interface AuditEntity {
   readonly kind: 'variant' | 'product' | 'role' | 'membership' | 'invitation' | 'tenant';
@@ -35,6 +35,20 @@ interface AuditEntryBase {
 
 /** Qué importe cambió. El costo usa el mismo tipo de evento pero se distingue acá. */
 export type PriceField = 'price' | 'compareAtPrice' | 'cost';
+
+/**
+ * Qué condición de venta cambió (FR-032 de la 002): mostrar u ocultar el precio, o el envío. El
+ * cambio de tipo físico/digital se registra como cambio de envío, porque eso es lo que altera.
+ */
+export type SaleConditionField = 'price' | 'shipping';
+
+/**
+ * Condiciones EFECTIVAS, no campos: un digital con `freeShipping` guardado es `'none'`, porque no se
+ * envía (research §3 de la 002).
+ */
+export type PriceVisibility = 'shown' | 'hidden';
+export type ShippingCondition = 'none' | 'charged' | 'free';
+export type SaleConditionValue = PriceVisibility | ShippingCondition;
 
 export type RoleChangeKind =
   | 'role.created'
@@ -80,6 +94,12 @@ export type AuditEntry =
       readonly change: RoleChangeKind;
       readonly before: RoleSnapshot | null;
       readonly after: RoleSnapshot | null;
+    })
+  | (AuditEntryBase & {
+      readonly type: 'sale-conditions.changed';
+      readonly field: SaleConditionField;
+      readonly before: SaleConditionValue;
+      readonly after: SaleConditionValue;
     })
   | (AuditEntryBase & {
       readonly type: 'platform.action';

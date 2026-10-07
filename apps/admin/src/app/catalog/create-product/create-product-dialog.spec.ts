@@ -1,22 +1,25 @@
 import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { productId, variantId } from '@ecommerce/domain';
-import { CATALOG_COMMANDS } from '../../core/client';
-import { fakeCatalogCommands, T1 } from '../../../testing/fakes';
+import { productId, slug, variantId } from '@ecommerce/domain';
+import { CATALOG_COMMANDS, CATALOG_QUERIES } from '../../core/client';
+import { FakeCatalogQueries, fakeCatalogCommands, T1 } from '../../../testing/fakes';
 import { settle } from '../../../testing/settle';
 import { CreateProductDialog } from './create-product-dialog';
 
 describe('CreateProductDialog', () => {
   let commands: ReturnType<typeof fakeCatalogCommands>;
+  let queries: FakeCatalogQueries;
   const dialogRef = { close: vi.fn() };
 
   beforeEach(() => {
     commands = fakeCatalogCommands();
+    queries = new FakeCatalogQueries();
     dialogRef.close.mockClear();
     TestBed.configureTestingModule({
       imports: [CreateProductDialog],
       providers: [
         { provide: CATALOG_COMMANDS, useValue: commands },
+        { provide: CATALOG_QUERIES, useValue: queries },
         { provide: MAT_DIALOG_DATA, useValue: { tenantId: T1 } },
         { provide: MatDialogRef, useValue: dialogRef },
       ],
@@ -49,7 +52,7 @@ describe('CreateProductDialog', () => {
   });
 
   it('crea el producto y devuelve su id al cerrar', async () => {
-    const created = { productId: productId('p1'), variantId: variantId('v1') };
+    const created = { productId: productId('p1'), variantId: variantId('v1'), slug: slug('camiseta') };
     commands.createProduct.mockResolvedValue({ ok: true, data: created });
     const { type, submit } = await render();
     await type('input', 'Camiseta');
@@ -75,5 +78,39 @@ describe('CreateProductDialog', () => {
     await submit();
     const [first, second] = commands.createProduct.mock.calls.map(([, input]) => (input as { requestId: string }).requestId);
     expect(second).toBe(first);
+  });
+
+  // T038a — escenario 2 de la Historia 1: la URL que va a recibir, sufijo incluido, antes de confirmar.
+  describe('URL amigable (FR-006)', () => {
+    const hint = (root: HTMLElement) => root.querySelector('.slug-preview')?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+
+    it('mientras se escribe el nombre, muestra la URL que va a recibir', async () => {
+      const { root, type } = await render();
+      await type('input', 'Té Verde');
+      expect(hint(root)).toContain('…/te-verde');
+    });
+
+    it('si está tomada, muestra la del sufijo que va a recibir', async () => {
+      queries.slugs.set('camiseta', { productId: productId('p9'), kind: 'current' });
+      queries.slugs.set('camiseta-2', { productId: productId('p8'), kind: 'previous' });
+      const { root, type } = await render();
+      await type('input', 'Camiseta');
+      expect(hint(root)).toContain('…/camiseta-3');
+    });
+
+    it('un nombre sin letras ni números avisa que se generará una para reemplazar', async () => {
+      const { root, type } = await render();
+      await type('input', '★★★');
+      expect(hint(root)).toContain('Se generará una URL provisoria');
+    });
+
+    it('al crear, devuelve la URL final que asignó el servidor', async () => {
+      const created = { productId: productId('p1'), variantId: variantId('v1'), slug: slug('camiseta-2') };
+      commands.createProduct.mockResolvedValue({ ok: true, data: created });
+      const { type, submit } = await render();
+      await type('input', 'Camiseta');
+      await submit();
+      expect(dialogRef.close).toHaveBeenCalledWith(expect.objectContaining({ slug: 'camiseta-2' }));
+    });
   });
 });

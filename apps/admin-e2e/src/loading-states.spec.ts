@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { MULTI, OWNER, productAsOwner, signIn } from './support';
+import { call, idTokenOf, MULTI, OWNER, productAsOwner, signIn } from './support';
 
 /** Lo que tarda en llegar cada respuesta de Firestore: suficiente para ver el esqueleto. */
 const DELAY_MS = 600;
@@ -18,6 +18,12 @@ async function measureLayoutShifts(page: Page) {
       }
     }).observe({ type: 'layout-shift', buffered: true });
   });
+}
+
+/** Una categoría raíz creada como Propietaria; devuelve su id. */
+async function rootCategory(name: string): Promise<string> {
+  const { body } = await call(await idTokenOf(OWNER), 'createCategory', { tenantId: 't1', requestId: crypto.randomUUID(), parentId: null, name });
+  return (body.result as { data: { categoryId: string } }).data.categoryId;
 }
 
 const layoutShift = (page: Page) => page.evaluate(() => (window as unknown as { layoutShift: number }).layoutShift);
@@ -79,6 +85,14 @@ test.describe('estados de carga', () => {
     const shift = await loadSlowly(page, '/t/t1/audit', (p) => expect(p.getByLabel('Tipo de evento')).toBeVisible());
     expect(shift).toBeLessThan(IMPERCEPTIBLE);
   });
+
+  // 002, Polish (T097): el editor del árbol. El de producto ya espera al árbol y las secciones (T104).
+  test('árbol de categorías', async ({ page }) => {
+    const name = `Carga ${Date.now()}`;
+    await rootCategory(name);
+    const shift = await loadSlowly(page, '/t/t1/categories', (p) => expect(p.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible());
+    expect(shift).toBeLessThan(IMPERCEPTIBLE);
+  });
 });
 
 // FR-037: el vacío no se presenta como error, y el error ofrece reintentar.
@@ -89,6 +103,37 @@ test.describe('vacío y error', () => {
     await page.getByRole('link', { name: /Comercio Dos/ }).click();
     await expect(page.getByText('Todavía no hay productos')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Crear producto' })).toBeVisible();
+  });
+
+  // 002, Polish (T097): el editor del árbol.
+  test('un comercio sin categorías invita a crear la primera', async ({ page }) => {
+    await page.goto('/login');
+    await signIn(page, MULTI);
+    await page.goto('/t/t2/categories');
+    await expect(page.getByText('Todavía no hay categorías')).toBeVisible();
+    await expect(page.getByText('Creá la primera para empezar a organizar tu catálogo.')).toBeVisible();
+  });
+
+  test('el árbol que no llega del servidor da error con reintento, no un árbol vacío', async ({ page, context }) => {
+    const name = `Vuelve ${Date.now()}`;
+    await rootCategory(name);
+    await page.goto('/login');
+    await signIn(page, OWNER);
+    // La vista ya descargada: sin red, lo que falta son los datos, no el código.
+    const link = page.getByRole('link', { name: 'Categorías', exact: true });
+    await link.click();
+    await expect(page.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible();
+    await page.getByRole('link', { name: 'Catálogo', exact: true }).click();
+    await expect(page).toHaveURL(/\/t\/t1\/catalog$/);
+
+    await context.setOffline(true);
+    await link.click();
+    await expect(page.getByText('No pudimos cargar las categorías')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Todavía no hay categorías')).toHaveCount(0);
+
+    await context.setOffline(false);
+    await page.getByRole('button', { name: 'Reintentar' }).click();
+    await expect(page.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible({ timeout: 15_000 });
   });
 
   test('un comercio sin acceso lo dice y ofrece reintentar', async ({ page }) => {

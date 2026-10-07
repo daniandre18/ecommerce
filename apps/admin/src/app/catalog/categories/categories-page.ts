@@ -1,0 +1,252 @@
+import { LiveAnnouncer } from '@angular/cdk/a11y';
+import { CdkDrag, CdkDropList, CdkDropListGroup, type CdkDragDrop } from '@angular/cdk/drag-drop';
+import { NgTemplateOutlet } from '@angular/common';
+import { afterRenderEffect, Component, computed, ElementRef, inject, input, resource, signal } from '@angular/core';
+import { MatButton } from '@angular/material/button';
+import { MatFormField, MatHint, MatLabel } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import {
+  childrenOf,
+  depthOf,
+  effectiveVisibility,
+  categorySlugCandidates,
+  MAX_CATEGORY_DEPTH,
+  slugHeldByOther,
+  slugify,
+  tenantId,
+  type CategoryId,
+  type CategoryNode,
+  type CategoryTree,
+  type Slug,
+  type TenantId,
+} from '@ecommerce/domain';
+import { EmptyState, ErrorState, Skeleton } from '@ecommerce/ui';
+import { CATALOG_COMMANDS, CATALOG_QUERIES } from '../../core/client';
+import { liveResource } from '../../shared/live-resource';
+import { trackUnsaved } from '../../shared/pending-changes/pending-changes';
+import { CURRENT_ACCESS, injectCan } from '../../tenant/current-access';
+import { canMoveInto, categoryErrorMessage, childrenIn, inTreeOrder, moveAndAnnounce, pathLabel, type CategoryMove } from './category-messages';
+import { CategoryRow } from './category-row';
+
+type VisibilityFilter = 'all' | 'visible' | 'hidden';
+
+/** Lo que se está escribiendo para crear una categoría. `parentId` vacío es el primer nivel. */
+interface NewCategory {
+  name: string;
+  parentId: string;
+  slug: string;
+}
+
+const EMPTY: NewCategory = { name: '', parentId: '', slug: '' };
+
+/**
+ * El árbol de categorías del comercio (Historia 2 de la 002). Se lee entero de un documento; la
+ * visibilidad efectiva de cada una se deriva en memoria, y cada fila dice si está oculta por sí misma
+ * o por su categoría padre (FR-021a). Sin `catalog.write` se ve y se filtra, sin acciones.
+ */
+@Component({
+  selector: 'app-categories-page',
+  imports: [
+    NgTemplateOutlet,
+    CdkDropListGroup,
+    CdkDropList,
+    CdkDrag,
+    MatButton,
+    MatFormField,
+    MatLabel,
+    MatHint,
+    MatInput,
+    Skeleton,
+    ErrorState,
+    EmptyState,
+    CategoryRow,
+  ],
+  templateUrl: './categories-page.html',
+  styleUrl: './categories-page.scss',
+})
+export class CategoriesPage {
+  readonly tenantId = input.required<string>();
+
+  private readonly queries = inject(CATALOG_QUERIES);
+  private readonly commands = inject(CATALOG_COMMANDS);
+  private readonly announcer = inject(LiveAnnouncer);
+  private readonly snackBar = inject(MatSnackBar);
+  protected readonly canWrite = injectCan('catalog.write');
+  private readonly access = inject(CURRENT_ACCESS);
+
+  protected readonly id = computed<TenantId>(() => tenantId(this.tenantId()));
+  protected readonly tree = liveResource<CategoryTree, TenantId>({
+    params: () => this.id(),
+    subscribe: (id, watcher) => this.queries.watchCategoryTree(id, watcher),
+  });
+  protected readonly current = computed(() => (this.tree.hasValue() ? this.tree.value() : undefined));
+  /**
+   * El árbol se muestra cuando además se sabe qué puede hacer la cuenta: el alta y las acciones
+   * dependen de eso, y si aparecieran después empujarían la vista (como en el editor de producto).
+   */
+  protected readonly ready = computed(() => (this.access() === undefined ? undefined : this.current()));
+  protected readonly visibility = computed(() => effectiveVisibility(this.current() ?? { nodes: {}, pendingPrune: [] }));
+  protected readonly empty = computed(() => Object.keys(this.current()?.nodes ?? {}).length === 0);
+
+  protected readonly filter = signal<VisibilityFilter>('all');
+  /** La vista filtrada es una lista con la ruta de cada una: una oculta puede estar bajo una visible. */
+  protected readonly filtered = computed(() => {
+    const tree = this.current();
+    const filter = this.filter();
+    if (!tree || filter === 'all') return [];
+    return inTreeOrder(tree).filter((node) => this.visibility().get(node.id)?.visible === (filter === 'visible'));
+  });
+
+  protected readonly failure = signal('');
+
+  // ── Crear ─────────────────────────────────────────────────────────────────────────────────────
+
+  protected readonly draft = signal<NewCategory>(EMPTY);
+  /** Se conserva entre reintentos: si la primera llegó al servidor, no se crea dos veces. */
+  private requestId = crypto.randomUUID();
+  protected readonly creating = signal(false);
+  protected readonly createFailure = signal('');
+
+  /** Donde puede ir una nueva: en el primer nivel o dentro de una de los dos primeros (FR-019). */
+  protected readonly parents = computed(() => {
+    const tree = this.current();
+    if (!tree) return [];
+    return inTreeOrder(tree)
+      .filter((node) => depthOf(tree, node.id) < MAX_CATEGORY_DEPTH)
+      .map((node) => ({ value: node.id as string, label: pathLabel(tree, node.id) }));
+  });
+
+  /**
+   * La URL que va a recibir, antes de confirmar (FR-021): la escrita, o la generada con su sufijo. Las
+   * anteriores reservadas viven fuera del árbol (T110 de la 002): se pregunta por cada candidata.
+   */
+  private readonly slugCheck = resource({
+    params: () => {
+      const tree = this.current();
+      const { name, slug } = this.draft();
+      return !tree || (name.trim() === '' && slug.trim() === '') ? undefined : { tree, name, slug, tenant: this.id() };
+    },
+    loader: async ({ params: { tree, name, slug, tenant } }): Promise<{ text: string; ok: boolean }> => {
+      const free = async (candidate: Slug) => !slugHeldByOther(tree, await this.queries.findCategorySlug(tenant, candidate), null);
+      if (slug.trim() === '') {
+        for (const candidate of categorySlugCandidates(tree, name)) if (await free(candidate)) return { text: `Su URL será …/${candidate}`, ok: true };
+      }
+      const written = slugify(slug);
+      if (!written) return { text: 'La URL necesita al menos una letra o un número.', ok: false };
+      const taken = Object.values(tree.nodes).some((node) => node.slug === written) || !(await free(written));
+      return taken ? { text: 'La usa otra categoría, o está reservada.', ok: false } : { text: `Su URL será …/${written}`, ok: true };
+    },
+  });
+  protected readonly slugPreview = computed<{ text: string; ok: boolean } | null>(() => {
+    if (this.slugCheck.error()) return { text: 'No pudimos comprobar la URL. Revisá la conexión.', ok: false };
+    if (this.slugCheck.isLoading()) return { text: 'Comprobando la URL…', ok: false };
+    return this.slugCheck.hasValue() ? (this.slugCheck.value() ?? null) : null;
+  });
+
+  protected readonly canCreate = computed(() => this.draft().name.trim() !== '' && this.slugPreview()?.ok === true && !this.creating());
+
+  /**
+   * Lo que cuesta mostrar el árbol no depende de cuántas categorías tiene (T094 de la 002, hasta 1.000):
+   * primero las que llenan la pantalla y el resto por tandas, cada una en su turno. Se dibujan en el
+   * orden del árbol, así que cada tanda queda después de todo lo dibujado —también dentro de cada
+   * lista de hermanas— y nada de lo que se ve se corre.
+   */
+  private static readonly FIRST_DRAWN = 40;
+  private static readonly DRAWN_PER_TURN = 50;
+  protected readonly drawn = signal(CategoriesPage.FIRST_DRAWN);
+  private readonly rank = computed(() => new Map(inTreeOrder(this.current() ?? { nodes: {}, pendingPrune: [] }).map((node, i) => [node.id, i] as const)));
+
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  /**
+   * La categoría que se está moviendo con el menú (T099 de la 002, WCAG 2.4.3). Su fila cambia de
+   * lugar —o se crea de nuevo bajo otra madre— recién cuando llega el árbol actualizado, y en ese
+   * momento el foco se perdía: quien usa el teclado volvía al principio de la página.
+   */
+  private readonly refocus = signal<CategoryMove | null>(null);
+
+  constructor() {
+    trackUnsaved(() => this.draft().name.trim() !== '' || this.draft().slug.trim() !== '');
+    // La tanda siguiente, después de pintar la anterior: entre una y otra, el navegador muestra lo
+    // dibujado y atiende a la persona. Con `setTimeout` solo, encadenaba tandas antes del primer cuadro.
+    afterRenderEffect(() => {
+      const [drawn, total] = [this.drawn(), this.rank().size];
+      if (drawn < total) requestAnimationFrame(() => setTimeout(() => this.drawn.set(drawn + CategoriesPage.DRAWN_PER_TURN)));
+    });
+    // Cuando el árbol ya la muestra en su lugar nuevo, el foco vuelve a sus acciones.
+    afterRenderEffect(() => {
+      const pending = this.refocus();
+      const tree = this.current();
+      if (!pending || !tree) return;
+      const node = tree.nodes[pending.categoryId];
+      const index = node ? childrenIn(tree, node.parentId).findIndex((sibling) => sibling.id === node.id) : -1;
+      if (node?.parentId !== pending.parentId || index !== pending.position) return;
+      this.refocus.set(null);
+      this.host.nativeElement.querySelector<HTMLElement>(`li[data-category="${pending.categoryId}"] > .row button.actions`)?.focus();
+    });
+  }
+
+  protected refocusAfter(move: CategoryMove | null): void {
+    this.refocus.set(move);
+  }
+
+  protected isDrawn(id: CategoryId): boolean {
+    return (this.rank().get(id) ?? 0) < this.drawn();
+  }
+
+  protected children(parentId: CategoryId | null): readonly CategoryNode[] {
+    const tree = this.current();
+    return tree ? childrenIn(tree, parentId) : [];
+  }
+
+  protected edit(field: keyof NewCategory, value: string): void {
+    this.draft.update((draft) => ({ ...draft, [field]: value }));
+  }
+
+  protected async create(): Promise<void> {
+    if (!this.canCreate()) return;
+    const { name, parentId, slug } = this.draft();
+    this.creating.set(true);
+    this.createFailure.set('');
+    const result = await this.commands.createCategory(this.id(), {
+      parentId: (parentId || null) as CategoryId | null,
+      name: name.trim(),
+      ...(slug.trim() === '' ? {} : { slug: slug.trim() }),
+      requestId: this.requestId,
+    });
+    this.creating.set(false);
+    if (!result.ok) {
+      this.createFailure.set(categoryErrorMessage(result));
+      return;
+    }
+    this.snackBar.open(`Creaste «${name.trim()}» en …/${result.data.slug}`, undefined, { duration: 4000 });
+    this.requestId = crypto.randomUUID();
+    this.draft.set(EMPTY);
+  }
+
+  // ── Arrastrar ─────────────────────────────────────────────────────────────────────────────────
+
+  /** Una lista acepta lo arrastrado solo si podría quedar ahí (FR-019); el servidor lo verifica igual. */
+  protected readonly canEnter = (drag: CdkDrag<CategoryId>, drop: CdkDropList<CategoryId | null>): boolean => {
+    const tree = this.current();
+    return !!tree && canMoveInto(tree, drag.data, drop.data);
+  };
+
+  protected async dropped(event: CdkDragDrop<CategoryId | null, CategoryId | null, CategoryId>): Promise<void> {
+    const tree = this.current();
+    const parentId = event.container.data;
+    if (!tree || (event.previousContainer.data === parentId && event.previousIndex === event.currentIndex)) return;
+    this.failure.set('');
+    const failed = await moveAndAnnounce({ commands: this.commands, announcer: this.announcer }, this.id(), tree, {
+      categoryId: event.item.data,
+      parentId,
+      position: event.currentIndex,
+    });
+    if (failed) this.failure.set(categoryErrorMessage(failed));
+  }
+
+  protected path(node: CategoryNode): string {
+    const tree = this.current();
+    return tree ? pathLabel(tree, node.id) : node.name;
+  }
+}

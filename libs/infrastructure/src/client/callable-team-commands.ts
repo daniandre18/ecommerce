@@ -1,4 +1,4 @@
-import type { CommandResult, TeamCommands } from '@ecommerce/application';
+import type { CommandResult, TeamCommands } from '@ecommerce/application/client';
 import type { TenantId } from '@ecommerce/domain';
 import type { Functions } from 'firebase/functions';
 import { callCommand } from './callable';

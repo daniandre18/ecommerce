@@ -1,4 +1,4 @@
-import type { ImageStorage, UploadFailure, UploadRequest, UploadResult } from '@ecommerce/application';
+import type { ImageStorage, UploadFailure, UploadRequest, UploadResult } from '@ecommerce/application/client';
 import { getDownloadURL, ref, uploadBytesResumable, type FirebaseStorage } from 'firebase/storage';
 
 const EXTENSIONS: Readonly<Record<string, string>> = {

@@ -27,6 +27,18 @@ body {
   font: var(--mat-sys-body-large);
 }
 
+// La cruz de un chip mide 18 px: esta zona invisible de 48 px, como la de los botones de Material, la
+// hace cómoda de tocar sin agrandar el chip (T098 de la 002, FR-038 de la 001). Se centra en la celda
+// de la cruz, que Material ya posiciona; `mobile.spec.ts` verifica que el toque llegue.
+.chip-touch-target {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 48px;
+  height: 48px;
+  transform: translate(-50%, -50%);
+}
+
 // Foco siempre visible con teclado (WCAG 2.4.7 y 2.4.11).
 :focus-visible {
   outline: 3px solid var(--mat-sys-primary);

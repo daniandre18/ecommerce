@@ -62,6 +62,24 @@ describe('buildAuditEntries', () => {
     );
   });
 
+  // T013 (002) — FR-032: las condiciones de venta son del producto, no de una variante, y lo que se
+  // registra son condiciones efectivas.
+  it('registra un cambio de condiciones de venta sobre el producto, con su campo', () => {
+    const [entry] = build([
+      { type: 'sale-conditions.changed', field: 'shipping', productId: productId('p1'), before: 'none', after: 'charged' },
+    ]);
+    expect(entry).toEqual(
+      expect.objectContaining({
+        type: 'sale-conditions.changed',
+        field: 'shipping',
+        entity: { kind: 'product', id: 'p1', productId: 'p1' },
+        before: 'none',
+        after: 'charged',
+        batchId: BATCH,
+      }),
+    );
+  });
+
   it('sin cambios no hay entradas', () => {
     expect(build([])).toEqual([]);
   });

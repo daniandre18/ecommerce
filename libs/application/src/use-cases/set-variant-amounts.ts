@@ -5,13 +5,11 @@ import {
   stockEquals,
   type AuditedChange,
   type AuditEntryId,
-  type BatchId,
   type Money,
-  type ProductId,
-  type StockLevel,
   type Variant,
   type VariantId,
 } from '@ecommerce/domain';
+import type { AmountsOutput, SetVariantCostInput, SetVariantPriceInput, SetVariantStockInput } from '@ecommerce/application/client';
 import { requirePermission } from '../ports/authorization';
 import type { OperationContext } from '../ports/operation-context';
 import type { TransactionScope } from '../ports/unit-of-work';
@@ -25,13 +23,6 @@ import {
   loadTenant,
   type UseCaseDependencies,
 } from './shared';
-
-/** Resultado común: cuántas variantes cambiaron y las entradas de bitácora que dejaron. */
-export interface AmountsOutput {
-  readonly batchId: BatchId;
-  readonly updated: number;
-  readonly auditEntryIds: readonly AuditEntryId[];
-}
 
 /**
  * Base de los tres casos de uso que alteran importes o existencias. Comparten lo que FR-030 y
@@ -51,17 +42,6 @@ abstract class AuditedBatch {
     await tx.audit.append(entries);
     return { batchId: batch, auditEntryIds: entries.map((entry) => entry.id) };
   }
-}
-
-export interface SetVariantPriceInput {
-  readonly productId: ProductId;
-  readonly changes: readonly {
-    readonly variantId: VariantId;
-    readonly version: number;
-    readonly price?: Money;
-    /** `null` quita el precio tachado. */
-    readonly compareAtPrice?: Money | null;
-  }[];
 }
 
 /** Precio de venta y precio comparativo (FR-015, FR-028). El rol de Catálogo no los modifica. */
@@ -101,11 +81,6 @@ export class SetVariantPrice extends AuditedBatch {
   }
 }
 
-export interface SetVariantCostInput {
-  readonly productId: ProductId;
-  readonly changes: readonly { readonly variantId: VariantId; readonly cost: Money }[];
-}
-
 /** Costo de adquisición, en su documento aparte (FR-015): sin el permiso de costo, ni se ve. */
 export class SetVariantCost extends AuditedBatch {
   static readonly requires = requirePermission('variant.cost.write');
@@ -131,11 +106,6 @@ export class SetVariantCost extends AuditedBatch {
     if (audited.length > 0) await tx.costs.setMany(input.productId, updates);
     return { ...(await this.record(tx, ctx, audited)), updated: audited.length };
   }
-}
-
-export interface SetVariantStockInput {
-  readonly productId: ProductId;
-  readonly changes: readonly { readonly variantId: VariantId; readonly version: number; readonly stock: StockLevel }[];
 }
 
 /** Existencias, distinguiendo "sin definir" de cero (FR-029). */

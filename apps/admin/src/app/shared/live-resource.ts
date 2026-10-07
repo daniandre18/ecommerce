@@ -1,5 +1,5 @@
 import { resource, signal, type ResourceRef, type ResourceStreamItem } from '@angular/core';
-import type { Unsubscribe, Watcher } from '@ecommerce/application';
+import type { Unsubscribe, Watcher } from '@ecommerce/application/client';
 
 /**
  * Una suscripción en tiempo real como `resource`: carga hasta el primer valor y después entrega

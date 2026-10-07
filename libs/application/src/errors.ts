@@ -1,11 +1,4 @@
-/** Códigos del contrato de las callable (`contracts/callable-functions.md`). */
-export type BusinessErrorCode =
-  | 'not-found'
-  | 'version-conflict' // FR-027
-  | 'sku-conflict' // FR-021
-  | 'limit-exceeded' // FR-025
-  | 'incomplete-variants' // FR-023a
-  | 'invalid-argument';
+import type { BusinessErrorCode } from '@ecommerce/application/client';
 
 /**
  * Una regla de negocio impidió la operación. Se lanza ANTES de cualquier escritura, así que la

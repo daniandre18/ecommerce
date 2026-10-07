@@ -3,6 +3,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   createIncompleteVariant,
+  gtin,
   money,
   optionId,
   productId,
@@ -323,6 +324,162 @@ describe('VariantTable', () => {
       await settle();
       expect(commands.setVariantSku).toHaveBeenCalledTimes(1);
       expect(pending()).toBe(true);
+    });
+  });
+
+  // T091 (002, Historia 4): GTIN, peso y dimensiones propios en cada fila (FR-015, FR-030).
+  describe('datos por variante', () => {
+    const BOX = { length: 300, width: 200, height: 20 };
+    const shipped = product('p1', 'Camiseta', { options: [color], weightGrams: 300, dimensionsMm: BOX });
+
+    beforeEach(() => {
+      commands.setVariantGtin.mockResolvedValue({ ok: true, data: { version: 4 } });
+      commands.setVariantShipping.mockResolvedValue({ ok: true, data: { versions: { v1: 4, v2: 4 } } });
+    });
+
+    /** Despliega "Código de barras y envío" de una fila: está plegado, así no cambia el orden con Tab. */
+    const expand = async (group: HTMLElement) => {
+      const toggle = group.querySelector<HTMLButtonElement>('button.more');
+      if (!toggle) throw new Error('No hay botón para desplegar');
+      toggle.click();
+      await settle();
+    };
+    /** Todas las filas, desplegadas. */
+    const opened = async (...args: Parameters<typeof render>) => {
+      const rendered = await render(...args);
+      for (const group of rendered.root.querySelectorAll<HTMLElement>('[role="group"]')) await expand(group);
+      return rendered;
+    };
+
+    it('plegado: el resumen dice el GTIN y el envío, con lo heredado señalado; nada de eso recibe el foco', async () => {
+      const { row } = await render([variantOf('v1', 'rojo', { gtin: gtin('96385074') }), variantOf('v2', 'azul', { weightGrams: 450 })], shipped);
+      const summary = (label: string) => row(label).group.querySelector('.more-summary')?.textContent?.replace(/\s+/g, ' ').trim();
+      expect(summary('Rojo')).toBe('GTIN 96385074 · Peso 0.3 kg, heredado del producto · 30 × 20 × 2 cm, heredadas del producto');
+      expect(summary('Azul')).toBe('Sin GTIN · Peso 0.45 kg · 30 × 20 × 2 cm, heredadas del producto');
+      expect(() => row('Rojo').field('GTIN')).toThrow();
+      expect(row('Rojo').group.querySelector('button.more')?.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('desplegar lo dice con aria-expanded y muestra los campos', async () => {
+      const { row } = await render([variantOf('v1', 'rojo')], shipped);
+      await expand(row('Rojo').group);
+      expect(row('Rojo').group.querySelector('button.more')?.getAttribute('aria-expanded')).toBe('true');
+      expect(row('Rojo').field('GTIN')).toBeTruthy();
+    });
+
+    it('un producto sin opciones: su única variante es el producto, y no repite su peso; el GTIN sí', async () => {
+      const single = product('p1', 'Taza', { weightGrams: 300 });
+      const implicit = { ...createIncompleteVariant({ id: variantId('v1'), tenantId: T1, productId: productId('p1'), optionValues: {} }), version: 3 };
+      const { row, root } = await opened([implicit], single);
+      expect(root.querySelector('button.more')?.textContent?.trim()).toBe('Código de barras');
+      // Sin opciones, la variante implícita se llama "Única".
+      expect(row('Única').field('GTIN')).toBeTruthy();
+      expect(() => row('Única').field('Peso')).toThrow();
+    });
+
+    it('el GTIN se guarda al salir del campo; vaciarlo lo quita', async () => {
+      const { row } = await opened([variantOf('v1', 'rojo'), variantOf('v2', 'azul', { gtin: gtin('96385074') })]);
+      await row('Rojo').edit('GTIN', '4006381333931');
+      expect(commands.setVariantGtin).toHaveBeenCalledWith(T1, { productId: 'p1', variantId: 'v1', version: 3, gtin: '4006381333931' });
+      await row('Azul').edit('GTIN', '');
+      expect(commands.setVariantGtin).toHaveBeenLastCalledWith(T1, { productId: 'p1', variantId: 'v2', version: 3, gtin: null });
+    });
+
+    it('uno con el dígito de control mal no se envía y se explica (escenario 2)', async () => {
+      const { row } = await opened([variantOf('v1', 'rojo')]);
+      await row('Rojo').edit('GTIN', '4006381333932');
+      expect(commands.setVariantGtin).not.toHaveBeenCalled();
+      expect(row('Rojo').group.textContent).toContain('El dígito de control no corresponde');
+    });
+
+    it('uno que tiene otra variante nombra el producto y dice si está archivado (escenario 3)', async () => {
+      commands.setVariantGtin.mockResolvedValue({
+        ok: false,
+        code: 'gtin-conflict',
+        message: 'x',
+        details: { productId: 'p2', productName: 'Taza', variantId: 'x', archived: true },
+      });
+      const { row } = await opened([variantOf('v1', 'rojo')]);
+      await row('Rojo').edit('GTIN', '4006381333931');
+      expect(row('Rojo').group.textContent).toContain('Ese GTIN ya lo usa «Taza», archivado');
+    });
+
+    // FR-030: la válvula de escape, en el momento en que hace falta. Las archivadas no se ven en la
+    // tabla: si el código lo tiene una, se le puede quitar desde el rechazo mismo.
+    it('si lo tiene una variante archivada, se le quita desde la misma fila y se usa acá (escenario 8)', async () => {
+      commands.setVariantGtin
+        .mockResolvedValueOnce({ ok: false, code: 'gtin-conflict', message: 'x', details: { productId: 'p2', productName: 'Taza', variantId: 'x', version: 5, archived: true } })
+        .mockResolvedValueOnce({ ok: true, data: { version: 6 } })
+        .mockResolvedValueOnce({ ok: true, data: { version: 4 } });
+      const { row } = await opened([variantOf('v1', 'rojo')]);
+      await row('Rojo').edit('GTIN', '4006381333931');
+      const release = [...row('Rojo').group.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Quitárselo a la archivada y usarlo acá');
+      release?.click();
+      await settle();
+      expect(commands.setVariantGtin.mock.calls.slice(1)).toEqual([
+        [T1, { productId: 'p2', variantId: 'x', version: 5, gtin: null }],
+        [T1, { productId: 'p1', variantId: 'v1', version: 3, gtin: '4006381333931' }],
+      ]);
+      expect(row('Rojo').group.textContent).not.toContain('Ese GTIN ya lo usa');
+    });
+
+    it('si lo tiene una variante en circulación, no se ofrece quitárselo', async () => {
+      commands.setVariantGtin.mockResolvedValue({
+        ok: false,
+        code: 'gtin-conflict',
+        message: 'x',
+        details: { productId: 'p2', productName: 'Taza', variantId: 'x', version: 5, archived: false },
+      });
+      const { row } = await opened([variantOf('v1', 'rojo')]);
+      await row('Rojo').edit('GTIN', '4006381333931');
+      expect(row('Rojo').group.textContent).toContain('Ese GTIN ya lo usa «Taza».');
+      expect(row('Rojo').group.textContent).not.toContain('Quitárselo');
+    });
+
+    it('sin peso propio, se ve el del producto señalado como heredado (escenario 4)', async () => {
+      const { row } = await opened([variantOf('v1', 'rojo'), variantOf('v2', 'azul', { weightGrams: 450 })], shipped);
+      expect([row('Rojo').field('Peso').value, row('Rojo').field('Peso').placeholder]).toEqual(['', '0.3']);
+      expect(row('Rojo').group.textContent).toContain('Peso heredado del producto');
+      expect(row('Azul').field('Peso').value).toBe('0.45');
+      expect(row('Azul').group.textContent).not.toContain('Peso heredado del producto');
+    });
+
+    it('el peso propio se guarda en gramos; vaciarlo vuelve a heredar (escenarios 4 y 5)', async () => {
+      const { row } = await opened([variantOf('v1', 'rojo'), variantOf('v2', 'azul', { weightGrams: 450 })], shipped);
+      await row('Rojo').edit('Peso', '0,6');
+      expect(commands.setVariantShipping).toHaveBeenCalledWith(T1, { productId: 'p1', changes: [{ variantId: 'v1', version: 3, weightGrams: 600 }] });
+      await row('Azul').edit('Peso', '');
+      expect(commands.setVariantShipping).toHaveBeenLastCalledWith(T1, { productId: 'p1', changes: [{ variantId: 'v2', version: 3, weightGrams: null }] });
+    });
+
+    it('las dimensiones propias van en un campo, largo × ancho × alto en centímetros', async () => {
+      const { row } = await opened([variantOf('v1', 'rojo')], shipped);
+      expect(row('Rojo').field('Dimensiones').placeholder).toBe('30 × 20 × 2');
+      await row('Rojo').edit('Dimensiones', '60 x 40 x 3,5');
+      expect(commands.setVariantShipping).toHaveBeenCalledWith(T1, {
+        productId: 'p1',
+        changes: [{ variantId: 'v1', version: 3, dimensionsMm: { length: 600, width: 400, height: 35 } }],
+      });
+    });
+
+    it('unas dimensiones a medias no se envían y se explica', async () => {
+      const { row } = await opened([variantOf('v1', 'rojo')], shipped);
+      await row('Rojo').edit('Dimensiones', '60 x 40');
+      expect(commands.setVariantShipping).not.toHaveBeenCalled();
+      expect(row('Rojo').group.textContent).toContain('Escribí largo × ancho × alto');
+    });
+
+    it('un producto digital no ofrece peso ni dimensiones por variante (escenario 6)', async () => {
+      const { row } = await opened([variantOf('v1', 'rojo')], product('p1', 'Licencia', { options: [color], kind: 'digital' }));
+      expect(() => row('Rojo').field('Peso')).toThrow();
+      expect(() => row('Rojo').field('Dimensiones')).toThrow();
+      expect(row('Rojo').field('GTIN')).toBeTruthy();
+    });
+
+    it('sin catalog.write se ven sin poder cambiarlos', async () => {
+      access.set({ isOwner: false, permissions: ['catalog.read', 'variant.price.write'] });
+      const { row } = await opened([variantOf('v1', 'rojo', { gtin: gtin('96385074') })], shipped);
+      expect([row('Rojo').field('GTIN').readOnly, row('Rojo').field('Peso').readOnly, row('Rojo').field('Dimensiones').readOnly]).toEqual([true, true, true]);
     });
   });
 });

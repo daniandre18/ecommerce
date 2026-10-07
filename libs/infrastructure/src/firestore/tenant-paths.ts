@@ -23,4 +23,38 @@ export class TenantPaths {
   doc(path: string) {
     return this.db.doc(`tenants/${this.tenantId}/${path}`);
   }
+
+  // `storefront` tiene tres documentos de id fijo, y las reglas declaran exactamente esos tres
+  // (specs/002-storefront-catalog/contracts/firestore-rules.md): uno nuevo no queda legible por
+  // heredar la regla.
+
+  /** El árbol de categorías entero, en un solo documento (research §1 de la 002). */
+  categoryTreeDoc() {
+    return this.doc('storefront/categoryTree');
+  }
+
+  /** Destacados y Ofertas: la lista ES el contador del tope (research §4 de la 002). */
+  sectionsDoc() {
+    return this.doc('storefront/sections');
+  }
+
+  /** Etiquetas y marcas del comercio, para sugerir (research §7 de la 002). */
+  vocabularyDoc() {
+    return this.doc('storefront/vocabulary');
+  }
+
+  /** La URL anterior de una categoría, reservada para ella (T110 de la 002): fuera del árbol. */
+  categorySlugDoc(slug: string) {
+    return this.doc(`categorySlugs/${slug}`);
+  }
+
+  /** Reserva de una URL amigable de producto. El `Slug` no admite `/`: es un solo segmento. */
+  slugIndexDoc(slug: string) {
+    return this.doc(`slugIndex/${slug}`);
+  }
+
+  /** Reserva de un GTIN, normalizado a 14 dígitos. */
+  gtinIndexDoc(gtin14: string) {
+    return this.doc(`gtinIndex/${gtin14}`);
+  }
 }

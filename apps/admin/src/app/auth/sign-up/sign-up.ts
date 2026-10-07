@@ -4,7 +4,7 @@ import { MatButton } from '@angular/material/button';
 import { MatError, MatFormField, MatHint, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
-import type { SignUpFailure } from '@ecommerce/application';
+import type { SignUpFailure } from '@ecommerce/application/client';
 import { SESSION } from '../../core/client';
 import { safeReturnUrl } from '../login/login';
 

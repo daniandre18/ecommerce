@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { InvalidIdentifierError, productId, tenantId, uid } from './ids';
+import { categoryId, InvalidIdentifierError, productId, tenantId, uid } from './ids';
 
 // Los identificadores forman rutas de almacenamiento a partir de datos que manda el cliente
 // (el tenantId llega en la carga útil, FR-003). Un identificador es un único segmento.
@@ -22,6 +22,12 @@ describe('identificadores', () => {
   it('aplica la misma regla a todos los tipos de identificador', () => {
     expect(() => productId('p/1')).toThrow(InvalidIdentifierError);
     expect(() => uid('')).toThrow(InvalidIdentifierError);
+  });
+
+  // T011 — la categoría también forma rutas: viaja en la carga útil de las callables (002).
+  it('CategoryId sigue la misma regla de un solo segmento', () => {
+    expect(categoryId('c-1')).toBe('c-1');
+    expect(() => categoryId('c/1')).toThrow(InvalidIdentifierError);
   });
 
   it('no altera el valor: la identidad es exacta', () => {

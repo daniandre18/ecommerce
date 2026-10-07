@@ -1,13 +1,19 @@
 import type {
   AuditLogRepository,
+  CategoryTreeRepository,
+  CategorySlugRepository,
+  FeaturedSectionsRepository,
+  GtinIndexRepository,
   InvitationRepository,
   MembershipRepository,
   ProductRepository,
   RoleRepository,
   SkuIndexRepository,
+  SlugIndexRepository,
   TenantRepository,
   VariantCostsRepository,
   VariantRepository,
+  VocabularyRepository,
 } from './repositories';
 
 /**
@@ -24,6 +30,12 @@ export interface TransactionScope {
   readonly variants: VariantRepository;
   readonly costs: VariantCostsRepository;
   readonly skuIndex: SkuIndexRepository;
+  readonly slugIndex: SlugIndexRepository;
+  readonly vocabulary: VocabularyRepository;
+  readonly categories: CategoryTreeRepository;
+  readonly categorySlugs: CategorySlugRepository;
+  readonly sections: FeaturedSectionsRepository;
+  readonly gtinIndex: GtinIndexRepository;
 }
 
 /**

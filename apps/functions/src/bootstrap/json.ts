@@ -41,6 +41,16 @@ export class JsonObject {
     return (this.has(key) ? { [key]: read(key) } : {}) as { [P in K]?: T };
   }
 
+  /** Un campo que admite `null`: `null` lo quita; cualquier otro valor se lee con `read`. */
+  nullable<T>(key: string, read: (key: string) => T): T | null {
+    return this.isNull(key) ? null : read(key);
+  }
+
+  /** Un objeto anidado, o `null`. */
+  nullableObject<T>(key: string, read: (entry: JsonObject) => T): T | null {
+    return this.isNull(key) ? null : read(this.object(key));
+  }
+
   string(key: string): string {
     const value = this.data[key];
     if (typeof value !== 'string') reject(this.field(key), 'se esperaba un texto');
@@ -76,6 +86,11 @@ export class JsonObject {
   id<T>(key: string, factory: (raw: string) => T): T {
     const raw = this.string(key);
     return fromDomain(this.field(key), () => factory(raw));
+  }
+
+  /** Una lista de identificadores de dominio; el que no sirve se nombra por su lugar. */
+  ids<T>(key: string, factory: (raw: string) => T): T[] {
+    return this.strings(key).map((raw, index) => fromDomain(`${this.field(key)}[${index}]`, () => factory(raw)));
   }
 
   /** Importe entero en la unidad mínima de la moneda, nunca negativo. */

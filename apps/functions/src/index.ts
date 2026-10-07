@@ -1,7 +1,10 @@
 import { setGlobalOptions } from 'firebase-functions/options';
 import { productionDependencies } from './bootstrap/composition';
 import { catalogCallables } from './catalog/callables';
+import { categoryCallables } from './categories/callables';
 import { pricingCallables } from './pricing/callables';
+import { sectionCallables } from './sections/callables';
+import { storefrontCallables } from './storefront/callables';
 import { teamCallables } from './team/callables';
 
 /**
@@ -28,6 +31,22 @@ export const {
 } = catalogCallables(deps);
 
 export const { setVariantPrice, setVariantCost, setVariantStock } = pricingCallables(deps);
+
+export const { setProductSlug, setProductShipping, setProductType, setSaleConditions, setVariantGtin, setVariantShipping } = storefrontCallables(deps);
+
+export const { addToSection, removeFromSection } = sectionCallables(deps);
+
+export const {
+  createCategory,
+  renameCategory,
+  setCategorySlug,
+  moveCategory,
+  setCategoryHidden,
+  deleteCategory,
+  setProductCategories,
+  assignCategory,
+  unassignCategory,
+} = categoryCallables(deps);
 
 export const {
   createRole,

@@ -5,6 +5,8 @@ import {
   InvalidIdentifierError,
   productId,
   tenantId,
+  type CategoryTree,
+  type FeaturedSections,
   type ImageRef,
   type Product,
   type ProductId,
@@ -18,10 +20,16 @@ import { liveResource } from '../../shared/live-resource';
 import { CURRENT_ACCESS } from '../../tenant/current-access';
 import { CURRENT_TENANT } from '../../tenant/current-tenant';
 import { ImageUpload } from '../image-upload/image-upload';
+import { ProductVideo } from '../image-upload/product-video';
 import { VariantTable } from '../variant-table/variant-table';
+import { CategoriesSection } from './categories-section/categories-section';
 import { DetailsSection } from './details-section';
+import { ExternalCatalogsSection } from './external-catalogs-section/external-catalogs-section';
 import { OptionsEditor } from './options-editor/options-editor';
+import { PresentationSection } from './presentation-section/presentation-section';
 import { StatusControl } from './status-control/status-control';
+import { ShippingSection } from './shipping-section/shipping-section';
+import { StorefrontSection } from './storefront-section/storefront-section';
 
 interface Ids {
   readonly tenantId: TenantId;
@@ -41,7 +49,13 @@ const STATUS_LABELS: Record<Product['status'], string> = { draft: 'Borrador', ac
     EmptyState,
     HasPermission,
     DetailsSection,
+    StorefrontSection,
+    ShippingSection,
+    PresentationSection,
+    CategoriesSection,
+    ExternalCatalogsSection,
     ImageUpload,
+    ProductVideo,
     StatusControl,
     OptionsEditor,
     VariantTable,
@@ -66,6 +80,36 @@ export class ProductEditor {
   protected readonly variants = liveResource<readonly Variant[], Ids>({
     params: () => this.ids(),
     subscribe: (ids, watcher) => this.queries.watchVariants(ids.tenantId, ids.productId, watcher),
+  });
+  /**
+   * El árbol, para las rutas de las categorías del producto. A 1.000 categorías es el documento más
+   * pesado del editor y, pedido junto con lo demás, demoraba las variantes por la misma conexión: se
+   * pide cuando ellas llegaron, y el editor no lo espera (T094 de la 002).
+   */
+  protected readonly categoryTree = liveResource<CategoryTree, TenantId>({
+    params: () => (this.variants.hasValue() ? this.ids()?.tenantId : undefined),
+    subscribe: (tenant, watcher) => this.queries.watchCategoryTree(tenant, watcher),
+  });
+
+  /** En qué secciones destacadas está: el aviso de "en borrador" y el del archivado dependen de eso. */
+  protected readonly sections = liveResource<FeaturedSections, TenantId>({
+    params: () => this.ids()?.tenantId,
+    subscribe: (tenant, watcher) => this.queries.watchSections(tenant, watcher),
+  });
+
+  /**
+   * El editor se muestra cuando llegó lo que cambia su forma: el producto, las secciones destacadas
+   * y qué puede hacer la cuenta. Si algo de eso llegara después, lo que depende de ello —el enlace a
+   * la bitácora, los botones de guardar, el aviso de una sección— aparecería de golpe y empujaría lo
+   * demás (hallado por `loading-states.spec.ts`, SC-009 de la 001). El árbol no: la sección de
+   * categorías reserva su lugar hasta tenerlo (T094 de la 002).
+   */
+  protected readonly loaded = computed(() => {
+    if (this.access() === undefined || !this.product.hasValue() || !this.sections.hasValue()) return undefined;
+    const product = this.product.value();
+    const tree = this.categoryTree.hasValue() ? this.categoryTree.value() : undefined;
+    const sections = this.sections.value();
+    return product && sections ? { product, tree, sections } : undefined;
   });
 
   protected readonly currency = computed(() => this.tenant()?.currency);

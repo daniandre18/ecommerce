@@ -1,0 +1,101 @@
+<h1>Categorías</h1>
+
+@if (canWrite() && ready()) {
+  <form class="create" novalidate aria-labelledby="nueva" (submit)="$event.preventDefault(); create()">
+    <h2 id="nueva">Nueva categoría</h2>
+    <div class="fields">
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-label>Nombre</mat-label>
+        <input matInput data-field="newName" autocomplete="off" [value]="draft().name" (input)="edit('name', $any($event.target).value)" />
+      </mat-form-field>
+      <div class="select">
+        <label for="new-parent">Dentro de</label>
+        <select id="new-parent" data-field="newParent" [value]="draft().parentId" (change)="edit('parentId', $any($event.target).value)">
+          <option value="">Primer nivel</option>
+          @for (option of parents(); track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+      <mat-form-field subscriptSizing="dynamic">
+        <mat-label>URL (opcional)</mat-label>
+        <input matInput data-field="newSlug" autocomplete="off" [value]="draft().slug" (input)="edit('slug', $any($event.target).value)" />
+        <mat-hint>Si la dejás vacía, se genera del nombre.</mat-hint>
+      </mat-form-field>
+    </div>
+    <!-- La URL es plana y única en todo el comercio: se ve antes de confirmar (FR-021). -->
+    <p class="slug-preview" aria-live="polite">{{ slugPreview()?.text ?? '' }}</p>
+    <div role="alert" class="failure">{{ createFailure() }}</div>
+    <div class="actions">
+      <button matButton="filled" type="submit" [disabled]="!canCreate()">Crear categoría</button>
+    </div>
+  </form>
+}
+
+<!--
+  Recién con el árbol y el acceso, como el alta: si estuviera desde antes, el alta aparecería encima
+  y lo empujaría al llegar los datos (T097 de la 002: 0,075 de CLS a 360 px).
+-->
+@if (ready()) {
+  <div class="select filter">
+    <label for="visibility">Mostrar</label>
+    <select id="visibility" data-field="visibility" [value]="filter()" (change)="filter.set($any($event.target).value)">
+      <option value="all">Todas, en su árbol</option>
+      <option value="visible">Visibles en la tienda</option>
+      <option value="hidden">Ocultas en la tienda</option>
+    </select>
+  </div>
+}
+
+<div role="alert" class="failure">{{ failure() }}</div>
+
+@if (tree.error()) {
+  <ui-error-state heading="No pudimos cargar las categorías" (retry)="tree.reload()" />
+} @else if (ready(); as tree) {
+  @if (empty()) {
+    <ui-empty-state heading="Todavía no hay categorías" [message]="canWrite() ? 'Creá la primera para empezar a organizar tu catálogo.' : ''" />
+  } @else if (filter() === 'all') {
+    <div cdkDropListGroup>
+      <ng-container [ngTemplateOutlet]="branch" [ngTemplateOutletContext]="{ $implicit: null, level: 1 }" />
+    </div>
+  } @else {
+    @if (filtered().length === 0) {
+      <p class="none">{{ filter() === 'hidden' ? 'No hay categorías ocultas.' : 'No hay categorías visibles.' }}</p>
+    } @else {
+      <ul class="flat">
+        @for (node of filtered(); track node.id; let i = $index) {
+          @if (i < drawn()) {
+            <li [attr.data-category]="node.id" aria-level="1">
+              <app-category-row class="row" [tenantId]="id()" [tree]="tree" [node]="node" [visibility]="visibility().get(node.id) ?? { visible: true }" (moving)="refocusAfter($event)" [path]="path(node)" />
+            </li>
+          }
+        }
+      </ul>
+    }
+  }
+
+  <ng-template #branch let-parent let-level="level">
+    <ul
+      cdkDropList
+      [cdkDropListData]="parent"
+      [attr.data-parent]="parent ?? 'root'"
+      [cdkDropListDisabled]="!canWrite()"
+      [cdkDropListEnterPredicate]="canEnter"
+      (cdkDropListDropped)="dropped($event)"
+    >
+      <!-- Las dibujadas de cada lista son siempre las primeras: en el orden del árbol, la tanda que falta va al final. -->
+      @for (node of children(parent); track node.id) {
+        @if (isDrawn(node.id)) {
+          <li cdkDrag [cdkDragData]="node.id" [cdkDragDisabled]="!canWrite()" [attr.data-category]="node.id" [attr.aria-level]="level">
+            <app-category-row class="row" [tenantId]="id()" [tree]="tree" [node]="node" [visibility]="visibility().get(node.id) ?? { visible: true }" (moving)="refocusAfter($event)" [draggable]="true" />
+            @if (children(node.id).length > 0) {
+              <ng-container [ngTemplateOutlet]="branch" [ngTemplateOutletContext]="{ $implicit: node.id, level: level + 1 }" />
+            }
+          </li>
+        }
+      }
+    </ul>
+  </ng-template>
+} @else {
+  <ui-skeleton rows="5" rowHeight="56px" label="Cargando las categorías…" />
+}

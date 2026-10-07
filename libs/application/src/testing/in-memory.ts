@@ -1,7 +1,13 @@
 import {
   assertCanDeleteRole,
+  emptyCategoryTree,
+  emptySections,
+  emptyVocabulary,
   normalizeEmail,
   type AuditEntry,
+  type CategoryId,
+  type CategoryTree,
+  type FeaturedSections,
   type Invitation,
   type InvitationId,
   type Membership,
@@ -10,22 +16,33 @@ import {
   type ProductId,
   type Role,
   type RoleId,
+  type Slug,
   type Tenant,
   type Uid,
   type Variant,
   type VariantId,
+  type Vocabulary,
 } from '@ecommerce/domain';
+import type { SlugIndexEntry } from '@ecommerce/application/client';
 import type {
   AuditLogRepository,
+  CategoryPruner,
+  CategoryTreeRepository,
+  CategorySlugRepository,
+  FeaturedSectionsRepository,
+  GtinIndexEntry,
+  GtinIndexRepository,
   InvitationRepository,
   MembershipRepository,
   ProductRepository,
   RoleRepository,
   SkuIndexEntry,
   SkuIndexRepository,
+  SlugIndexRepository,
   TenantRepository,
   VariantCostsRepository,
   VariantRepository,
+  VocabularyRepository,
 } from '../ports/repositories';
 import type { SecurityEvent, SecurityEventRecorder } from '../ports/security-events';
 import type { TransactionScope, UnitOfWork } from '../ports/unit-of-work';
@@ -45,6 +62,14 @@ export class InMemoryStore {
   products = new Map<ProductId, Product>();
   variants = new Map<string, Variant>();
   skuIndex = new Map<string, SkuIndexEntry>();
+  slugIndex = new Map<Slug, SlugIndexEntry>();
+  vocabulary: Vocabulary = emptyVocabulary();
+  categoryTree: CategoryTree = emptyCategoryTree();
+  /** URL anterior de categoría → la categoría que la reserva (T110). */
+  categorySlugs = new Map<Slug, CategoryId>();
+  sections: FeaturedSections = emptySections();
+  /** Por GTIN normalizado a 14 dígitos. */
+  gtinIndex = new Map<string, GtinIndexEntry>();
 
   clone(): InMemoryStore {
     const copy = new InMemoryStore();
@@ -57,6 +82,12 @@ export class InMemoryStore {
     copy.products = new Map(this.products);
     copy.variants = new Map(this.variants);
     copy.skuIndex = new Map(this.skuIndex);
+    copy.slugIndex = new Map(this.slugIndex);
+    copy.vocabulary = this.vocabulary;
+    copy.categoryTree = this.categoryTree;
+    copy.categorySlugs = new Map(this.categorySlugs);
+    copy.sections = this.sections;
+    copy.gtinIndex = new Map(this.gtinIndex);
     return copy;
   }
 
@@ -134,6 +165,10 @@ function scopeOver(s: InMemoryStore): TransactionScope {
       const product = s.products.get(id);
       if (product) s.products.set(id, { ...product, ...summary });
     },
+    updateCategories: async (id, categoryIds) => {
+      const product = s.products.get(id);
+      if (product) s.products.set(id, { ...product, categoryIds: [...categoryIds] });
+    },
   };
 
   const variants: VariantRepository = {
@@ -166,7 +201,69 @@ function scopeOver(s: InMemoryStore): TransactionScope {
     },
   };
 
-  return { tenant, audit, members, invitations, roles, products, variants, costs, skuIndex };
+  const slugIndex: SlugIndexRepository = {
+    find: async (value) => s.slugIndex.get(value) ?? null,
+    reserve: async (value, productId) => {
+      if (s.slugIndex.has(value)) throw new DocumentAlreadyExistsError(value);
+      s.slugIndex.set(value, { productId, kind: 'current' });
+    },
+    release: async (value) => {
+      s.slugIndex.delete(value);
+    },
+    markPrevious: async (value) => markSlug(s, value, 'previous'),
+    markCurrent: async (value) => markSlug(s, value, 'current'),
+  };
+
+  const vocabulary: VocabularyRepository = {
+    get: async () => s.vocabulary,
+    save: async (value) => {
+      s.vocabulary = value;
+    },
+  };
+
+  const categories: CategoryTreeRepository = {
+    get: async () => s.categoryTree,
+    save: async (value) => {
+      s.categoryTree = value;
+    },
+  };
+
+  const categorySlugs: CategorySlugRepository = {
+    find: async (value) => s.categorySlugs.get(value) ?? null,
+    reserve: async (value, categoryId) => {
+      s.categorySlugs.set(value, categoryId);
+    },
+    release: async (value) => {
+      s.categorySlugs.delete(value);
+    },
+  };
+
+  const sections: FeaturedSectionsRepository = {
+    get: async () => s.sections,
+    save: async (value) => {
+      s.sections = value;
+    },
+  };
+
+  const gtinIndex: GtinIndexRepository = {
+    find: async (value) => s.gtinIndex.get(value.normalized) ?? null,
+    reserve: async (entry) => {
+      if (s.gtinIndex.has(entry.gtin.normalized)) throw new DocumentAlreadyExistsError(entry.gtin.normalized);
+      s.gtinIndex.set(entry.gtin.normalized, entry);
+    },
+    release: async (value) => {
+      s.gtinIndex.delete(value.normalized);
+    },
+  };
+
+  return { tenant, audit, members, invitations, roles, products, variants, costs, skuIndex, slugIndex, vocabulary, categories, categorySlugs, sections, gtinIndex };
+}
+
+/** Como `update` en Firestore: falla si la entrada no existe. */
+function markSlug(s: InMemoryStore, value: Slug, kind: SlugIndexEntry['kind']): void {
+  const entry = s.slugIndex.get(value);
+  if (!entry) throw new Error(`No existe la reserva ${value}`);
+  s.slugIndex.set(value, { ...entry, kind });
 }
 
 export class InMemoryUnitOfWork implements UnitOfWork {
@@ -177,6 +274,31 @@ export class InMemoryUnitOfWork implements UnitOfWork {
     const result = await work(scopeOver(draft));
     this.store = draft; // solo se confirma si `work` no lanzó
     return result;
+  }
+}
+
+/**
+ * La poda en memoria, sobre lo ya confirmado: como la de Firestore, fuera de la transacción, en lotes
+ * y escribiendo solo `categoryIds`. `failAfterBatches` la corta a propósito después de ese número de
+ * lotes, para probar que una poda interrumpida converge.
+ */
+export class InMemoryCategoryPruner implements CategoryPruner {
+  constructor(
+    private readonly uow: InMemoryUnitOfWork,
+    private readonly options: { readonly batchSize?: number; readonly failAfterBatches?: number } = {},
+  ) {}
+
+  async prune(ids: readonly CategoryId[]): Promise<void> {
+    const { batchSize = 500, failAfterBatches } = this.options;
+    for (let batches = 0; ; batches++) {
+      if (failAfterBatches !== undefined && batches >= failAfterBatches) throw new Error('Poda cortada a propósito');
+      const store = this.uow.store;
+      const batch = [...store.products.values()].filter((p) => p.categoryIds.some((id) => ids.includes(id))).slice(0, batchSize);
+      if (batch.length === 0) return;
+      for (const product of batch) {
+        store.products.set(product.id, { ...product, categoryIds: product.categoryIds.filter((id) => !ids.includes(id)) });
+      }
+    }
   }
 }
 

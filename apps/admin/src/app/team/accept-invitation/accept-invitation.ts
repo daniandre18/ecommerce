@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, resource, signal } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { Router, RouterLink } from '@angular/router';
-import type { CommandFailure } from '@ecommerce/application';
+import type { CommandFailure } from '@ecommerce/application/client';
 import { SignOut } from '../../auth/sign-out';
 import { SESSION, TEAM_COMMANDS } from '../../core/client';
 import { commandErrorMessage } from '../../shared/command-errors';

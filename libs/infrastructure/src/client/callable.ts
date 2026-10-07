@@ -1,4 +1,4 @@
-import type { CommandFailure, CommandResult, GateErrorCode } from '@ecommerce/application';
+import type { CommandFailure, CommandResult, GateErrorCode } from '@ecommerce/application/client';
 import { httpsCallable, type Functions } from 'firebase/functions';
 
 /**

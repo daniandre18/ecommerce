@@ -36,6 +36,7 @@ import { MyTenants } from '../my-tenants';
       </mat-menu>
       <nav aria-label="Secciones">
         <a matButton routerLink="catalog" routerLinkActive="active" ariaCurrentWhenActive="page">Catálogo</a>
+        <a matButton routerLink="categories" routerLinkActive="active" ariaCurrentWhenActive="page">Categorías</a>
         <!-- Equipo y bitácora son solo del Propietario (FR-014, FR-034): a otra cuenta ni se le ofrecen. -->
         @if (access()?.isOwner) {
           <a matButton routerLink="team" routerLinkActive="active" ariaCurrentWhenActive="page">Equipo</a>

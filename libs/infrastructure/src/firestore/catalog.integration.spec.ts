@@ -1,6 +1,9 @@
 import {
   ArchiveVariant,
+  AssignCategory,
+  CreateCategory,
   CreateProduct,
+  SetProductCategories,
   SetProductOptions,
   SetVariantCost,
   SetVariantPrice,
@@ -11,6 +14,7 @@ import {
   type UseCaseDependencies,
 } from '@ecommerce/application';
 import {
+  categoryId,
   money,
   optionId,
   productId,
@@ -98,6 +102,18 @@ describe('catálogo sobre Firestore', () => {
     await run(new SetVariantSku(), { productId: pid, variantId: rojo, version: await versionOf(rojo), sku: 'A' });
     await run(new SetVariantSku(), { productId: pid, variantId: amarillo, version: await versionOf(amarillo), sku: 'B' });
     expect(await raw(`products/${pid}`)).toEqual(expect.objectContaining({ hasIncompleteVariants: false, version: 2 }));
+  });
+
+  // 002, Historia 2 (T054): asignar categorías escribe solo `categoryIds`, sin tocar la versión ni la
+  // fecha de edición: no mueve el producto en el listado ni provoca un conflicto a quien lo edita.
+  it('asignar y quitar categorías escribe solo categoryIds', async () => {
+    for (const key of ['ropa', 'verano']) {
+      await uow.run((tx) => new CreateCategory().execute(tx, { ...ctx, requestId: key }, { parentId: null, name: key }));
+    }
+    const before = await raw(`products/${pid}`);
+    await run(new AssignCategory(), { categoryId: categoryId('ropa'), productIds: [pid] });
+    await run(new SetProductCategories(), { productId: pid, add: [categoryId('verano')], remove: [categoryId('ropa')] });
+    expect(await raw(`products/${pid}`)).toEqual({ ...before, categoryIds: ['verano'] });
   });
 
   it('archivar una variante deja su SKU reservado en el índice (FR-023)', async () => {

@@ -1,0 +1,68 @@
+<h2 id="envio">Tipo y envío</h2>
+
+<!-- Los radios de Material traen la zona táctil de 48 px (FR-038 de la 001), como el control de estado. -->
+<mat-radio-group class="kind" aria-labelledby="kind-label" [value]="shownKind()" [disabled]="kindLocked()" (change)="choose($event.value)">
+  <span id="kind-label" class="kind-label">Tipo de producto</span>
+  <mat-radio-button value="physical">Físico: se envía</mat-radio-button>
+  <mat-radio-button value="digital">Digital: no se envía</mat-radio-button>
+</mat-radio-group>
+
+@if (pendingKind(); as kind) {
+  <div class="confirm" role="group" aria-labelledby="confirm-heading">
+    <p id="confirm-heading" class="confirm-heading">Antes de cambiarlo a {{ kind === 'digital' ? 'digital' : 'físico' }}:</p>
+    <ul>
+      @for (impact of buyerImpact(); track impact) {
+        <li>{{ impact }}</li>
+      }
+      @if (kind === 'digital') {
+        <li>El peso, las dimensiones y el envío gratis se conservan, pero dejan de usarse; vuelven si lo cambiás otra vez a físico.</li>
+      }
+    </ul>
+    <div class="actions">
+      <button matButton type="button" (click)="cancelKind()">Cancelar</button>
+      <button matButton="filled" type="button" (click)="confirmKind()">Confirmar el cambio</button>
+    </div>
+  </div>
+}
+
+@if (product().kind === 'digital') {
+  <p class="note">Un producto digital no se envía: no lleva peso ni dimensiones.</p>
+} @else {
+  @if (product().missingShippingData) {
+    <p class="missing">Faltan datos de envío: cargá el peso y las tres dimensiones para poder cotizarlo.</p>
+  }
+  <form novalidate (submit)="$event.preventDefault(); save()">
+    <mat-form-field class="weight">
+      <mat-label>Peso</mat-label>
+      <input matInput data-field="weight" inputmode="decimal" autocomplete="off" [formField]="measuresForm.weight" />
+      <span matTextSuffix>kg</span>
+    </mat-form-field>
+    <fieldset class="dimensions">
+      <legend>Dimensiones del paquete</legend>
+      <mat-form-field>
+        <mat-label>Largo</mat-label>
+        <input matInput data-field="length" inputmode="decimal" autocomplete="off" [formField]="measuresForm.length" />
+        <span matTextSuffix>cm</span>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Ancho</mat-label>
+        <input matInput data-field="width" inputmode="decimal" autocomplete="off" [formField]="measuresForm.width" />
+        <span matTextSuffix>cm</span>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Alto</mat-label>
+        <input matInput data-field="height" inputmode="decimal" autocomplete="off" [formField]="measuresForm.height" />
+        <span matTextSuffix>cm</span>
+      </mat-form-field>
+    </fieldset>
+    <div role="alert" class="failure">{{ failure() }}</div>
+    @if (canWrite()) {
+      <div class="actions">
+        @if (dirty()) {
+          <button matButton type="button" (click)="discard()">Descartar cambios</button>
+        }
+        <button matButton="filled" type="submit">Guardar envío</button>
+      </div>
+    }
+  </form>
+}

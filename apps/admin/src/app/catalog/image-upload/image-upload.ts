@@ -5,7 +5,7 @@ import { MatButton } from '@angular/material/button';
 import { MatError, MatFormField, MatHint, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatProgressBar } from '@angular/material/progress-bar';
-import type { CommandResult, UploadFailure } from '@ecommerce/application';
+import type { CommandResult, UploadFailure } from '@ecommerce/application/client';
 import { IMAGE_CONTENT_TYPES, MAX_IMAGE_BYTES, type ImageRef, type ProductId, type TenantId } from '@ecommerce/domain';
 import { IMAGE_STORAGE } from '../../core/client';
 import { commandErrorMessage } from '../../shared/command-errors';

@@ -3,22 +3,14 @@ import {
   isVariantComplete,
   normalizeSku,
   summarizeVariants,
-  type ProductId,
   type Sku,
-  type VariantId,
 } from '@ecommerce/domain';
+import type { SetVariantSkuInput } from '@ecommerce/application/client';
 import { BusinessRuleError } from '../errors';
 import { requirePermission } from '../ports/authorization';
 import type { OperationContext } from '../ports/operation-context';
 import type { TransactionScope } from '../ports/unit-of-work';
 import { assertVersion, bumped, findLiveVariant, loadProduct } from './shared';
-
-export interface SetVariantSkuInput {
-  readonly productId: ProductId;
-  readonly variantId: VariantId;
-  readonly version: number;
-  readonly sku: string;
-}
 
 /**
  * Asigna el SKU de una variante (FR-021). La reserva en el índice va en la misma transacción que la
@@ -34,7 +26,7 @@ export class SetVariantSku {
     input: SetVariantSkuInput,
   ): Promise<{ version: number; complete: boolean }> {
     const sku = parseSku(input.sku);
-    await loadProduct(tx, input.productId);
+    const product = await loadProduct(tx, input.productId);
     const variants = await tx.variants.findByProduct(input.productId);
     const occupant = await tx.skuIndex.find(sku.normalized);
 
@@ -54,7 +46,7 @@ export class SetVariantSku {
     await tx.variants.save(updated);
     await tx.products.updateVariantSummary(
       input.productId,
-      summarizeVariants(variants.map((v) => (v.id === updated.id ? updated : v))),
+      summarizeVariants(product, variants.map((v) => (v.id === updated.id ? updated : v))),
     );
     return { version: updated.version, complete: isVariantComplete(updated) };
   }

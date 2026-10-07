@@ -1,5 +1,5 @@
 import { RoleBasedAuthorizationService } from '@ecommerce/application';
-import { InMemorySecurityEventRecorder, InMemoryUnitOfWork } from '@ecommerce/application/testing';
+import { InMemoryCategoryPruner, InMemorySecurityEventRecorder, InMemoryUnitOfWork } from '@ecommerce/application/testing';
 import {
   activateMembership,
   createCatalogRole,
@@ -14,6 +14,7 @@ import {
 } from '@ecommerce/domain';
 import type { CallableRequest } from 'firebase-functions/https';
 import type { CallableDependencies } from '../bootstrap/callable';
+import type { CategoryDependencies } from '../categories/callables';
 
 export const AT = new Date('2026-09-30T12:00:00Z');
 export const T1 = tenantId('t1');
@@ -57,12 +58,13 @@ export function harness() {
 
   const securityEvents = new InMemorySecurityEventRecorder();
   let n = 0;
-  const deps: CallableDependencies = {
+  const deps: CallableDependencies & CategoryDependencies = {
     unitOfWorkFor: (tenant: TenantId) => (tenant === T1 ? t1 : new InMemoryUnitOfWork()),
     authorization: new RoleBasedAuthorizationService(),
     securityEvents,
     clock: { now: () => AT },
     ids: { next: () => `id-${++n}` },
+    prunerFor: (tenant: TenantId) => new InMemoryCategoryPruner(tenant === T1 ? t1 : new InMemoryUnitOfWork()),
   };
   return { t1, deps, securityEvents };
 }

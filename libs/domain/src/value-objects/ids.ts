@@ -14,6 +14,7 @@ export type InvitationId = Branded<string, 'InvitationId'>;
 export type AuditEntryId = Branded<string, 'AuditEntryId'>;
 export type BatchId = Branded<string, 'BatchId'>;
 export type PlatformOperatorId = Branded<string, 'PlatformOperatorId'>;
+export type CategoryId = Branded<string, 'CategoryId'>;
 
 export class InvalidIdentifierError extends Error {
   override readonly name = 'InvalidIdentifierError';
@@ -45,3 +46,4 @@ export const valueId = (value: string) => identifier<ValueId>(value, 'ValueId');
 export const batchId = (value: string) => identifier<BatchId>(value, 'BatchId');
 export const invitationId = (value: string) => identifier<InvitationId>(value, 'InvitationId');
 export const auditEntryId = (value: string) => identifier<AuditEntryId>(value, 'AuditEntryId');
+export const categoryId = (value: string) => identifier<CategoryId>(value, 'CategoryId');
