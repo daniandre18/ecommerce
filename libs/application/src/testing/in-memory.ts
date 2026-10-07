@@ -28,6 +28,7 @@ import type {
   AuditLogRepository,
   CategoryPruner,
   CategoryTreeRepository,
+  CategorySlugRepository,
   FeaturedSectionsRepository,
   GtinIndexEntry,
   GtinIndexRepository,
@@ -64,6 +65,8 @@ export class InMemoryStore {
   slugIndex = new Map<Slug, SlugIndexEntry>();
   vocabulary: Vocabulary = emptyVocabulary();
   categoryTree: CategoryTree = emptyCategoryTree();
+  /** URL anterior de categoría → la categoría que la reserva (T110). */
+  categorySlugs = new Map<Slug, CategoryId>();
   sections: FeaturedSections = emptySections();
   /** Por GTIN normalizado a 14 dígitos. */
   gtinIndex = new Map<string, GtinIndexEntry>();
@@ -82,6 +85,7 @@ export class InMemoryStore {
     copy.slugIndex = new Map(this.slugIndex);
     copy.vocabulary = this.vocabulary;
     copy.categoryTree = this.categoryTree;
+    copy.categorySlugs = new Map(this.categorySlugs);
     copy.sections = this.sections;
     copy.gtinIndex = new Map(this.gtinIndex);
     return copy;
@@ -224,6 +228,16 @@ function scopeOver(s: InMemoryStore): TransactionScope {
     },
   };
 
+  const categorySlugs: CategorySlugRepository = {
+    find: async (value) => s.categorySlugs.get(value) ?? null,
+    reserve: async (value, categoryId) => {
+      s.categorySlugs.set(value, categoryId);
+    },
+    release: async (value) => {
+      s.categorySlugs.delete(value);
+    },
+  };
+
   const sections: FeaturedSectionsRepository = {
     get: async () => s.sections,
     save: async (value) => {
@@ -242,7 +256,7 @@ function scopeOver(s: InMemoryStore): TransactionScope {
     },
   };
 
-  return { tenant, audit, members, invitations, roles, products, variants, costs, skuIndex, slugIndex, vocabulary, categories, sections, gtinIndex };
+  return { tenant, audit, members, invitations, roles, products, variants, costs, skuIndex, slugIndex, vocabulary, categories, categorySlugs, sections, gtinIndex };
 }
 
 /** Como `update` en Firestore: falla si la entrada no existe. */

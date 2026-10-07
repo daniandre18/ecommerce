@@ -18,7 +18,6 @@ function nodeFromDoc(key: string, d: DocumentData): CategoryNode {
     id: categoryId(key),
     name: String(d['name']),
     slug: slug(String(d['slug'])),
-    previousSlugs: ((d['previousSlugs'] ?? []) as unknown[]).map((value) => slug(String(value))),
     parentId: parent == null ? null : categoryId(String(parent)),
     position: Number(d['position'] ?? 0),
     hidden: d['hidden'] === true,
@@ -31,7 +30,7 @@ export function categoryTreeToDoc(tree: CategoryTree): Record<string, unknown> {
     nodes: Object.fromEntries(
       Object.values(tree.nodes).map((n) => [
         n.id,
-        { name: n.name, slug: n.slug, previousSlugs: [...n.previousSlugs], parentId: n.parentId, position: n.position, hidden: n.hidden },
+        { name: n.name, slug: n.slug, parentId: n.parentId, position: n.position, hidden: n.hidden },
       ]),
     ),
     pendingPrune: [...tree.pendingPrune],

@@ -1,5 +1,5 @@
 import { assertFails, assertSucceeds, type RulesTestEnvironment } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { deleteDoc, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 import { createRulesEnv, db, seed, USERS } from './env';
 
@@ -63,6 +63,11 @@ describe('ninguna escritura desde el cliente', () => {
       await assertSucceeds(getDoc(doc(as(USERS.owner1), 'tenants/t1/slugIndex/camiseta')));
       await assertFails(setDoc(doc(as(USERS.owner1), 'tenants/t1/slugIndex/otra'), { productId: 'p1', kind: 'current' }));
       await assertFails(setDoc(doc(as(USERS.owner1), 'tenants/t1/gtinIndex/00012345678905'), { productId: 'p1' }));
+    });
+
+    it('caso 51: ni el Propietario reserva ni libera una URL anterior de categoría desde el cliente', async () => {
+      await assertFails(setDoc(doc(as(USERS.owner1), 'tenants/t1/categorySlugs/otra'), { categoryId: 'ropa' }));
+      await assertFails(deleteDoc(doc(as(USERS.owner1), 'tenants/t1/categorySlugs/otra')));
     });
 
     it('caso 48: el rol de Catálogo no cambia la visibilidad del precio ni el envío gratis', async () => {

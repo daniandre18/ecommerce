@@ -30,6 +30,7 @@ describe('storefront y slugIndex', () => {
       // Un documento de `storefront` que la regla no nombra: tiene que quedar cerrado (caso 41).
       docs[`tenants/${t}/storefront/otroDocumento`] = { reservado: true };
       docs[`tenants/${t}/slugIndex/camiseta`] = { productId: 'p1', kind: 'current' };
+      docs[`tenants/${t}/categorySlugs/prendas`] = { categoryId: 'ropa' };
       docs[`tenants/${t}/gtinIndex/00012345678905`] = { productId: 'p1', variantId: 'v1' };
     }
     await seedExtra(env, docs);
@@ -91,5 +92,17 @@ describe('storefront y slugIndex', () => {
   it('caso 43: gtinIndex no se lee, aunque slugIndex sí', async () => {
     await assertSucceeds(read(USERS.owner1, 'tenants/t1/slugIndex/camiseta'));
     await assertFails(read(USERS.owner1, 'tenants/t1/gtinIndex/00012345678905'));
+  });
+
+  // T110: las URL anteriores de las categorías, fuera del árbol. El panel muestra si una está libre
+  // antes de guardar: las lee de a una, como slugIndex.
+  it('caso 49: un miembro activo lee una URL anterior de categoría de su comercio, de a una', async () => {
+    await assertSucceeds(read(USERS.catalog1, 'tenants/t1/categorySlugs/prendas'));
+    await assertFails(getDocs(collection(as(USERS.catalog1), 'tenants/t1/categorySlugs')));
+  });
+
+  it('caso 50: no lee las de otro comercio, ni con la membresía dada de baja', async () => {
+    await assertFails(read(USERS.catalog1, 'tenants/t2/categorySlugs/prendas'));
+    await assertFails(read('disabled1', 'tenants/t1/categorySlugs/prendas'));
   });
 });

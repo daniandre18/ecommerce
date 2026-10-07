@@ -150,7 +150,7 @@ describe('visibilidad efectiva', () => {
     const steps: [string, (tree: CategoryTree) => CategoryTree][] = [
       ['crear', (tree) => createCategory(tree, { id: id('polos'), parentId: id('hombre'), name: 'Polos' })],
       ['renombrar', (tree) => renameCategory(tree, id('hombre'), 'Caballeros')],
-      ['editar la URL', (tree) => setCategorySlug(tree, id('hombre'), slug('caballeros'))],
+      ['editar la URL', (tree) => setCategorySlug(tree, id('hombre'), slug('caballeros')).tree],
       ['mover con hijas', (tree) => moveCategory(tree, id('hombre'), null, 0)],
       ['mover de vuelta', (tree) => moveCategory(tree, id('hombre'), id('ropa'), 0)],
       ['reordenar', (tree) => moveCategory(tree, id('camisas'), id('hombre'), 0)],

@@ -174,6 +174,29 @@ describe('CategoriesPage', () => {
       expect(button('Crear categoría')?.disabled).toBe(true);
     });
 
+    // T110: las URL anteriores viven fuera del árbol; el panel pregunta por cada una antes de crear.
+    it('la URL generada salta las reservadas por otra categoría que existe', async () => {
+      queries.categorySlugs.set('camisas-2', categoryId('hombre'));
+      const { type, root } = await render();
+      await type('newName', 'Camisas');
+      await settle();
+      expect(root.querySelector('.slug-preview')?.textContent).toContain('Su URL será …/camisas-3');
+    });
+
+    it('una escrita y reservada por otra que existe se avisa y no se crea; la de una eliminada está libre', async () => {
+      queries.categorySlugs.set('prendas', categoryId('ropa'));
+      queries.categorySlugs.set('viejas', categoryId('borrada'));
+      const { type, root, button } = await render();
+      await type('newName', 'Nueva');
+      await type('newSlug', 'prendas');
+      await settle();
+      expect(root.querySelector('.slug-preview')?.textContent).toContain('La usa otra categoría, o está reservada.');
+      expect(button('Crear categoría')?.disabled).toBe(true);
+      await type('newSlug', 'viejas');
+      await settle();
+      expect(root.querySelector('.slug-preview')?.textContent).toContain('Su URL será …/viejas');
+    });
+
     it('crea con el nombre, el padre y una requestId nueva', async () => {
       const { type, click } = await render();
       await type('newName', 'Polos');
@@ -221,6 +244,19 @@ describe('CategoriesPage', () => {
     await type('slug', 'caballeros', row('hombre'));
     await click('Guardar', row('hombre'));
     expect(commands.setCategorySlug).toHaveBeenCalledWith(T1, { categoryId: 'hombre', slug: 'caballeros' });
+  });
+
+  it('cambiar la URL a una anterior propia avisa que se recupera; a una reservada por otra, que no', async () => {
+    queries.categorySlugs.set('caballeros', categoryId('hombre'));
+    queries.categorySlugs.set('senores', categoryId('mujer'));
+    const { act, type, row } = await render();
+    await act('hombre', 'Cambiar URL');
+    await type('slug', 'caballeros', row('hombre'));
+    await settle();
+    expect(row('hombre').textContent).toContain('Era una URL anterior de esta categoría: se recupera.');
+    await type('slug', 'senores', row('hombre'));
+    await settle();
+    expect(row('hombre').textContent).toContain('La usa otra categoría, o está reservada.');
   });
 
   // FR-021a en el panel: el aviso dice cuántas quedan ocultas, la orden escribe solo esa categoría, y

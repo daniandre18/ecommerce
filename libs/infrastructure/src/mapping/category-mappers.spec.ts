@@ -11,7 +11,7 @@ function tree() {
   t = createCategory(t, { id: id('hombre'), parentId: id('ropa'), name: 'Hombre' });
   t = createCategory(t, { id: id('camisas'), parentId: id('hombre'), name: 'Camisas' });
   t = createCategory(t, { id: id('calzado'), parentId: null, name: 'Calzado' });
-  t = setCategorySlug(t, id('hombre'), slug('caballeros'));
+  t = setCategorySlug(t, id('hombre'), slug('caballeros')).tree;
   t = setCategoryHidden(t, id('camisas'), true);
   t = setCategoryHidden(t, id('ropa'), true);
   return deleteCategory(t, id('calzado'));
@@ -32,10 +32,18 @@ describe('mapeo del árbol de categorías', () => {
     expect(categoryTreeFromDoc(undefined)).toEqual(emptyCategoryTree());
   });
 
-  it('un nodo sin visibilidad guardada es visible; sin URL anteriores, ninguna', () => {
+  it('un nodo sin visibilidad guardada es visible', () => {
     const read = categoryTreeFromDoc({ nodes: { ropa: { name: 'Ropa', slug: 'ropa', parentId: null, position: 0 } } });
-    expect(read.nodes[id('ropa')]).toEqual({ id: 'ropa', name: 'Ropa', slug: 'ropa', previousSlugs: [], parentId: null, position: 0, hidden: false });
+    expect(read.nodes[id('ropa')]).toEqual({ id: 'ropa', name: 'Ropa', slug: 'ropa', parentId: null, position: 0, hidden: false });
     expect(read.pendingPrune).toEqual([]);
+  });
+
+  // T110: las URL anteriores viven en `categorySlugs`, fuera del documento.
+  it('el documento no guarda URL anteriores, y uno viejo que las traiga se lee sin ellas', () => {
+    const nodes = categoryTreeToDoc(tree())['nodes'] as Record<string, Record<string, unknown>>;
+    expect(Object.values(nodes).some((node) => 'previousSlugs' in node)).toBe(false);
+    const old = categoryTreeFromDoc({ nodes: { ropa: { name: 'Ropa', slug: 'ropa', previousSlugs: ['prendas'], parentId: null, position: 0 } } });
+    expect(old.nodes[id('ropa')]).not.toHaveProperty('previousSlugs');
   });
 
   it('una URL con otra forma no se acepta en silencio', () => {

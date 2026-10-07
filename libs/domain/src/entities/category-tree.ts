@@ -13,10 +13,8 @@ export interface CategoryNode {
   readonly id: CategoryId;
   /** Único entre hermanas, comparado sin mayúsculas ni acentos (FR-020). */
   readonly name: string;
-  /** Plana y única en todo el árbol, incluidas las anteriores (FR-021). */
+  /** Plana y única en el comercio, también contra las anteriores reservadas fuera del árbol (FR-021). */
   readonly slug: Slug;
-  /** Las que tuvo y ya no tiene: reservadas para redirigir (FR-021). */
-  readonly previousSlugs: readonly Slug[];
   /** `null`: primer nivel. */
   readonly parentId: CategoryId | null;
   /** Orden entre hermanas. */
@@ -91,16 +89,36 @@ export function categoryPath(tree: CategoryTree, id: CategoryId): CategoryNode[]
 }
 
 /**
- * La URL que recibirá una categoría con ese nombre: la generada, o la base con el menor sufijo libre
- * (FR-021). Es la que el panel muestra antes de confirmar, y la que usa `createCategory`.
+ * Quién tiene reservada una URL anterior, o `null`. Las anteriores viven fuera del árbol, una entrada
+ * por URL (T110 de la 002): dentro, cada cambio de URL agrandaba un documento con límite de 1 MiB.
  */
-export function firstFreeCategorySlug(tree: CategoryTree, name: string): Slug {
+export type SlugHolder = CategoryId | null;
+
+/** Una reserva cuenta si es de otra categoría que todavía existe: la de una eliminada está libre. */
+export function slugHeldByOther(tree: CategoryTree, holder: SlugHolder, self: CategoryId | null): boolean {
+  return holder !== null && holder !== self && tree.nodes[holder] !== undefined;
+}
+
+/**
+ * Las URL que puede recibir una categoría con ese nombre, en orden: la generada y la base con sufijos,
+ * sin las vigentes del árbol. Quien la crea toma la primera que no esté reservada (FR-021).
+ */
+export function* categorySlugCandidates(tree: CategoryTree, name: string): Generator<Slug> {
   const base = slugify(name) ?? slug('categoria');
-  const used = usedSlugs(tree);
+  const used = currentSlugs(tree);
   for (let n = 1; ; n++) {
     const candidate = nextSlugCandidate(base, n);
-    if (!used.has(candidate)) return candidate;
+    if (!used.has(candidate)) yield candidate;
   }
+}
+
+/**
+ * La URL que recibirá una categoría con ese nombre: la primera candidata que no esté reservada por
+ * otra (FR-021). Es la que el panel muestra antes de confirmar, y la que elige la creación.
+ */
+export function firstFreeCategorySlug(tree: CategoryTree, name: string, reserved: (candidate: Slug) => boolean = () => false): Slug {
+  for (const candidate of categorySlugCandidates(tree, name)) if (!reserved(candidate)) return candidate;
+  throw new Error('inalcanzable');
 }
 
 export interface NewCategory {
@@ -111,7 +129,8 @@ export interface NewCategory {
   readonly slug?: Slug;
 }
 
-export function createCategory(tree: CategoryTree, input: NewCategory): CategoryTree {
+/** `heldBy`: quién tiene reservada la URL escrita, si se escribió una. */
+export function createCategory(tree: CategoryTree, input: NewCategory, heldBy: SlugHolder = null): CategoryTree {
   if (tree.nodes[input.id]) throw new Error(`Ya existe la categoría ${input.id}`);
   if (Object.keys(tree.nodes).length >= MAX_CATEGORIES) {
     throw new CategoryLimitError('count', `Un comercio admite hasta ${MAX_CATEGORIES} categorías`);
@@ -126,12 +145,12 @@ export function createCategory(tree: CategoryTree, input: NewCategory): Category
   assertNameFree(tree, input.parentId, name, input.id);
   const chosen = input.slug ?? firstFreeCategorySlug(tree, name);
   assertSlugFree(tree, chosen, input.id);
+  if (input.slug && slugHeldByOther(tree, heldBy, input.id)) throw new CategorySlugTakenError(chosen, heldBy as CategoryId);
 
   const node: CategoryNode = {
     id: input.id,
     name,
     slug: chosen,
-    previousSlugs: [],
     parentId: input.parentId,
     position: childrenOf(tree, input.parentId).length,
     hidden: false,
@@ -147,13 +166,24 @@ export function renameCategory(tree: CategoryTree, id: CategoryId, rawName: stri
   return withNode(tree, { ...node, name });
 }
 
-/** La anterior queda en `previousSlugs`, reservada; volver a una anterior propia la recupera. */
-export function setCategorySlug(tree: CategoryTree, id: CategoryId, next: Slug): CategoryTree {
+export interface CategorySlugChange {
+  readonly tree: CategoryTree;
+  /** La que deja de ser vigente: se reserva para esta categoría, fuera del árbol. */
+  readonly reserve: Slug | null;
+  /** La nueva tenía una reserva que ya no corresponde —propia, que se recupera, o de una eliminada—. */
+  readonly release: Slug | null;
+}
+
+/**
+ * La anterior queda reservada; volver a una anterior propia la recupera (FR-021). `heldBy`: quién
+ * tiene reservada la nueva. El nodo guarda solo la vigente: el árbol no crece con los cambios.
+ */
+export function setCategorySlug(tree: CategoryTree, id: CategoryId, next: Slug, heldBy: SlugHolder = null): CategorySlugChange {
   const node = find(tree, id);
-  if (next === node.slug) return tree;
+  if (next === node.slug) return { tree, reserve: null, release: null };
   assertSlugFree(tree, next, id);
-  const previousSlugs = [...node.previousSlugs.filter((previous) => previous !== next), node.slug];
-  return withNode(tree, { ...node, slug: next, previousSlugs });
+  if (slugHeldByOther(tree, heldBy, id)) throw new CategorySlugTakenError(next, heldBy as CategoryId);
+  return { tree: withNode(tree, { ...node, slug: next }), reserve: node.slug, release: heldBy === null ? null : next };
 }
 
 /**
@@ -232,15 +262,15 @@ function assertNameFree(tree: CategoryTree, parentId: CategoryId | null, name: s
   }
 }
 
+/** Contra las vigentes del árbol; las reservadas se miran aparte (`slugHeldByOther`). */
 function assertSlugFree(tree: CategoryTree, value: Slug, self: CategoryId): void {
   for (const node of Object.values(tree.nodes)) {
-    if (node.id === self) continue;
-    if (node.slug === value || node.previousSlugs.includes(value)) throw new CategorySlugTakenError(value, node.id);
+    if (node.id !== self && node.slug === value) throw new CategorySlugTakenError(value, node.id);
   }
 }
 
-function usedSlugs(tree: CategoryTree): Set<Slug> {
-  return new Set(Object.values(tree.nodes).flatMap((node) => [node.slug, ...node.previousSlugs]));
+function currentSlugs(tree: CategoryTree): Set<Slug> {
+  return new Set(Object.values(tree.nodes).map((node) => node.slug));
 }
 
 /** Niveles que ocupa la rama de un nodo, contándolo: una hoja ocupa 1. */

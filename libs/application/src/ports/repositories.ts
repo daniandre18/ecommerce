@@ -141,6 +141,18 @@ export interface VocabularyRepository {
   save(vocabulary: Vocabulary): Promise<void>;
 }
 
+/**
+ * Las URL anteriores de las categorías, una entrada por URL con la categoría que la reserva (T110 de
+ * la 002). Fuera del árbol: dentro, cada cambio de URL agrandaba un documento con límite de 1 MiB. Una
+ * reserva de una categoría eliminada está libre, así que se escribe con `set` y no con `create`.
+ */
+export interface CategorySlugRepository {
+  /** Quién la tiene reservada, o `null`. */
+  find(slug: Slug): Promise<CategoryId | null>;
+  reserve(slug: Slug, categoryId: CategoryId): Promise<void>;
+  release(slug: Slug): Promise<void>;
+}
+
 /** El árbol entero de categorías, en un solo documento (research §1 de la 002). */
 export interface CategoryTreeRepository {
   /** Vacío si todavía no existe. */

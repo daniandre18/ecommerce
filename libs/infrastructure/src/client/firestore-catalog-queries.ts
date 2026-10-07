@@ -1,6 +1,7 @@
 import { chunkIds, mergePages, type CatalogQueries, type ProductListQuery, type SlugIndexEntry, type Unsubscribe, type Watcher } from '@ecommerce/application/client';
 import {
   normalizeName,
+  categoryId as toCategoryId,
   productId as toProductId,
   slugify,
   type CategoryId,
@@ -116,6 +117,12 @@ export class FirestoreCatalogQueries implements CatalogQueries {
     const data = (await getDoc(doc(this.db, 'tenants', tenantId, 'slugIndex', slug))).data();
     if (!data) return null;
     return { productId: toProductId(String(data['productId'])), kind: data['kind'] === 'previous' ? 'previous' : 'current' };
+  }
+
+  /** De a una, como `findSlug`: las reglas no dejan listar `categorySlugs` (caso 49). */
+  async findCategorySlug(tenantId: TenantId, slug: Slug): Promise<CategoryId | null> {
+    const data = (await getDoc(doc(this.db, 'tenants', tenantId, 'categorySlugs', slug))).data();
+    return data ? toCategoryId(String(data['categoryId'])) : null;
   }
 
   watchCategoryTree(tenantId: TenantId, watcher: Watcher<CategoryTree>): Unsubscribe {

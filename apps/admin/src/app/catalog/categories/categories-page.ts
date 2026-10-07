@@ -1,7 +1,7 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { CdkDrag, CdkDropList, CdkDropListGroup, type CdkDragDrop } from '@angular/cdk/drag-drop';
 import { NgTemplateOutlet } from '@angular/common';
-import { afterRenderEffect, Component, computed, ElementRef, inject, input, signal } from '@angular/core';
+import { afterRenderEffect, Component, computed, ElementRef, inject, input, resource, signal } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatFormField, MatHint, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
@@ -10,13 +10,15 @@ import {
   childrenOf,
   depthOf,
   effectiveVisibility,
-  firstFreeCategorySlug,
+  categorySlugCandidates,
   MAX_CATEGORY_DEPTH,
+  slugHeldByOther,
   slugify,
   tenantId,
   type CategoryId,
   type CategoryNode,
   type CategoryTree,
+  type Slug,
   type TenantId,
 } from '@ecommerce/domain';
 import { EmptyState, ErrorState, Skeleton } from '@ecommerce/ui';
@@ -115,16 +117,31 @@ export class CategoriesPage {
       .map((node) => ({ value: node.id as string, label: pathLabel(tree, node.id) }));
   });
 
-  /** La URL que va a recibir, antes de confirmar (FR-021): la escrita, o la generada con su sufijo. */
+  /**
+   * La URL que va a recibir, antes de confirmar (FR-021): la escrita, o la generada con su sufijo. Las
+   * anteriores reservadas viven fuera del árbol (T110 de la 002): se pregunta por cada candidata.
+   */
+  private readonly slugCheck = resource({
+    params: () => {
+      const tree = this.current();
+      const { name, slug } = this.draft();
+      return !tree || (name.trim() === '' && slug.trim() === '') ? undefined : { tree, name, slug, tenant: this.id() };
+    },
+    loader: async ({ params: { tree, name, slug, tenant } }): Promise<{ text: string; ok: boolean }> => {
+      const free = async (candidate: Slug) => !slugHeldByOther(tree, await this.queries.findCategorySlug(tenant, candidate), null);
+      if (slug.trim() === '') {
+        for (const candidate of categorySlugCandidates(tree, name)) if (await free(candidate)) return { text: `Su URL será …/${candidate}`, ok: true };
+      }
+      const written = slugify(slug);
+      if (!written) return { text: 'La URL necesita al menos una letra o un número.', ok: false };
+      const taken = Object.values(tree.nodes).some((node) => node.slug === written) || !(await free(written));
+      return taken ? { text: 'La usa otra categoría, o está reservada.', ok: false } : { text: `Su URL será …/${written}`, ok: true };
+    },
+  });
   protected readonly slugPreview = computed<{ text: string; ok: boolean } | null>(() => {
-    const tree = this.current();
-    const { name, slug } = this.draft();
-    if (!tree || (name.trim() === '' && slug.trim() === '')) return null;
-    if (slug.trim() === '') return { text: `Su URL será …/${firstFreeCategorySlug(tree, name)}`, ok: true };
-    const written = slugify(slug);
-    if (!written) return { text: 'La URL necesita al menos una letra o un número.', ok: false };
-    const taken = Object.values(tree.nodes).some((node) => node.slug === written || node.previousSlugs.includes(written));
-    return taken ? { text: 'La usa otra categoría, o está reservada.', ok: false } : { text: `Su URL será …/${written}`, ok: true };
+    if (this.slugCheck.error()) return { text: 'No pudimos comprobar la URL. Revisá la conexión.', ok: false };
+    if (this.slugCheck.isLoading()) return { text: 'Comprobando la URL…', ok: false };
+    return this.slugCheck.hasValue() ? (this.slugCheck.value() ?? null) : null;
   });
 
   protected readonly canCreate = computed(() => this.draft().name.trim() !== '' && this.slugPreview()?.ok === true && !this.creating());

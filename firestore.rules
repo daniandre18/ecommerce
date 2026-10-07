@@ -114,6 +114,12 @@ service cloud.firestore {
         allow get: if isActiveMember(tenantId);
       }
 
+      // Las URL anteriores de las categorías (T110 de la 002), fuera del árbol: el panel dice si una
+      // está reservada antes de guardar. De a una, como `slugIndex`.
+      match /categorySlugs/{slug} {
+        allow get: if isActiveMember(tenantId);
+      }
+
       // `gtinIndex` no se declara: lo consulta solo el servidor, como `skuIndex`.
     }
 

@@ -94,10 +94,11 @@ destacadas.
 |---|---|---|
 | `storefront/categoryTree`, `storefront/sections`, `storefront/vocabulary` | Cualquier miembro activo | Lo necesita el panel para operar el catálogo. Los tres documentos se **nombran**: uno nuevo en `storefront` (configuración reservada a la Propietaria, por ejemplo) no queda legible por heredar la regla. Es la lección del comodín de la 001. |
 | `slugIndex/{slug}` | Cualquier miembro activo, **de a una** (`get`, nunca `list`) | El panel pregunta si una URL está libre antes de guardarla (FR-007). Las URL son públicas por naturaleza, pero listarlas todas no hace falta. |
+| `categorySlugs/{slug}` | Cualquier miembro activo, **de a una** | Las URL anteriores de las categorías, fuera del árbol (T110). El panel pregunta por una antes de guardarla. |
 | `gtinIndex/{gtin}` | Nadie desde el cliente | Lo consulta solo el servidor, como `skuIndex`. |
 
 Y ninguna escritura desde el cliente, tampoco en lo nuevo: ni el árbol, ni las secciones, ni las
-reservas de URL o de GTIN (casos 45 a 47), que el servidor crea con `create` dentro de la
+reservas de URL o de GTIN (casos 45 a 47 y 51), que el servidor crea con `create` dentro de la
 transacción para que dos reservas simultáneas no puedan ganar las dos.
 
 ## Por qué los permisos no viajan en el token
@@ -128,4 +129,4 @@ próxima lectura y en la próxima escritura, sin esperar a que venza un token.
 | Las escrituras | `apps/functions/src/bootstrap/guard.ts`, `libs/application/src/services/authorization.service.ts` |
 | Lo que exige cada operación | `requires` de cada caso de uso en `libs/application/src/use-cases/` |
 | El panel | `apps/admin/src/app/tenant/current-access.ts`, `apps/admin/src/app/shared/directives/has-permission.directive.ts` |
-| Las pruebas | `tests/rules/` (casos 1 a 34 de la 001; 35 a 48 y 35a de la 002), `libs/application/src/use-cases/authorization.spec.ts`, `apps/admin-e2e/src/team-and-permissions.spec.ts` |
+| Las pruebas | `tests/rules/` (casos 1 a 34 de la 001; 35 a 51 y 35a de la 002), `libs/application/src/use-cases/authorization.spec.ts`, `apps/admin-e2e/src/team-and-permissions.spec.ts` |

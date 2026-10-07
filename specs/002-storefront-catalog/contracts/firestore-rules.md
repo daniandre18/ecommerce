@@ -65,6 +65,14 @@ que se indique otro archivo.
 | 43 | Miembro activo lee `t1/gtinIndex/{gtin}` | **denegado** |
 | 44 | `member-cannot-read-owner-paths.spec.ts`: la regla de `storefront` no abre `config`, `auditLog`, `invitations` ni `securityEvents` | **denegado**, igual que antes |
 
+### Las URL anteriores de categoría, fuera del árbol (T110)
+
+| # | Caso | Esperado |
+|---|---|---|
+| 49 | Miembro activo de `t1` hace `get` de `t1/categorySlugs/{slug}`; y **lista** `t1/categorySlugs` | `get` permitido; listar **denegado** |
+| 50 | Miembro activo de `t1` lee `t2/categorySlugs/{slug}`; membresía `disabled` lee `t1/categorySlugs/{slug}` | **denegado** |
+| 51 | `no-client-writes.spec.ts`: el Propietario crea o borra `t1/categorySlugs/{slug}` | **denegado** |
+
 ### Ninguna escritura desde el cliente (`no-client-writes.spec.ts`)
 
 | # | Caso | Esperado |

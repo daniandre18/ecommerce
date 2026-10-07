@@ -137,11 +137,18 @@ interface CategoryTree {
 interface CategoryNode {
   id: CategoryId;
   name: string;                 // único entre hermanas, comparado normalizado (FR-020)
-  slug: Slug;                   // plana, única en todo el árbol (FR-021)
-  previousSlugs: Slug[];        // reservadas para redirigir (FR-021)
+  slug: Slug;                   // plana, única en el comercio, también contra las reservadas (FR-021)
   parentId: CategoryId | null;  // null = primer nivel
   position: number;             // orden entre hermanas
   hidden: boolean;              // SOLO la propia (FR-021a)
+}
+
+// tenants/{t}/categorySlugs/{slug} — una URL anterior, reservada para redirigir (FR-021). Fuera del
+// árbol (T110): dentro, cada cambio de URL agrandaba un documento con límite duro de 1 MiB. Una
+// reserva de una categoría eliminada está libre y se pisa.
+interface CategorySlugReservation {
+  categoryId: CategoryId;
+  reservedAt: Timestamp;
 }
 ```
 
@@ -163,9 +170,9 @@ function depthOf(tree: CategoryTree, id: CategoryId): 1 | 2 | 3;
 
 | Operación | Valida |
 |---|---|
-| `createCategory(tree, { parentId, name, slug? })` | profundidad ≤ 3, nombre único entre hermanas, URL única y no reservada, ≤ 1.000 nodos |
+| `createCategory(tree, { parentId, name, slug? }, heldBy)` | profundidad ≤ 3, nombre único entre hermanas, URL única y no reservada por otra que exista (`heldBy`, leído de `categorySlugs`), ≤ 1.000 nodos |
 | `renameCategory(tree, id, name)` | nombre único entre hermanas; **no** cambia la URL (FR-021) |
-| `setCategorySlug(tree, id, slug)` | URL única y no reservada; la anterior pasa a `previousSlugs` |
+| `setCategorySlug(tree, id, slug, heldBy)` | URL única y no reservada por otra que exista; devuelve el árbol, la anterior que hay que reservar en `categorySlugs` y la que deja de estarlo (una propia que se recupera, o la de una eliminada) |
 | `moveCategory(tree, id, parentId, position)` | no dentro de su propia rama; la rama completa queda a ≤ 3 niveles; **no toca `hidden` de nadie**. Con el mismo padre, solo reordena |
 | `setCategoryHidden(tree, id, hidden)` | **escribe solo ese nodo** |
 | `deleteCategory(tree, id)` | sin subcategorías (FR-024); agrega el id a `pendingPrune` |

@@ -128,6 +128,9 @@ export class FakeCatalogQueries implements CatalogQueries {
   /** Las URL reservadas que conoce `findSlug`; la prueba las agrega. */
   readonly slugs = new Map<string, SlugIndexEntry>();
   readonly findSlug = vi.fn(async (_tenantId: TenantId, slug: Slug) => this.slugs.get(slug) ?? null);
+  /** Las URL anteriores de categoría y quién las reserva; la prueba las agrega (T110). */
+  readonly categorySlugs = new Map<string, CategoryId>();
+  readonly findCategorySlug = vi.fn(async (_tenantId: TenantId, slug: Slug) => this.categorySlugs.get(slug) ?? null);
   readonly categoryTrees: Subscription<CategoryTree, TenantId>[] = [];
   /** Cuántos productos tiene cada categoría, para el aviso previo a eliminarla; la prueba los fija. */
   readonly categoryCounts = new Map<string, number>();

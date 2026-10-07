@@ -15,7 +15,10 @@ import type { Target } from './page';
 //     firebase emulators:exec --only firestore --project demo-ecommerce "npx tsx --tsconfig tools/tsconfig.json tools/firestore-compression/measure.ts emulador"
 //   A través del proxy que comprime (el puerto, después de `emulador`): … measure.ts emulador 8090
 
-/** 1.000 categorías en tres niveles, con los campos de `categoryTreeToDoc`. */
+/**
+ * 1.000 categorías en tres niveles, con los campos que tenía `categoryTreeToDoc` al medir (2026-10-06):
+ * `previousSlugs` vacío, que desde T110 el documento ya no lleva. Así se reproduce lo de research §14.
+ */
 function treeDoc(): Record<string, unknown> {
   let tree: CategoryTree = emptyCategoryTree();
   for (let root = 0; Object.keys(tree.nodes).length < MAX_CATEGORIES; root++) {
@@ -30,7 +33,7 @@ function treeDoc(): Record<string, unknown> {
     }
   }
   return {
-    nodes: Object.fromEntries(Object.values(tree.nodes).map((n) => [n.id, { name: n.name, slug: n.slug, previousSlugs: [...n.previousSlugs], parentId: n.parentId, position: n.position, hidden: n.hidden }])),
+    nodes: Object.fromEntries(Object.values(tree.nodes).map((n) => [n.id, { name: n.name, slug: n.slug, previousSlugs: [], parentId: n.parentId, position: n.position, hidden: n.hidden }])),
     pendingPrune: [],
   };
 }

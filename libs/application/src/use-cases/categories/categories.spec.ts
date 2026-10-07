@@ -84,12 +84,54 @@ describe('categorías', () => {
       expect(node('hombre')).toEqual(expect.objectContaining({ name: 'Caballeros', slug: 'hombre' }));
     });
 
-    it('editar la URL deja la anterior reservada', async () => {
-      expect(await t.run(new SetCategorySlug(), { categoryId: cid('hombre'), slug: 'Caballeros' })).toEqual({ slug: 'caballeros' });
-      expect(node('hombre')).toEqual(expect.objectContaining({ slug: 'caballeros', previousSlugs: ['hombre'] }));
-      expect(await failureOf(t.run(new SetCategorySlug(), { categoryId: cid('mujer'), slug: 'hombre' }))).toEqual(
-        expect.objectContaining({ code: 'slug-conflict' }),
-      );
+    // T110: las URL anteriores viven fuera del árbol, en `categorySlugs`, una entrada por URL.
+    describe('URL anteriores, fuera del árbol', () => {
+      const reserved = () => Object.fromEntries(t.uow.store.categorySlugs);
+      const setSlug = (key: string, slug: string) => t.run(new SetCategorySlug(), { categoryId: cid(key), slug });
+
+      it('editar la URL deja la anterior reservada para esa categoría, y el árbol solo con la vigente', async () => {
+        expect(await setSlug('hombre', 'Caballeros')).toEqual({ slug: 'caballeros' });
+        expect(node('hombre')).toEqual(expect.objectContaining({ slug: 'caballeros' }));
+        expect(node('hombre')).not.toHaveProperty('previousSlugs');
+        expect(reserved()).toEqual({ hombre: 'hombre' });
+      });
+
+      it('la reservada por otra categoría que existe no se puede tomar: ni al cambiarla ni al crear con ella', async () => {
+        await setSlug('hombre', 'caballeros');
+        expect(await failureOf(setSlug('mujer', 'hombre'))).toEqual(expect.objectContaining({ code: 'slug-conflict' }));
+        expect(await failureOf(newCategory('x', null, 'X', 'hombre'))).toEqual(expect.objectContaining({ code: 'slug-conflict' }));
+      });
+
+      it('creada sin URL, salta las reservadas por otra que existe', async () => {
+        await setSlug('hombre', 'caballeros');
+        await newCategory('otro-hombre', null, 'Hombre');
+        expect(node('otro-hombre').slug).toBe('hombre-2');
+      });
+
+      it('volver a una anterior propia la recupera: deja de estar reservada, y la vigente pasa a reservarse', async () => {
+        await setSlug('hombre', 'caballeros');
+        await setSlug('hombre', 'hombre');
+        expect(node('hombre').slug).toBe('hombre');
+        expect(reserved()).toEqual({ caballeros: 'hombre' });
+      });
+
+      it('la reservada por una categoría eliminada está libre, y su reserva vieja se limpia', async () => {
+        await setSlug('calzado', 'zapatos');
+        await t.run(new DeleteCategory(), { categoryId: cid('calzado') });
+        await setSlug('mujer', 'calzado');
+        expect(node('mujer').slug).toBe('calzado');
+        expect(reserved()).toEqual({ mujer: 'mujer' });
+        await newCategory('z', null, 'Z', 'zapatos');
+        expect(node('z').slug).toBe('zapatos');
+      });
+
+      it('200 cambios de URL no agrandan el árbol', async () => {
+        const size = JSON.stringify(tree()).length;
+        for (let i = 0; i < 200; i++) await setSlug('hombre', `url-${String(i).padStart(3, '0')}`);
+        await setSlug('hombre', 'hombre');
+        expect(JSON.stringify(tree()).length).toBe(size);
+        expect(t.uow.store.categorySlugs.size).toBe(200);
+      });
     });
 
     it('mover dentro de su propia rama: category-limit con motivo cycle', async () => {

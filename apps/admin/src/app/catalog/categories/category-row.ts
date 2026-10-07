@@ -1,13 +1,13 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { CdkDragHandle } from '@angular/cdk/drag-drop';
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, resource, signal } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatMenu, MatMenuContent, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import type { CommandFailure } from '@ecommerce/application/client';
-import { childrenOf, descendantsOf, slugify, type CategoryId, type CategoryNode, type CategoryTree, type EffectiveVisibility, type TenantId } from '@ecommerce/domain';
+import { childrenOf, descendantsOf, slugHeldByOther, slugify, type CategoryId, type CategoryNode, type CategoryTree, type EffectiveVisibility, type TenantId } from '@ecommerce/domain';
 import { CATALOG_COMMANDS, CATALOG_QUERIES } from '../../core/client';
 import { trackUnsaved } from '../../shared/pending-changes/pending-changes';
 import { injectCan } from '../../tenant/current-access';
@@ -291,15 +291,31 @@ export class CategoryRow {
     return options;
   });
 
-  /** Qué dice la URL que se está escribiendo, contra el árbol que ya está en memoria (FR-021). */
+  /** Quién tiene reservada la URL que se está escribiendo: las anteriores viven fuera del árbol (T110). */
+  private readonly reservation = resource({
+    params: () => {
+      const next = this.mode() === 'slug' ? slugify(this.draft()) : undefined;
+      return next && next !== this.node().slug ? { tenant: this.tenantId(), slug: next } : undefined;
+    },
+    loader: ({ params }) => this.queries.findCategorySlug(params.tenant, params.slug),
+  });
+
+  /** Qué dice la URL que se está escribiendo (FR-021). */
   protected readonly slugStatus = computed(() => {
     const node = this.node();
     const next = slugify(this.draft());
     if (!next) return { text: 'La URL necesita al menos una letra o un número.', canSave: false };
     if (next === node.slug) return { text: 'Es la URL vigente.', canSave: false };
-    if (node.previousSlugs.includes(next)) return { text: 'Era una URL anterior de esta categoría: se recupera.', canSave: true };
-    const taken = Object.values(this.tree().nodes).some((other) => other.id !== node.id && (other.slug === next || other.previousSlugs.includes(next)));
-    return taken ? { text: 'La usa otra categoría, o está reservada.', canSave: false } : { text: `Quedará …/${next}`, canSave: true };
+    if (Object.values(this.tree().nodes).some((other) => other.id !== node.id && other.slug === next)) {
+      return { text: 'La usa otra categoría, o está reservada.', canSave: false };
+    }
+    if (this.reservation.error()) return { text: 'No pudimos comprobar la URL. Revisá la conexión.', canSave: false };
+    if (this.reservation.isLoading() || !this.reservation.hasValue()) return { text: 'Comprobando…', canSave: false };
+    const holder = this.reservation.value() ?? null;
+    if (holder === node.id) return { text: 'Era una URL anterior de esta categoría: se recupera.', canSave: true };
+    return slugHeldByOther(this.tree(), holder, node.id)
+      ? { text: 'La usa otra categoría, o está reservada.', canSave: false }
+      : { text: `Quedará …/${next}`, canSave: true };
   });
 
   constructor() {

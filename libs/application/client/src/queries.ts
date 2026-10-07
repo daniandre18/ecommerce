@@ -88,6 +88,8 @@ export interface CatalogQueries {
    * vista previa: la que decide es la reserva en el servidor, al confirmar.
    */
   findSlug(tenantId: TenantId, slug: Slug): Promise<SlugIndexEntry | null>;
+  /** La categoría que tiene reservada esa URL anterior, o `null` (T110 de la 002). De a una. */
+  findCategorySlug(tenantId: TenantId, slug: Slug): Promise<CategoryId | null>;
   /** El árbol entero de categorías: un documento, una lectura (research §1 de la 002). */
   watchCategoryTree(tenantId: TenantId, watcher: Watcher<CategoryTree>): Unsubscribe;
   /** Cuántos productos tienen la categoría, archivados incluidos: el aviso antes de eliminarla (FR-024). */

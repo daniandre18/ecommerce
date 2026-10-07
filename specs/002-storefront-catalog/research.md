@@ -32,9 +32,11 @@ padre".
 
 **Cómo se consulta el árbol sin pagar una lectura por nivel**: el árbol **entero** de un comercio
 vive en **un solo documento**, `tenants/{t}/storefront/categoryTree`, con un mapa de nodos
-`{ id, name, slug, parentId, position, hidden, previousSlugs }`. Leer el árbol cuesta **una lectura**
+`{ id, name, slug, parentId, position, hidden }`. Leer el árbol cuesta **una lectura**
 —más el `get()` de la membresía de las reglas— sea cual sea su profundidad o su tamaño, y la
-visibilidad efectiva de todos los nodos sale de un recorrido O(n) en memoria.
+visibilidad efectiva de todos los nodos sale de un recorrido O(n) en memoria. Las URL anteriores de cada categoría **no** van en el documento (T110): cada cambio de URL agrega
+una y ninguna se elimina, así que el árbol crecería sin tope hacia el límite duro de 1 MiB por
+documento, y al pasarlo dejaría de ser editable. Viven en `categorySlugs/{slug}`, una por documento.
 
 Lo que compra el documento único, además de la lectura:
 
@@ -345,9 +347,27 @@ Firestore real.
 **Conclusión**: Firestore comprime sus respuestas, así que comprimir el tráfico del emulador en
 `admin-e2e:perf` es medir lo que recibe la persona, no relajar el criterio. Se hace con
 `apps/admin-e2e/firestore-gzip-proxy.mjs` delante del emulador, solo para la configuración `measure`
-del panel. Medido con el mismo arnés, el proxy transfiere 14 kB de este documento, contra los 25 kB
-reales: la medición queda unos 11 kB por debajo de producción en esa lectura, unos 55 ms a 1,6 Mbps,
-y así se informa junto con cada resultado (T094).
+del panel.
+
+**El proxy erra hacia lo pesimista**: nunca comprime mejor que Firestore real. Firestore transfirió
+25,2 kB por cada 258 kB que el emulador decodifica del mismo documento (9,8%). El proxy fija un piso
+del 10%: si gzip baja de eso, rellena con bloques almacenados vacíos de deflate (`00 00 00 FF FF`,
+insertados después de cada `Z_SYNC_FLUSH`), que son gzip válido y no cambian lo que se decodifica.
+Medido con el mismo arnés (`measure.ts emulador 8090`), el árbol de 1.000 categorías transfiere
+**27,3 kB** por el proxy, contra 25,2 kB reales: unos 2 kB de más. Una primera versión sin piso
+transfería 14 kB, unos 55 ms a favor de la medición, y por eso se descartó.
+
+**Los números con el proxy pesimista** (2026-10-06, `npx nx run admin-e2e:perf`, perfil móvil de la
+001, árbol de 1.000 categorías):
+
+| Vista | Estructura | Contenido útil, primera visita | Contenido útil, siguientes |
+|---|---|---|---|
+| Catálogo (SC-009 de la 001) | 196 ms | 2.706 ms | 797 ms |
+| Editor del árbol | 204 ms | 2.749 ms | 972 ms |
+| Editor de producto | 188 ms | 2.796 ms | 851 ms |
+
+SC-006: p95 de 559 ms en 36 filtros. SC-008 de la 001: 2.706 → 2.672 ms con 100 colaboradores.
+Todo bajo el tope; el margen más chico es el del editor de producto, 204 ms.
 
 ## Riesgos abiertos
 

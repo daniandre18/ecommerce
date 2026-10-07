@@ -47,7 +47,6 @@ const names = (t: CategoryTree, parent: string | null) => childrenOf(t, parent =
 /** Congela todo el árbol: si una operación lo modificara en lugar de devolver uno nuevo, lanzaría. */
 function frozen(t: CategoryTree): CategoryTree {
   for (const n of Object.values(t.nodes)) {
-    Object.freeze(n.previousSlugs);
     Object.freeze(n);
   }
   Object.freeze(t.nodes);
@@ -64,7 +63,6 @@ describe('árbol de categorías', () => {
         id: 'hombre',
         name: 'Hombre',
         slug: 'hombre',
-        previousSlugs: [],
         parentId: 'ropa',
         position: 0,
         hidden: false,
@@ -149,12 +147,23 @@ describe('árbol de categorías', () => {
       );
     });
 
-    it('una URL anterior de otra categoría está reservada', () => {
-      const t = setCategorySlug(store(), id('hombre'), slug('caballeros'));
-      expect(() => createCategory(t, { id: id('x'), parentId: null, name: 'Hombre' })).not.toThrow();
-      expect(node(createCategory(t, { id: id('x'), parentId: null, name: 'Hombre' }), 'x').slug).toBe('hombre-2');
-      expect(() => createCategory(t, { id: id('x'), parentId: null, name: 'X', slug: slug('hombre') })).toThrow(CategorySlugTakenError);
-      expect(() => setCategorySlug(t, id('mujer'), slug('hombre'))).toThrow(CategorySlugTakenError);
+    // T110: las URL anteriores viven fuera del árbol (`categorySlugs`); el dominio recibe quién tiene
+    // reservada una, y una reserva solo cuenta si su categoría todavía existe.
+    it('una URL reservada por otra categoría que existe no se puede tomar, ni al crear ni al cambiarla', () => {
+      expect(() => createCategory(store(), { id: id('x'), parentId: null, name: 'X', slug: slug('caballeros') }, id('hombre'))).toThrow(
+        CategorySlugTakenError,
+      );
+      expect(() => setCategorySlug(store(), id('mujer'), slug('caballeros'), id('hombre'))).toThrow(CategorySlugTakenError);
+    });
+
+    it('la reservada por una categoría eliminada está libre', () => {
+      expect(node(createCategory(store(), { id: id('x'), parentId: null, name: 'X', slug: slug('viejas') }, id('borrada')), 'x').slug).toBe('viejas');
+      expect(setCategorySlug(store(), id('mujer'), slug('viejas'), id('borrada')).release).toBe('viejas');
+    });
+
+    it('la vista previa salta las reservadas por otra que existe, como la creación', () => {
+      const reserved = new Set(['hombre-2']);
+      expect(firstFreeCategorySlug(store(), 'Hombre', (value) => reserved.has(value))).toBe('hombre-3');
     });
 
     it('un nombre sin letras ni números recibe "categoria" con su sufijo', () => {
@@ -165,24 +174,33 @@ describe('árbol de categorías', () => {
 
     it('renombrar no cambia la URL', () => {
       const t = renameCategory(store(), id('hombre'), 'Caballeros');
-      expect(node(t, 'hombre')).toEqual(expect.objectContaining({ name: 'Caballeros', slug: 'hombre', previousSlugs: [] }));
+      expect(node(t, 'hombre')).toEqual(expect.objectContaining({ name: 'Caballeros', slug: 'hombre' }));
     });
 
-    it('editarla deja la anterior en previousSlugs, reservada', () => {
-      let t = setCategorySlug(store(), id('hombre'), slug('caballeros'));
-      t = setCategorySlug(t, id('hombre'), slug('senores'));
-      expect(node(t, 'hombre')).toEqual(expect.objectContaining({ slug: 'senores', previousSlugs: ['hombre', 'caballeros'] }));
+    it('cambiarla deja la anterior para reservar, fuera del árbol: el nodo solo tiene la vigente', () => {
+      const change = setCategorySlug(store(), id('hombre'), slug('caballeros'));
+      expect(change).toEqual(expect.objectContaining({ reserve: 'hombre', release: null }));
+      expect(node(change.tree, 'hombre')).toEqual(expect.not.objectContaining({ previousSlugs: expect.anything() }));
+      expect(node(change.tree, 'hombre').slug).toBe('caballeros');
     });
 
-    it('volver a una anterior propia la recupera, y la vigente pasa a anterior', () => {
-      let t = setCategorySlug(store(), id('hombre'), slug('caballeros'));
-      t = setCategorySlug(t, id('hombre'), slug('hombre'));
-      expect(node(t, 'hombre')).toEqual(expect.objectContaining({ slug: 'hombre', previousSlugs: ['caballeros'] }));
+    it('cambiarla 200 veces no agranda el árbol', () => {
+      let t = store();
+      const size = JSON.stringify(t).length;
+      for (let i = 0; i < 200; i++) t = setCategorySlug(t, id('hombre'), slug(`url-${String(i).padStart(3, '0')}`)).tree;
+      t = setCategorySlug(t, id('hombre'), slug('hombre'), id('hombre')).tree;
+      expect(JSON.stringify(t).length).toBe(size);
+    });
+
+    it('volver a una anterior propia la recupera: deja de estar reservada, y la vigente pasa a reservarse', () => {
+      const change = setCategorySlug(store(), id('hombre'), slug('caballeros'), id('hombre'));
+      expect(change).toEqual(expect.objectContaining({ reserve: 'hombre', release: 'caballeros' }));
+      expect(node(change.tree, 'hombre').slug).toBe('caballeros');
     });
 
     it('poner la misma que ya tiene no cambia nada', () => {
       const before = store();
-      expect(setCategorySlug(before, id('hombre'), slug('hombre'))).toEqual(before);
+      expect(setCategorySlug(before, id('hombre'), slug('hombre'))).toEqual({ tree: before, reserve: null, release: null });
     });
 
     it('la URL de otra vigente se rechaza', () => {

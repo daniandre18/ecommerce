@@ -43,6 +43,11 @@ export class TenantPaths {
     return this.doc('storefront/vocabulary');
   }
 
+  /** La URL anterior de una categoría, reservada para ella (T110 de la 002): fuera del árbol. */
+  categorySlugDoc(slug: string) {
+    return this.doc(`categorySlugs/${slug}`);
+  }
+
   /** Reserva de una URL amigable de producto. El `Slug` no admite `/`: es un solo segmento. */
   slugIndexDoc(slug: string) {
     return this.doc(`slugIndex/${slug}`);

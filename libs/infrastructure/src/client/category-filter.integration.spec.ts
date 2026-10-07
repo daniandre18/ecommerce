@@ -10,6 +10,7 @@ import {
   productId,
   roleId,
   setCategoryHidden,
+  slug,
   storefrontDefaults,
   tenantId,
   uid,
@@ -180,6 +181,13 @@ describe('filtro del listado por una rama de categorías', () => {
     const read = await first<CategoryTree>((watcher) => queries.watchCategoryTree(T1, watcher));
     expect(read).toEqual(tree);
     expect([read.nodes[cid('chica')]?.hidden, read.nodes[cid(sub('chica', 0))]?.hidden, read.nodes[cid(sub('chica', 1))]?.hidden]).toEqual([true, false, true]);
+  });
+
+  // T110: el panel pregunta por cada URL anterior antes de guardar, de a una y a través de las reglas.
+  it('quién tiene reservada una URL anterior de categoría, o nadie', async () => {
+    await firestore().doc('tenants/t1/categorySlugs/prendas').set({ categoryId: 'grande' });
+    await expect(queries.findCategorySlug(T1, slug('prendas'))).resolves.toBe('grande');
+    await expect(queries.findCategorySlug(T1, slug('nadie'))).resolves.toBeNull();
   });
 
   it('cuántos productos tienen una categoría, para el aviso previo a eliminarla (FR-024)', async () => {

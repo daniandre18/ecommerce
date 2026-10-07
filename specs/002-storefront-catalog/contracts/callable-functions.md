@@ -72,7 +72,7 @@ dominio correspondiente ([data-model](../data-model.md#categorytree--storefrontc
 |---|---|---|
 | `createCategory` | `parentId` o `null`, `name`, `slug?`, `requestId` | Genera la URL si no viene (FR-021). Devuelve `{ categoryId, slug }` |
 | `renameCategory` | `categoryId`, `name` | No cambia la URL (FR-021) |
-| `setCategorySlug` | `categoryId`, `slug` | La anterior pasa a `previousSlugs` |
+| `setCategorySlug` | `categoryId`, `slug` | La anterior queda reservada en `categorySlugs/{slug}`, fuera del árbol (T110) |
 | `moveCategory` | `categoryId`, `parentId` o `null`, `position` | `category-limit` si quedaría a más de 3 niveles o dentro de su rama. No toca ningún `hidden` |
 | `setCategoryHidden` | `categoryId`, `hidden` | Escribe solo ese nodo (FR-021a) |
 | `deleteCategory` | `categoryId` | `category-has-children` si tiene hijas. Agrega el id a `pendingPrune` en la misma transacción |
