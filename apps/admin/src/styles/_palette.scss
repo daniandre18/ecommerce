@@ -1,0 +1,89 @@
+// Paleta del panel: los únicos valores de color del código (FR-001, FR-003). Son variables Sass: no
+// llegan al CSS con su nombre, y ninguna vista las alcanza. Solo `_tokens.scss` y `_theme.scss` las usan
+// para definir papeles (`--ds-*`).
+//
+// Decisiones tomadas de la referencia (~/Documents/github/angular-admin/src/app/styles/), sin copiar su
+// código (FR-006). Lo que no cumplía AA se ajustó en luminosidad, conservando tono y saturación
+// (research §2). Las razones de cada par están en `apps/admin/design-system/contrast-pairs.ts`.
+
+// ── Azul: el primario de la referencia (colors.scss, $blue #536DFE), ajustado de 4,21 a 4,54+ sobre
+//    los tres planos. El fondo de página es su tinte ($background-color #F6F7FF).
+$blue-25: #f6f7ff;
+$blue-50: #eef0ff;
+$blue-100: #e3e7ff;
+$blue-150: #dfe3ff;
+$blue-300: #8e9dff;
+$blue-500: #3c5afe;
+// El anillo de foco en oscuro: entre los planos oscuros y el acento claro, la franja de luminancia que
+// da 3:1 con los cinco fondos es angosta (research §2).
+$blue-520: #415efe;
+$blue-750: #1c2a99;
+$blue-800: #2c336f;
+$blue-950: #10173f;
+
+// ── Amarillo: el acento cálido de la referencia ($yellow #ffc260), con texto oscuro (10,31:1) en lugar
+//    de blanco (1,6:1). Sus tonos oscuros son el aviso.
+$yellow-100: #fff1d6;
+$yellow-150: #ffe2b0;
+$yellow-300: #ffc260;
+$yellow-700: #9b5f00;
+$yellow-800: #5c3800;
+$yellow-900: #3d2a00;
+
+// ── Rosa: el error de la referencia ($pink #ff4081), oscurecido de 3,33 a 4,58+ para el texto claro.
+$pink-100: #ffe3ec;
+$pink-150: #ffd9e4;
+$pink-400: #ff6b95;
+$pink-600: #d9004a;
+$pink-800: #8a0030;
+$pink-900: #4d0019;
+$pink-950: #2a0010;
+
+// ── Verde: el éxito de la referencia ($green #31C2A0), oscurecido para el texto claro.
+$green-100: #dcf5ee;
+$green-150: #b6f0e0;
+$green-400: #4fd1b0;
+$green-600: #1f7b65;
+$green-800: #0f4a3c;
+$green-900: #0f3a30;
+
+// ── Violeta: la información de la referencia ($violet #9013FE), que ya cumplía.
+$violet-100: #f1e3ff;
+$violet-150: #ead6ff;
+$violet-300: #c39bff;
+$violet-600: #9013fe;
+$violet-800: #5a0a9e;
+$violet-900: #351060;
+
+// ── Grises: el texto de la referencia ($dark-grey #4A4A4A, $grey #6E6E6E, oscurecido a #666666) y sus
+//    fondos oscuros (#13131A de página y #23232D de tarjeta en su tema oscuro).
+$white: #ffffff;
+$gray-100: #ececf1;
+$gray-200: #e3e5f2;
+$gray-350: #a3a3ad;
+$gray-400: #9e9e9e;
+$gray-500: #80809a;
+$gray-550: #7a7a88;
+$gray-600: #666666;
+$gray-650: #6c6c74;
+$gray-700: #4a4a4a;
+$ink-700: #34343f;
+$ink-750: #262631;
+$ink-800: #23232d;
+$ink-850: #1b1b24;
+$ink-900: #13131a;
+$ink-1000: #1f1f1f;
+
+// ── Sombras: la de la tarjeta de la referencia ($card-shadow: tres capas difusas, con tinte azul) y una
+//    más marcada para lo superpuesto. En oscuro, una sombra no separa nada sobre un fondo casi negro.
+$shadow-tint: #e8eafc;
+$shadow-soft: rgba(178, 178, 178, 0.1);
+$shadow-mid: rgba(154, 154, 154, 0.1);
+$shadow-overlay-near: rgba(20, 24, 60, 0.18);
+$shadow-overlay-far: rgba(20, 24, 60, 0.12);
+$shadow-dark-near: rgba(0, 0, 0, 0.6);
+$shadow-dark-far: rgba(0, 0, 0, 0.4);
+
+// ── Capas de estado: el hover tenue de las filas de la referencia ($black-04).
+$hover-light: rgba(0, 0, 0, 0.04);
+$hover-dark: rgba(255, 255, 255, 0.06);

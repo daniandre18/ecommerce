@@ -94,12 +94,12 @@ esta fase. La US3 solo depende de la Fase 1.
 
 ### Pruebas primero
 
-- [ ] T004 [P] Pruebas del lector de tokens compilados en `apps/admin/design-system/compiled-tokens.spec.ts`, con un SCSS de prueba en `apps/admin/design-system/fixtures/tokens/`:
+- [X] T004 [P] Pruebas del lector de tokens compilados en `apps/admin/design-system/compiled-tokens.spec.ts`, con un SCSS de prueba en `apps/admin/design-system/fixtures/tokens/`:
   - `light-dark(a, b)` se separa en `light: a` y `dark: b`, y un valor sin `light-dark` vale igual en los dos.
   - Las cadenas `var(--ds-x)` → `var(--ds-y)` → valor se resuelven.
   - Un color con alfa se compone sobre un fondo dado.
-  - Una referencia a un token inexistente lanza un error que lo nombra.
-- [ ] T005 [P] Pruebas de contraste en `apps/admin/design-system/contrast.spec.ts`, con las reglas de `data-model.md` ("Par de contraste") al pie de la letra:
+  - Una referencia a un token inexistente lanza un error que lo nombra. Hecho: más `color.spec.ts` (la fórmula de WCAG contra las razones de la referencia que cita research §2). Mutaciones: invertir el esquema tumba 4 casos; quitar la detección de ciclos, 1
+- [X] T005 [P] Pruebas de contraste en `apps/admin/design-system/contrast.spec.ts`, con las reglas de `data-model.md` ("Par de contraste") al pie de la letra:
   - Umbral por `kind`: `text` 4,5; `large-text` 3; `ui` 3.
   - `declared` coincide con la razón calculada, redondeada a 2 decimales, en **los dos** esquemas.
   - "Todo token `--ds-text-*`, `--ds-on-*`, `--ds-icon-*` y `--ds-focus-ring` aparece en al menos un par".
@@ -107,9 +107,9 @@ esta fase. La US3 solo depende de la Fase 1.
   - `--ds-focus-ring` se declara contra los tres planos, el superpuesto y el fondo del acento.
   - Un par que nombra un token inexistente falla.
   - Un par en `state: 'disabled'` se declara con `kind: 'ui'` y no se exige.
-  - Los mensajes son los de `contracts/gates.md`.
-- [ ] T006 [P] Pruebas de jerarquía tipográfica (FR-015) en `apps/admin/design-system/typography.spec.ts`: recorre los niveles de `typography-levels.ts` en orden y exige que dos niveles contiguos difieran en al menos **dos** de: tamaño, peso, color y espaciado. El espaciado entre letras y el interlineado cuentan como **un** solo atributo (`contracts/tokens.md`). Con un caso que falla sobre `fixtures/typography/`: dos niveles que solo cambian de peso
-- [ ] T007 [P] Pruebas de planos en el catálogo (la mitad de SC-005 que no necesita navegador) en `apps/admin/design-system/planes.spec.ts`: `--ds-surface-page`, `--ds-surface-card` y `--ds-surface-bar` son distintos entre sí en **cada** esquema; `--ds-border-width` es mayor que 0; `--ds-border-subtle` existe. El mensaje es el de `contracts/gates.md`
+  - Los mensajes son los de `contracts/gates.md`. Hecho: el verificador es `contrast.ts` (`checkPairs`, `checkCoverage`), probado contra `fixtures/contrast/` con pares que tienen que fallar (bajo el umbral, mal declarado, token inexistente, cobertura incompleta). Mutaciones: sin comparar con lo declarado, sin eximir el deshabilitado y sin exigir el foco contra lo superpuesto y el acento: cada una tumba su caso
+- [X] T006 [P] Pruebas de jerarquía tipográfica (FR-015) en `apps/admin/design-system/typography.spec.ts`: recorre los niveles de `typography-levels.ts` en orden y exige que dos niveles contiguos difieran en al menos **dos** de: tamaño, peso, color y espaciado. El espaciado entre letras y el interlineado cuentan como **un** solo atributo (`contracts/tokens.md`). Con un caso que falla sobre `fixtures/typography/`: dos niveles que solo cambian de peso Hecho: `typography.ts`. Mutación: con un solo atributo de diferencia, cae el caso de "solo cambia de peso"
+- [X] T007 [P] Pruebas de planos en el catálogo (la mitad de SC-005 que no necesita navegador) en `apps/admin/design-system/planes.spec.ts`: `--ds-surface-page`, `--ds-surface-card` y `--ds-surface-bar` son distintos entre sí en **cada** esquema; `--ds-border-width` es mayor que 0; `--ds-border-subtle` existe. El mensaje es el de `contracts/gates.md` Hecho: `planes.ts`. Mutación: mirando solo el esquema claro, cae el caso de la tarjeta y la barra iguales en oscuro
 - [ ] T008 [P] Pruebas del verificador de literales en `apps/admin/design-system/literals.spec.ts`, con `apps/admin/design-system/fixtures/literals/` (`research.md` §5):
   - Un `.scss` con `color: #ff0000; font-size: 13px; padding: 10px; border-radius: 3px` produce **exactamente 4** hallazgos, cada uno con `archivo:línea:columna`, propiedad, valor y token sugerido.
   - Un `.ts` con `styles:` en línea reporta la línea **del `.ts`**.
@@ -128,15 +128,15 @@ esta fase. La US3 solo depende de la Fase 1.
 
 ### Implementación de la base
 
-- [ ] T010 [P] `apps/admin/design-system/compiled-tokens.ts`: compila `apps/admin/src/styles.scss` con `sass` (con los `loadPaths` de `node_modules`), lee las `--ds-*` de `:root` y expone `light`/`dark` resueltos, hasta que T004 pase
-- [ ] T011 [P] `apps/admin/src/styles/_palette.scss`: los valores de partida de `research.md` §2, para el esquema claro y el oscuro, solo como variables Sass. Encabezado con la decisión de la referencia que origina cada grupo, citando el archivo de `~/Documents/github/angular-admin/src/app/styles/`. Sin una línea copiada (FR-006)
-- [ ] T012 `apps/admin/src/styles/_tokens.scss`:
+- [X] T010 [P] `apps/admin/design-system/compiled-tokens.ts`: compila `apps/admin/src/styles.scss` con `sass` (con los `loadPaths` de `node_modules`), lee las `--ds-*` de `:root` y expone `light`/`dark` resueltos, hasta que T004 pase Hecho: más `color.ts` (luminancia, composición con alfa y razón de WCAG 2.2)
+- [X] T011 [P] `apps/admin/src/styles/_palette.scss`: los valores de partida de `research.md` §2, para el esquema claro y el oscuro, solo como variables Sass. Encabezado con la decisión de la referencia que origina cada grupo, citando el archivo de `~/Documents/github/angular-admin/src/app/styles/`. Sin una línea copiada (FR-006) Hecho: dos ajustes sobre research §2 al calcular los 43 pares. `border-control` claro pasa a `#80809a` (2,98 → 3,39 sobre la barra). En oscuro, el anillo de foco (`#415efe`) tiene que dar 3:1 contra planos casi negros y contra el acento amarillo: solo cabe si lo superpuesto oscuro baja de `#2a2a35` a `#262631`, y aun así queda con margen mínimo (3,03 y 3,09)
+- [X] T012 `apps/admin/src/styles/_tokens.scss`:
   - **Todos** los tokens de `contracts/tokens.md`, con los nombres textuales: planos, texto, marca y acción (incluido `--ds-action-destructive` como papel propio, distinto de `--ds-status-error`, FR-009a), estados con significado, bordes y foco, tipografía (`-size`, `-weight`, `-line-height`, `-tracking` y el atajo `--ds-type-{nivel}`), espaciado, radio, borde, elevación, densidad y movimiento.
   - Color y elevación con `light-dark()`. Todo definido **solo** desde `_palette.scss`, las escalas u otro token, con un comentario de origen por token (`data-model.md`).
   - `styles.scss` lo incluye. Ninguna vista lo usa todavía.
-  - Depende de T011.
-- [ ] T013 `apps/admin/design-system/contrast-pairs.ts`: el catálogo de pares de `data-model.md` con las razones declaradas por esquema, hasta que T005 pase. Si un par no cumple, se ajusta el valor en `_palette.scss` **en luminosidad, conservando tono y saturación** (`research.md` §2), y se anota el valor final. Depende de T010 y T012
-- [ ] T014 [P] (después de T010 y T012) `apps/admin/design-system/typography-levels.ts`, con el orden `page-title`, `section-title`, `subtitle`, `body`, `label`, `help` y su color (`contracts/tokens.md`), hasta que T006 pase. Con los tokens de T012, T007 también pasa
+  - Depende de T011. Hecho: tipografía en `rem`, para que siga al tamaño de letra del sistema (edge case de texto ampliado)
+- [X] T013 `apps/admin/design-system/contrast-pairs.ts`: el catálogo de pares de `data-model.md` con las razones declaradas por esquema, hasta que T005 pase. Si un par no cumple, se ajusta el valor en `_palette.scss` **en luminosidad, conservando tono y saturación** (`research.md` §2), y se anota el valor final. Depende de T010 y T012 Hecho: 43 pares, todos AA en los dos esquemas; las razones se calcularon con el mismo `color.ts` que las verifica. Mutación sobre la paleta real: con el texto secundario en `#8a8a8a`, el catálogo falla (el paso 3 de "de verdad fallan" del quickstart)
+- [X] T014 [P] (después de T010 y T012) `apps/admin/design-system/typography-levels.ts`, con el orden `page-title`, `section-title`, `subtitle`, `body`, `label`, `help` y su color (`contracts/tokens.md`), hasta que T006 pase. Con los tokens de T012, T007 también pasa
 - [ ] T015 [P] Verificador de literales (después de T010 y T012, porque sugiere tokens a partir del catálogo compilado):
   - **Archivos**: `apps/admin/design-system/literals.ts` (CLI y función), `apps/admin/design-system/literal-exceptions.ts` y `apps/admin/design-system/migrated-files.ts`, esta última vacía.
   - **Funcionamiento**: lee con `postcss-scss` y extrae los `styles:` de los `.ts` con la API de TypeScript. Las propiedades por categoría son las de `research.md` §5, y el token sugerido sale de invertir los tokens compilados (T010).

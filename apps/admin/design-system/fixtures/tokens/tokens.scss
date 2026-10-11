@@ -1,0 +1,20 @@
+// Fixture de compiled-tokens.spec.ts: cada token prueba un caso del lector.
+$white: #ffffff;
+$black: #000000;
+
+:root {
+  --ds-plain: light-dark(#{$white}, #{$black});
+  --ds-chain: var(--ds-plain);
+  --ds-chain-twice: var(--ds-chain);
+  --ds-length: 4px;
+  --ds-alpha: light-dark(rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0.5));
+  --ds-shadow: 0 3px 11px 0 light-dark(rgba(0, 0, 0, 0.1), transparent), 0 1px 2px 0 light-dark(#e8eafc, #000000);
+  --ds-broken: var(--ds-missing);
+  --ds-loop-a: var(--ds-loop-b);
+  --ds-loop-b: var(--ds-loop-a);
+}
+
+// Fuera de :root no es catálogo: no se lee.
+.other {
+  --ds-ignored: red;
+}

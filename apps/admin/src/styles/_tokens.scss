@@ -1,0 +1,117 @@
+@use 'palette' as p;
+
+// Catálogo de tokens del panel (FR-001, contracts/tokens.md). Lo único que una vista puede escribir en
+// un estilo de color, tipografía, espaciado, radio, elevación o borde es `var(--ds-…)` de esta lista.
+// Color y elevación tienen un valor por esquema con `light-dark()`: el navegador elige según
+// `color-scheme`, sin código de arranque (FR-002, FR-034).
+:root {
+  // ── Planos (FR-010) ───────────────────────────────────────────────────────────────────────────────
+  --ds-surface-page: light-dark(#{p.$blue-25}, #{p.$ink-900}); // referencia: fondo con tinte del primario
+  --ds-surface-card: light-dark(#{p.$white}, #{p.$ink-800}); // referencia: tarjeta blanca; #23232D oscura
+  --ds-surface-bar: light-dark(#{p.$blue-50}, #{p.$ink-850}); // propio: la barra, otro tinte del primario
+  --ds-surface-overlay: light-dark(#{p.$white}, #{p.$ink-750}); // propio: diálogos y menús
+  --ds-surface-hover: light-dark(#{p.$hover-light}, #{p.$hover-dark}); // referencia: hover tenue de la tabla
+  --ds-surface-selected: var(--ds-primary-container); // propio
+
+  // ── Texto ─────────────────────────────────────────────────────────────────────────────────────────
+  --ds-text-primary: light-dark(#{p.$gray-700}, #{p.$gray-100}); // referencia: $dark-grey
+  --ds-text-secondary: light-dark(#{p.$gray-600}, #{p.$gray-350}); // referencia: $grey, oscurecido
+  --ds-text-link: var(--ds-primary); // referencia: enlaces en el primario
+  --ds-text-disabled: light-dark(#{p.$gray-400}, #{p.$gray-650}); // exento de AA; se declara igual
+
+  // ── Marca y acción (FR-007, FR-008, FR-009a) ─────────────────────────────────────────────────────
+  --ds-primary: light-dark(#{p.$blue-500}, #{p.$blue-300}); // referencia: $blue, ajustado a AA
+  --ds-on-primary: light-dark(#{p.$white}, #{p.$blue-950});
+  --ds-primary-container: light-dark(#{p.$blue-100}, #{p.$blue-800}); // propio: chips y selección
+  --ds-on-primary-container: light-dark(#{p.$blue-750}, #{p.$blue-150});
+  --ds-action-accent: #{p.$yellow-300}; // referencia: acento amarillo, solo para la acción principal
+  --ds-on-action-accent: #{p.$ink-1000}; // propio: texto oscuro sobre el acento (10,31:1)
+  --ds-action-destructive: light-dark(#{p.$pink-600}, #{p.$pink-400}); // propio: papel distinto del error
+  --ds-on-action-destructive: light-dark(#{p.$white}, #{p.$pink-950});
+
+  // ── Estados con significado (FR-009) ──────────────────────────────────────────────────────────────
+  --ds-status-error: light-dark(#{p.$pink-600}, #{p.$pink-400}); // referencia: $pink
+  --ds-status-error-container: light-dark(#{p.$pink-100}, #{p.$pink-900});
+  --ds-on-status-error-container: light-dark(#{p.$pink-800}, #{p.$pink-150});
+  --ds-status-warning: light-dark(#{p.$yellow-700}, #{p.$yellow-300}); // referencia: $yellow
+  --ds-status-warning-container: light-dark(#{p.$yellow-100}, #{p.$yellow-900});
+  --ds-on-status-warning-container: light-dark(#{p.$yellow-800}, #{p.$yellow-150});
+  --ds-status-success: light-dark(#{p.$green-600}, #{p.$green-400}); // referencia: $green
+  --ds-status-success-container: light-dark(#{p.$green-100}, #{p.$green-900});
+  --ds-on-status-success-container: light-dark(#{p.$green-800}, #{p.$green-150});
+  --ds-status-info: light-dark(#{p.$violet-600}, #{p.$violet-300}); // referencia: $violet
+  --ds-status-info-container: light-dark(#{p.$violet-100}, #{p.$violet-900});
+  --ds-on-status-info-container: light-dark(#{p.$violet-800}, #{p.$violet-150});
+
+  // ── Bordes y foco (FR-013, FR-023) ────────────────────────────────────────────────────────────────
+  --ds-border-subtle: light-dark(#{p.$gray-200}, #{p.$ink-700}); // decorativo: separa tarjeta y filas
+  --ds-border-control: light-dark(#{p.$gray-500}, #{p.$gray-550}); // 3:1 contra los planos (WCAG 1.4.11)
+  --ds-focus-ring: light-dark(#{p.$blue-500}, #{p.$blue-520}); // 3:1 contra planos, superpuesto y acento
+
+  // ── Tipografía (FR-014 a FR-017) ──────────────────────────────────────────────────────────────────
+  // La fuente del sistema, como decidió la 001: nada que descargar. La jerarquía sale de tamaño, peso,
+  // color y espaciado; cada nivel difiere del siguiente en dos o más (typography-levels.ts).
+  --ds-font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --ds-type-page-title-size: 1.75rem;
+  --ds-type-page-title-weight: 700;
+  --ds-type-page-title-line-height: 2.25rem;
+  --ds-type-page-title-tracking: -0.01em;
+  --ds-type-section-title-size: 1.25rem; // referencia: título de tarjeta ($fs-medium)
+  --ds-type-section-title-weight: 600;
+  --ds-type-section-title-line-height: 1.75rem;
+  --ds-type-section-title-tracking: 0;
+  --ds-type-subtitle-size: 1rem;
+  --ds-type-subtitle-weight: 600;
+  --ds-type-subtitle-line-height: 1.5rem;
+  --ds-type-subtitle-tracking: 0;
+  --ds-type-body-size: 1rem;
+  --ds-type-body-weight: 400;
+  --ds-type-body-line-height: 1.5rem;
+  --ds-type-body-tracking: 0;
+  --ds-type-label-size: 0.875rem;
+  --ds-type-label-weight: 500;
+  --ds-type-label-line-height: 1.25rem;
+  --ds-type-label-tracking: 0.01em;
+  --ds-type-help-size: 0.8125rem;
+  --ds-type-help-weight: 400;
+  --ds-type-help-line-height: 1.125rem;
+  --ds-type-help-tracking: 0;
+  --ds-type-page-title: var(--ds-type-page-title-weight) var(--ds-type-page-title-size) / var(--ds-type-page-title-line-height) var(--ds-font-family);
+  --ds-type-section-title: var(--ds-type-section-title-weight) var(--ds-type-section-title-size) / var(--ds-type-section-title-line-height) var(--ds-font-family);
+  --ds-type-subtitle: var(--ds-type-subtitle-weight) var(--ds-type-subtitle-size) / var(--ds-type-subtitle-line-height) var(--ds-font-family);
+  --ds-type-body: var(--ds-type-body-weight) var(--ds-type-body-size) / var(--ds-type-body-line-height) var(--ds-font-family);
+  --ds-type-label: var(--ds-type-label-weight) var(--ds-type-label-size) / var(--ds-type-label-line-height) var(--ds-font-family);
+  --ds-type-help: var(--ds-type-help-weight) var(--ds-type-help-size) / var(--ds-type-help-line-height) var(--ds-font-family);
+
+  // ── Espaciado (FR-018, FR-019): base de 4 px, lineal hasta 24 px y después de a 8 o 16 px ─────────
+  --ds-space-1: 4px; // ícono y texto dentro de un control
+  --ds-space-2: 8px; // entre elementos relacionados
+  --ds-space-3: 12px; // relleno de chips y avisos compactos
+  --ds-space-4: 16px; // relleno de tarjeta en móvil, margen de página
+  --ds-space-5: 20px; // paso de ritmo
+  --ds-space-6: 24px; // relleno de tarjeta en escritorio; entre grupos de una tarjeta
+  --ds-space-8: 32px; // entre tarjetas
+  --ds-space-12: 48px; // entre bloques mayores de una vista
+
+  // ── Radio y borde (FR-012) ────────────────────────────────────────────────────────────────────────
+  --ds-radius-sm: 4px; // chips de estado, enlace para saltar al contenido
+  --ds-radius-md: 8px; // campos, filas de esqueleto, avisos
+  --ds-radius-lg: 12px; // tarjetas, diálogos
+  --ds-radius-pill: 9999px; // botones
+  --ds-border-width: 1px; // tarjeta, filas, contorno de un control
+  --ds-border-width-strong: 2px; // campo con foco o con error
+  --ds-focus-ring-width: 3px; // el anillo de foco que ya usaba el panel
+  --ds-focus-ring-offset: 2px;
+
+  // ── Elevación (FR-011): un nivel por papel ───────────────────────────────────────────────────────
+  --ds-elevation-flat: none; // página, barra, filas
+  --ds-elevation-card: 0 3px 11px 0 light-dark(#{p.$shadow-tint}, transparent), 0 3px 3px -2px light-dark(#{p.$shadow-soft}, transparent),
+    0 1px 8px 0 light-dark(#{p.$shadow-mid}, transparent); // referencia: $card-shadow; en oscuro, tono y borde
+  --ds-elevation-bar: none; // la barra se distingue por el tono
+  --ds-elevation-overlay: 0 4px 16px 0 light-dark(#{p.$shadow-overlay-near}, #{p.$shadow-dark-near}), 0 1px 4px 0 light-dark(#{p.$shadow-overlay-far}, #{p.$shadow-dark-far});
+
+  // ── Densidad (FR-020) y movimiento (FR-028) ──────────────────────────────────────────────────────
+  --ds-touch-target: 48px; // alto mínimo de botones y enlaces de acción (el umbral es 44 px)
+  --ds-row-height: 72px; // fila del listado y de su esqueleto
+  --ds-motion-short: 150ms; // cambio de estado de un control
+}
