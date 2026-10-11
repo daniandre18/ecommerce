@@ -472,11 +472,12 @@ mide la duración real en el runner. Si el margen no alcanza para `oscuro`, se s
 medida a la vista**. El tope es una protección contra cuelgues, no un umbral de ninguna garantía, así
 que ajustarlo no afloja ninguna prueba (FR-033).
 
-**Medida de la línea base** (2026-10-11, corrida 38104416427): el paso e2e tardó 6 min 59 s y el
-trabajo completo 8 min 13 s, con unos 3 min de margen contra el `globalTimeout`. Unos 2 min de ese
-tiempo fueron los reintentos de una prueba flaky (`loading-states.spec.ts:117`, en los dos
-proyectos). Sin ella, la suite ronda los 5 min. El proyecto `oscuro` (T018) suma `a11y` y
-`design-system` sobre ese margen.
+**Medida de la línea base** (2026-10-11, corrida 38109953463, ya corregida la flaky de
+`loading-states.spec.ts`, ver T001 y T057): 134 pasadas, 8 omitidas, 0 flaky. El paso e2e tardó
+7 min 39 s y el trabajo completo 9 min 21 s, con unos **2 min 20 s** de margen contra el
+`globalTimeout`. La primera corrida, con la flaky, tardó 6 min 59 s: entre corridas, el runner varía
+del orden de medio minuto. El proyecto `oscuro` (T018) suma `a11y` y `design-system` sobre ese
+margen, así que es probable que T018 tenga que subir el tope, con esta medida a la vista.
 
 **Inestabilidad**: `retries: 2` absorbe un fallo aislado, y el reportero `github` lo marca como
 *flaky* sin ocultarlo. Una prueba que necesita reintentos con frecuencia es un defecto que se
