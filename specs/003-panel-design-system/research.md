@@ -276,7 +276,9 @@ la spec), no un número guardado.
 **Falla si** el JS crece **un byte** o el CSS crece más de **10.240 bytes**. El mensaje dice cuánto
 creció cada uno y qué archivo lo explica.
 
-**Costo**: un segundo build del panel en CI, entre 1 y 2 minutos. Se acepta: la alternativa, un
+**Costo**: un segundo `npm ci` y un segundo build del panel en CI, entre 2 y 4 minutos. El
+`npm ci` es necesario porque la base tiene su propio `package.json` (esta feature agrega
+dependencias) y no puede usar los `node_modules` de la rama. Se acepta: la alternativa, un
 número fijo en el repositorio, deja que otra feature consuma el presupuesto de esta, que es justo lo
 que la spec descarta.
 

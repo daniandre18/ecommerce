@@ -20,9 +20,12 @@ esta feature:
    empieza antes de que T001 cierre con sus cuatro criterios de salida.
 2. **Los tokens se aplican vista por vista** (T024 a T035), en el orden del plan. Cada tarea es
    verificable por separado: sus archivos quedan en 0 valores literales, y sus e2e y sus casos de
-   `design-system.spec.ts` pasan en los tres proyectos. Hay dos tareas globales: el tema de Material
-   (T021) y su tratamiento (T022). Son globales porque Material tiene un tema por aplicación, no
-   porque se aplique "el sistema al panel". Las dos se verifican con la suite completa.
+   `design-system.spec.ts` pasan en los tres proyectos. Hay seis tareas globales, y cada una lo declara: el tema de
+   Material (T021) y su tratamiento (T022), porque Material tiene un tema por aplicación; y el foco,
+   el ícono de error, el deshabilitado y los colores forzados (T036 a T039), porque cada uno es una
+   sola regla que alcanza a todos los controles. Ninguna "aplica el sistema al panel": cada una
+   cambia un aspecto acotado, y **todas se verifican con la suite e2e completa en los tres
+   proyectos**, además de sus casos propios.
 3. **El trinquete de literales**: mientras dura la migración, el verificador **bloquea** en los
    archivos que figuran en `apps/admin/design-system/migrated-files.ts` y solo **informa** en el
    resto. Cada tarea de vista agrega sus archivos a esa lista. T050 la elimina y la compuerta pasa a
@@ -56,8 +59,9 @@ compuertas nuevas.
   - **Pasos**: `./.github/actions/setup-workspace`; `./.github/actions/setup-emulators` con `firebase-tools-version: ${{ env.FIREBASE_TOOLS_VERSION }}`; `npm install -g firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}`, porque el `webServer` de `apps/admin-e2e/playwright.config.ts` llama a `firebase emulators:start` y no a `npx`; `npx playwright install --with-deps chromium`; `npx nx run admin-e2e:e2e --skip-nx-cache` con `CI=true`; y `actions/upload-artifact` de `test-results/` con `if: failure()`.
   - **Comentario de cabecera de `ci.yml`**: "los seis trabajos" pasa a "los siete trabajos". El trabajo `e2e` se describe como en los demás, citando FR-033a.
   - **No** incluye `admin-e2e:perf` (FR-033a: en máquinas compartidas da ruido).
+  - **PR borrador de la feature**: `ci.yml` solo corre en `pull_request` y en push a `main`, así que subir la rama no dispara nada. Antes del criterio (a), se abre `gh pr create --draft --base main --head feat/003-panel-design-system` y se anota su número aquí. Cada push a la rama vuelve a correr los trabajos en ese PR, y ese PR es el que se mezcla al final de la feature.
   - **Criterio de salida**. Se cumplen **los cuatro** y queda anotado al pie de esta tarea:
-    - (a) **Línea base en verde**: la suite **completa**, sin cambios, en los proyectos `escritorio` y `movil-360`, pasa en este trabajo sobre esta rama, **antes** de que exista ningún token ni estilo nuevo. Se anotan el SHA y el enlace a la corrida.
+    - (a) **Línea base en verde**: la suite **completa**, sin cambios, en los proyectos `escritorio` y `movil-360`, pasa en este trabajo dentro del PR borrador, **antes** de que exista ningún token ni estilo nuevo. Se anotan el SHA y el enlace a la corrida.
     - (b) **Duración medida**: se anota la duración del paso e2e en el runner, en esta tarea y en `research.md` §15, con su margen respecto de `globalTimeout` (10 minutos).
     - (c) **Required status check**: `e2e` queda marcado como obligatorio en la protección de `main`, junto a los otros seis. Se verifica con `gh api repos/{owner}/{repo}/branches/main/protection --jq '.required_status_checks.contexts'`, que debe listar `e2e`.
     - (d) **El check bloquea de verdad**: desde esta rama se crea `ci-check/e2e-bloquea` con una sola modificación, `expect(true).toBe(false)` en la primera prueba de `apps/admin-e2e/src/shell.spec.ts`. Se abre un PR contra `main` y se verifica que `e2e` falla **y** que GitHub impide mezclar ("Required" en rojo, botón de merge bloqueado). Se anota el enlace al PR. El PR se cierra **sin mezclar** y la rama se borra. Un check marcado como obligatorio que no bloquea da confianza falsa: si (d) no se cumple, T001 no cierra.
@@ -106,6 +110,7 @@ esta fase. La US3 solo depende de la Fase 1.
   - `calc(-1 * var(--ds-space-3))` se admite, y `calc(100% - 16px)` es un hallazgo.
   - Una excepción sin `reason` hace fallar, y una excepción cuyo `scope` no coincide con ningún archivo también.
   - **Trinquete**: un hallazgo en un archivo de `migrated-files.ts` hace fallar, y uno fuera de la lista solo se informa (código de salida 0).
+  - **`_theme.scss`**: una variable de la paleta (`$blue-600`) se admite; `#3c5afe` o una variable que no viene de la paleta, no (`data-model.md`).
 - [ ] T009 [P] Pruebas de la medida de la carga inicial en `apps/admin/bundle-check/initial-load.spec.ts`, con un `index.html` de prueba en `apps/admin/bundle-check/fixtures/`:
   - Lo inicial es el `<script src>` de `main`, cada `<link rel="modulepreload">`, cada `<link rel="stylesheet">` y cada `<style>` en línea (`research.md` §8), incluido el `<link media="print" data-beasties-media>`.
   - Gzip nivel 9 con `node:zlib`.
@@ -127,11 +132,12 @@ esta fase. La US3 solo depende de la Fase 1.
   - **Archivos**: `apps/admin/design-system/literals.ts` (CLI y función), `apps/admin/design-system/literal-exceptions.ts` y `apps/admin/design-system/migrated-files.ts`, esta última vacía.
   - **Funcionamiento**: lee con `postcss-scss` y extrae los `styles:` de los `.ts` con la API de TypeScript. Las propiedades por categoría son las de `research.md` §5, y el token sugerido sale de invertir los tokens compilados (T010).
   - **Excepciones iniciales**, textuales de `data-model.md`: `0`, `auto`, `inherit`, `none`, `transparent`, `currentColor` y porcentajes con `scope: 'everywhere'`, más `index-boot` con `scope: { files: ['apps/admin/src/index.html'] }`. `_palette.scss` y `_tokens.scss` no se revisan.
+  - **`_theme.scss`** se revisa con una sola concesión: puede usar variables Sass de `_palette.scss` (`$…`), porque `mat.theme` las necesita para generar sus paletas. Cualquier otro valor literal, o una variable que no venga de la paleta, es un hallazgo. Con su caso en `literals.spec.ts` (T008).
   - **Lint**: el objetivo `lint` de `apps/admin/project.json` pasa a `eslint apps/admin … && tsx apps/admin/design-system/literals.ts`.
   - **Cierre**: hasta que T008 pase. `npx nx run admin:lint` sale con 0 e informa el total actual de hallazgos, del orden de 258 (`research.md` §0).
 - [ ] T016 Compuerta de tamaño:
   - `apps/admin/bundle-check/initial-load.ts`, hasta que T009 pase, y `apps/admin/bundle-check/size.spec.ts`, que compara `dist/apps/admin/browser/index.html` con `dist/base-initial.json`.
-  - En `apps/admin/project.json`, `bundle-check` acepta `--base=<ref>`, por omisión `origin/main`. Construye la base en un `git worktree` en `.bundle-base/` (agregado a `.gitignore`) y escribe `dist/base-initial.json`.
+  - En `apps/admin/project.json`, `bundle-check` acepta `--base=<ref>`, por omisión `origin/main`. Construye la base en un `git worktree` en `.bundle-base/` (agregado a `.gitignore`), con **su propio `npm ci`** dentro del worktree antes del build: la base tiene otro `package.json`, porque T002 agrega dependencias, y no puede usar los `node_modules` de la rama. Escribe `dist/base-initial.json`. Se anota el tiempo total del trabajo `bundle-check` en CI.
   - En `.github/workflows/ci.yml`, el trabajo `bundle-check` hace checkout con `fetch-depth: 0` y pasa `--base=${{ github.event.pull_request.base.sha || github.event.before }}`.
   - `layers.spec.ts` no cambia.
   - Comparte `project.json` con T015: no va en paralelo con ella.
@@ -155,14 +161,15 @@ los tres planos con la tarjeta separada, y la jerarquía tipográfica.
 
 ### Declaraciones y pruebas primero
 
-- [ ] T019 [P] [US1] `apps/admin/design-system/primary-actions.ts`, que transcribe `contracts/primary-actions.md` fila por fila (`screen`, `kind`, `action`, `why`, con `action: null` donde dice "—"), y `apps/admin/design-system/screens.spec.ts`, que falla si alguna ruta con `loadComponent` de `apps/admin/src/app/app.routes.ts` o algún componente pasado a `MatDialog.open(...)` no figura en la lista. Incluye el `open` dinámico de `shared/pending-changes/pending-changes.ts`. Inventario esperado: 10 vistas y 5 diálogos
+- [ ] T019 [P] [US1] `apps/admin/design-system/primary-actions.ts`, que transcribe `contracts/primary-actions.md` fila por fila (`screen`, `kind`, `action`, `why`, con `action: null` donde dice "—"), y `apps/admin/design-system/screens.spec.ts`, que falla si alguna ruta con `loadComponent` de `apps/admin/src/app/app.routes.ts` o algún componente pasado a `MatDialog.open(...)` no figura en la lista. Incluye el `open` dinámico de `shared/pending-changes/pending-changes.ts`. Inventario esperado: 10 vistas y 5 diálogos. Cada entrada transcribe también `destructive`: los nombres de los botones destructivos visibles en esa pantalla, que el contrato nombra en "Por qué" (`data-model.md`)
 - [ ] T020 [P] [US1] Ayudas de e2e en `apps/admin-e2e/src/design-system-support.ts`:
   - `accentElements(page)`: los elementos visibles cuyo `background-color` computado es igual al de una sonda con `background: var(--ds-action-accent)`. Se compara el color computado, no la clase (`research.md` §9).
   - `expectPlanes(page)`: `body`, `.ds-card` y `.ds-bar` con fondos distintos, y `.ds-card` con borde visible o `box-shadow` distinto de `none`.
   - `expectTypeHierarchy(page)`: `h1` > `h2` > `h3` > texto, con dos atributos de diferencia.
+  - `expectDestructive(page, names)`: el conjunto de elementos visibles cuyo `background-color` computado es igual al de una sonda con `var(--ds-action-destructive)` es **exactamente** el de los nombres declarados. Si hay uno de más, se rompió "no se usa para nada más" de FR-009a; si falta uno, se rompió el tratamiento.
   - `readOnlyCollaborator(run)`, que **se mueve** desde `apps/admin-e2e/src/categories.spec.ts` sin cambiar su comportamiento, y `categories.spec.ts` pasa a importarlo.
 
-### Tratamiento global de Material (las dos únicas tareas globales)
+### Tratamiento global de Material (tareas globales: ver la regla 2)
 
 - [ ] T021 [US1] `apps/admin/src/styles/_theme.scss`: `mat.theme` con la paleta propia en lugar de `mat.$azure-palette`, la tipografía del sistema y `density: 0`. `mat.theme-overrides` hace que los `--mat-sys-*` que usa Material apunten a los `--ds-*` (primario, superficies, texto, error, contorno). `apps/admin/src/styles.scss` lo usa en lugar del `mat.theme` actual. Antes de escribir cada override, verificar el nombre del token en `node_modules/@angular/material/core/tokens/` y en el `_m3-*.scss` del componente: un nombre mal escrito no da error, simplemente no aplica. **Verificación**: la suite e2e completa en los tres proyectos y `design-check` en verde. Es global porque Material tiene un solo tema por aplicación
 - [ ] T022 [US1] Tratamiento de los componentes de Material en `apps/admin/src/styles/_components.scss`, fila por fila de la tabla "Componentes de Material" de `contracts/component-treatments.md`:
@@ -185,7 +192,7 @@ los tres planos con la tarjeta separada, y la jerarquía tipográfica.
 - **Estilos**: reemplaza en **sus** archivos todo valor literal y todo `var(--mat-sys-*)` por `var(--ds-*)`. Agrega las clases `ds-*` a elementos que **ya existen**, sin envolver, mover ni quitar nada (FR-032). Lleva su `<h1>` a `page-title`, sus `<h2>` a `section-title` y el texto de ayuda a `help`.
 - **Esqueleto**: ajusta el de la vista para que conserve alto, radio y espaciado (FR-027).
 - **Trinquete**: agrega sus archivos a `migrated-files.ts`.
-- **Pruebas**: agrega sus casos a `apps/admin-e2e/src/design-system.spec.ts` (acento, planos y tipografía de cada pantalla, según `primary-actions.ts`).
+- **Pruebas**: agrega sus casos a `apps/admin-e2e/src/design-system.spec.ts` (acento, destructivas con `expectDestructive`, planos y tipografía de cada pantalla, según `primary-actions.ts`). Cada caso se titula `pantalla: <screen>`, con el `screen` textual de `primary-actions.ts` (G1, ver T035).
 - **Cierra cuando**:
   - `npx nx run admin:lint` da 0 hallazgos en sus archivos (ya bloqueante por el trinquete);
   - sus e2e existentes y sus casos nuevos pasan en los tres proyectos;
@@ -230,7 +237,7 @@ Todas comparten `migrated-files.ts` y `design-system.spec.ts`, así que **ningun
   - **Clases**: "Invitar" lleva `ds-primary-action`. "Crear rol" sigue `filled`. "Traspasar la propiedad" y "Eliminar rol" llevan `ds-destructive`. "Guardar rol" lleva `ds-primary-action`.
   - **Casos**: Equipo como Propietario (1 acento, "Invitar"); `TransferOwnershipDialog` (0); Rol (1 acento, "Guardar rol").
   - e2e: `team-and-permissions.spec.ts`.
-- [ ] T035 [US1] **Bitácora**: `apps/admin/src/app/audit/audit-log/audit-log.ts` y `apps/admin/src/app/audit/entry-detail/entry-detail.ts`. Caso: 0 acentos. e2e: `audit.spec.ts`
+- [ ] T035 [US1] **Bitácora**: `apps/admin/src/app/audit/audit-log/audit-log.ts` y `apps/admin/src/app/audit/entry-detail/entry-detail.ts`. Caso: 0 acentos. e2e: `audit.spec.ts`. **Al cerrar la última vista**, `apps/admin/design-system/screens.spec.ts` suma una verificación: cada `screen` de `primary-actions.ts` aparece como título `pantalla: <screen>` de algún caso de `apps/admin-e2e/src/design-system.spec.ts`. Así el "100 % de las pantallas" de SC-004 lo hace cumplir una compuerta de CI, no la disciplina (G1 de `/speckit-analyze`)
 
 **Checkpoint**: las 10 vistas y los 5 diálogos tienen sus casos en verde en los tres proyectos.
 `migrated-files.ts` contiene todo archivo del panel con estilos, y el informe de literales da 0.
@@ -248,6 +255,9 @@ contraste AA en los dos esquemas.
 
 **Depende de T035**: necesita los tratamientos de T022 y T023, el `design-system.spec.ts` que crea
 T024 y las vistas ya migradas, sobre las que corren sus casos.
+
+**Las cuatro tareas de esta fase son globales** (regla 2): cada una cierra cuando sus casos pasan
+**y** la suite e2e completa queda en verde en los tres proyectos.
 
 - [ ] T036 [US2] Foco (FR-023): en `apps/admin/src/styles.scss`, `:focus-visible` pasa de `3px solid var(--mat-sys-primary)` a `var(--ds-focus-ring-width) solid var(--ds-focus-ring)`, con `outline-offset: var(--ds-focus-ring-offset)`. Caso en `apps/admin-e2e/src/design-system.spec.ts`: con Tab, un control sobre cada plano (página, `.ds-card`, `.ds-bar`, diálogo) y "Nuevo producto" (fondo de acento) tiene un `outline` computado con el color y el ancho del anillo. e2e: `keyboard.spec.ts`
 - [ ] T037 [US2] Error con ícono (FR-024): en `apps/admin/src/styles/_components.scss`, `.mat-mdc-form-field-error::before` y `.ds-notice--error::before` dibujan un ícono con `mask` sobre un SVG en línea (`data:`) y `background: currentColor`. Sin fuente de íconos, porque FR-017 no admite descargas, y sin tocar plantillas. **Actualizar** la fila "Campo de formulario" de `specs/003-panel-design-system/contracts/component-treatments.md`, que decía `matSuffix`, con este mecanismo y su razón: es global, no cambia la estructura y no requiere tocar cada campo. Caso: un SKU vacío muestra `mat-error` con texto y con un `::before` de `mask-image` distinto de `none`
@@ -315,7 +325,9 @@ escrito a mano.
 **Independent Test**: escenarios 1 a 3 de la historia 4 (`quickstart.md`, "Comprobar que de verdad
 fallan" y "Historia 4").
 
-**Depende de** T035, porque el trinquete debe cubrir todo el panel antes de retirarse.
+**Depende de T035 y de T036**: el trinquete debe cubrir todo el panel antes de retirarse, y
+`styles.scss` tiene `outline: 3px` y `outline-offset: 2px`, valores que la compuerta revisa, hasta
+que T036 los reemplaza. `styles.scss` no pertenece a ninguna tarea de vista.
 
 - [ ] T050 [US4] Retirar el trinquete: borrar `apps/admin/design-system/migrated-files.ts` y su uso en `literals.ts`. El verificador **bloquea en todo** el panel, y `var(--mat-sys-*)` solo se admite en `apps/admin/src/styles/_theme.scss`. Actualizar `literals.spec.ts` (los casos del trinquete pasan a "todo hallazgo bloquea"). `npx nx run admin:lint` con **0** hallazgos (SC-001). Revisar `literal-exceptions.ts`: cada `reason` se sostiene, ninguna excepción está muerta
 - [ ] T051 [P] [US4] Compuerta de adopción (FR-021a) en `apps/admin/design-system/adoption.spec.ts`: falla si `apps/admin/src` o `libs/ui/src` importa `@angular/material/paginator`, `tabs`, `table`, `card` o `toolbar` y `apps/admin/src/styles/_components.scss` no tiene el `@include` del mixin correspondiente (`ds-paginator`, `ds-tabs`, `ds-mat-table`, `ds-mat-card`, `ds-mat-toolbar`). El mensaje es el de `contracts/gates.md` y remite a "Adoptar uno de estos componentes" de `contracts/component-treatments.md`. Con un caso sobre `fixtures/adoption/` que falla, y otro que pasa al incluir el mixin
@@ -356,7 +368,7 @@ fallan" y "Historia 4").
 - **US1 (Fase 3)**: depende de la Fase 2. Sus tareas de vista (T024 a T035) van **en orden** y una por vez
 - **US2 (Fase 4)**: depende de T035
 - **US3 (Fase 5)**: depende **solo** de la Fase 1. Puede avanzar en paralelo con las fases 2 a 4
-- **US4 (Fase 6)**: depende de T035 (todo el panel en el trinquete) y de T015
+- **US4 (Fase 6)**: depende de T035 (todo el panel en el trinquete), de T036 (los literales de foco de `styles.scss`) y de T015
 - **Polish (Fase 7)**: depende de todas las historias
 
 ### Orden dentro de cada fase

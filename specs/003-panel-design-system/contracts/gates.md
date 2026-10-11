@@ -114,6 +114,11 @@ Una prueba por pantalla de [primary-actions.md](./primary-actions.md), en los pr
 4. Un control con foco por teclado sobre cada plano: el `outline` computado tiene el color y el ancho
    del anillo (FR-023).
 5. Un campo inválido: hay `mat-error` y un ícono dentro del campo (FR-024).
+6. El conjunto de botones con el color destructivo computado es exactamente el declarado en
+   `destructive` de esa pantalla (FR-009a).
+
+Cada caso se titula `pantalla: <screen>`. `screens.spec.ts`, que corre en CI sin navegador,
+verifica que toda pantalla de `primary-actions.ts` tenga su caso.
 
 `a11y.spec.ts`, `mobile.spec.ts`, `loading-states.spec.ts`, `keyboard.spec.ts` y
 `performance.spec.ts` no cambian de umbral (FR-033). Solo se actualizan los textos esperados que hoy

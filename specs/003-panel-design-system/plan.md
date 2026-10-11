@@ -162,7 +162,7 @@ son del panel, se ejecutan como objetivos Nx del panel y no se empaquetan.
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |---|---|---|
 | **Un verificador de literales propio** (~200 líneas) en lugar de una regla de Stylelint | FR-005 pide el token sugerido, y los estilos están en `.scss` **y** dentro de `.ts` | Stylelint necesita cuatro dependencias, una de ellas una sintaxis comunitaria para Angular, y aun así no sugiere el token por valor (research §5) |
-| **Un segundo build del panel en CI** para medir la base | La spec mide contra la rama base al integrar, no contra un número fijo | Un número guardado deja que otra feature consuma este presupuesto (Assumptions de la spec). Cuesta 1 o 2 minutos de CI |
+| **Un segundo build del panel en CI** para medir la base | La spec mide contra la rama base al integrar, no contra un número fijo | Un número guardado deja que otra feature consuma este presupuesto (Assumptions de la spec). Cuesta entre 2 y 4 minutos de CI: un `npm ci` y un build de la base en un worktree |
 | **Literales en `index.html`** | La hoja global carga sin bloquear: en el primer pintado `var(--ds-*)` no existe (research §4) | Generar `index.html` en el build agrega un paso al ejecutor por cuatro valores. Una prueba de igualdad mantiene una sola fuente |
 | **Mixins de paginador y pestañas sin incluir** | FR-021 los nombra y el panel no los usa | Incluirlos gasta bytes en componentes ausentes. Introducirlos en una vista cambia su estructura (FR-032) |
 
