@@ -57,6 +57,7 @@
     },
     "test": {
       "executor": "@angular/build:unit-test",
+      "dependsOn": ["design-check"],
       "options": {
         "buildTarget": "admin:build:development",
         "tsConfig": "apps/admin/tsconfig.spec.json"
@@ -64,12 +65,18 @@
     },
     "typecheck": {
       "executor": "nx:run-commands",
-      "options": { "command": "ngc -p apps/admin/tsconfig.app.json --noEmit && tsc -p apps/admin/bundle-check/tsconfig.json --noEmit" }
+      "options": {
+        "command": "ngc -p apps/admin/tsconfig.app.json --noEmit && tsc -p apps/admin/bundle-check/tsconfig.json --noEmit && tsc -p apps/admin/design-system/tsconfig.json --noEmit"
+      }
     },
     "bundle-check": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
       "options": { "command": "vitest run --config apps/admin/bundle-check/vite.config.mts" }
+    },
+    "design-check": {
+      "executor": "nx:run-commands",
+      "options": { "command": "vitest run --config apps/admin/design-system/vite.config.mts" }
     },
     "lint": {
       "executor": "nx:run-commands",
