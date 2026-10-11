@@ -38,6 +38,13 @@ export default defineConfig({
       name: 'movil-360',
       use: { ...devices['Desktop Chrome'], viewport: { width: 360, height: 780 }, isMobile: true, hasTouch: true },
     },
+    // FR-002 y SC-003 de la 003: el panel en su esquema oscuro, por preferencia del sistema operativo.
+    // Solo las pruebas que miran color y contraste; el resto no cambia con el esquema.
+    {
+      name: 'oscuro',
+      use: { ...devices['Desktop Chrome'], colorScheme: 'dark' },
+      testMatch: ['a11y.spec.ts', 'design-system.spec.ts'],
+    },
   ],
   webServer: [
     {

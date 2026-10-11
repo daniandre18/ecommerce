@@ -214,8 +214,17 @@ test.describe('accesibilidad', () => {
     await expect
       .poll(() => page.evaluate(() => document.getAnimations().filter((a) => a.playState === 'running' && a.effect?.getComputedTiming().endTime !== Infinity).length), { intervals: [50] })
       .toBe(0);
-    // El rojo de error del tema claro, #ba1a1a.
-    await expect(row.locator('mat-error')).toHaveCSS('color', 'rgb(186, 26, 26)');
+    // El color de error definitivo del esquema activo: el de una sonda con el mismo token que usa
+    // `mat-error`. En claro es #ba1a1a, como antes; el valor fijo daba por hecho el esquema claro y fallaba
+    // en el proyecto `oscuro` (T018 de la 003), y dejaría de valer cuando cambie la paleta (T021).
+    const errorColor = await page.evaluate(() => {
+      const probe = document.body.appendChild(document.createElement('span'));
+      probe.style.color = 'var(--mat-sys-error)';
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    });
+    await expect(row.locator('mat-error')).toHaveCSS('color', errorColor);
     await expect(row).toContainText('Peso heredado del producto');
     await expect(page.getByRole('heading', { name: 'Catálogos externos' })).toBeVisible();
     await expectAccessible(page);
