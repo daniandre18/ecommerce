@@ -477,7 +477,7 @@ que ajustarlo no afloja ninguna prueba (FR-033).
 7 min 39 s y el trabajo completo 9 min 21 s, con unos **2 min 20 s** de margen contra el
 `globalTimeout`. La primera corrida, con la flaky, tardó 6 min 59 s: entre corridas, el runner varía
 del orden de medio minuto. El proyecto `oscuro` (T018) suma `a11y` y `design-system` sobre ese
-margen, así que es probable que T018 tenga que subir el tope, con esta medida a la vista.
+margen, así que es probable que T018 tenga que subir el tope, con esta medida a la vista. **Resultado de T018** (corrida 38152439034): con `oscuro`, 143 pruebas en 6 min 19 s; el tope no hizo falta subirlo.
 
 **Inestabilidad**: `retries: 2` absorbe un fallo aislado, y el reportero `github` lo marca como
 *flaky* sin ocultarlo. Una prueba que necesita reintentos con frecuencia es un defecto que se

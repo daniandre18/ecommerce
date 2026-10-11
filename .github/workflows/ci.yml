@@ -30,7 +30,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-workspace
-      - run: npx nx run-many -t lint --skip-nx-cache
+      # Con la salida de cada tarea a la vista: el lint del panel también corre la compuerta de valores
+      # literales (003), y su resumen tiene que poder leerse en el log aunque pase.
+      - run: npx nx run-many -t lint --skip-nx-cache --output-style=stream
 
   # La misma frontera, verificada sobre lo que llega al navegador (T103 de la 002): construye el panel
   # de producción y falla si algún fragmento trae código de servidor de application. La regla de
