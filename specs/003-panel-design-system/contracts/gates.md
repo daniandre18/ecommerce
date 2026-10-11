@@ -108,7 +108,9 @@ Una prueba por pantalla de [primary-actions.md](./primary-actions.md), en los pr
 1. Cantidad y nombre del acento computado (SC-004). El caso "catálogo sin permiso de crear" crea un
    rol con solo `catalog.read`, y **depende de T102 de la 001**: si `catalog.read` sale del
    enumerado, la prueba usa un rol sin permisos ([primary-actions.md](./primary-actions.md)).
-2. Tres planos con `background-color` distinto, y la tarjeta con borde o sombra (SC-005).
+2. Los planos de la pantalla (`planes` de `primary-actions.ts`: tres dentro del marco del comercio,
+   página y tarjeta fuera de él) con `background-color` distinto, y la tarjeta con borde o sombra
+   (SC-005).
 3. Con `forcedColors: 'active'`: tarjeta, barra y campos con `border-style` distinto de `none`
    (FR-013).
 4. Un control con foco por teclado sobre cada plano: el `outline` computado tiene el color y el ancho

@@ -22,6 +22,12 @@ la pregunta se vuelve a hacer y la fila de esta lista se actualiza en el mismo c
 Una pantalla es una vista o un diálogo. Mientras un diálogo está abierto, la vista de fondo no cuenta
 (edge case de la spec).
 
+**Planos por pantalla** (SC-005, FR-010): las vistas dentro del marco del comercio (`/t/:id/…`)
+tienen página, tarjeta y barra. Inicio de sesión, alta de cuenta, comercios e invitación tienen
+página y tarjeta: la barra pertenece al marco, y agregarla a esas vistas violaría FR-032. La
+tarjeta va sobre un elemento que ya existe: el `<form>` en inicio de sesión y alta de cuenta, la
+`<ul>` en comercios (o el estado vacío, que ya es tarjeta) y el propio componente en invitación.
+
 ## Vistas
 
 | Pantalla | Acción principal | Por qué |

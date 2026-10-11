@@ -128,6 +128,7 @@ interface PrimaryAction {
   readonly kind: 'view' | 'dialog';
   readonly action: string | null;    // nombre accesible del botón, o null si no tiene
   readonly destructive: readonly string[];  // nombres de los botones destructivos visibles (FR-009a)
+  readonly planes: 'page-card-bar' | 'page-card';  // dentro o fuera del marco del comercio (SC-005)
   readonly why: string;              // qué tarea completa, o por qué no tiene
 }
 ```
@@ -136,6 +137,9 @@ interface PrimaryAction {
 `MatDialog.open` figura en la lista. Una prueba unitaria compara la lista con esos dos inventarios y
 falla si falta una pantalla. En cada pantalla, el número de elementos con el acento computado es
 0 si `action` es `null`, y como máximo 1 si no lo es; cuando hay 1, su nombre accesible es `action`.
+Los planos que se verifican son los de `planes`: las vistas fuera del marco del comercio (inicio de
+sesión, alta de cuenta, comercios e invitación) no tienen barra, y agregarla violaría FR-032. Un
+diálogo hereda los planos de la vista que lo abre, más el superpuesto.
 El conjunto de elementos con el color destructivo computado es **igual** a `destructive`: ni uno
 más (FR-009a, "no se usa para nada más") ni uno menos. Cada `screen` tiene su caso titulado
 `pantalla: <screen>` en `design-system.spec.ts`, y `screens.spec.ts` lo verifica.

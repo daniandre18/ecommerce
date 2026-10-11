@@ -302,8 +302,9 @@ dos esquemas:
 - Cuenta los elementos visibles cuyo `background-color` **computado** es igual al valor del acento,
   y verifica que hay como máximo uno y que su nombre accesible es el declarado. Se compara el color
   computado y no la clase: así se atrapa también un acento puesto por otro camino.
-- Verifica que el fondo de página, el de la tarjeta y el de la barra son distintos, y que la tarjeta
-  tiene borde visible (`border-style` distinto de `none` y ancho mayor que 0) o sombra (SC-005).
+- Verifica que los planos de la pantalla son distintos: página, tarjeta y barra dentro del marco
+  del comercio, y página y tarjeta fuera de él (SC-005, corregido el 2026-10-10). Verifica también
+  que la tarjeta tiene borde visible (`border-style` distinto de `none` y ancho mayor que 0) o sombra (SC-005).
 - Con `page.emulateMedia({ forcedColors: 'active' })`, verifica que la tarjeta y los campos conservan
   un borde visible (FR-013).
 - Verifica que cada nivel tipográfico difiere del contiguo en al menos dos de: tamaño, peso, color y

@@ -51,3 +51,6 @@
   compuerta que impide usarlos sin su tratamiento). Se insertan con sufijo para no renumerar.
 - Sesión del 2026-10-10: FR-033a, la suite e2e completa como compuerta en CI y primera tarea, con la
   línea base en verde antes de tocar tokens. El rendimiento sigue en local.
+- Desde `/speckit-analyze` del 2026-10-10 (C1): SC-005 y FR-010 reconocen que la barra existe solo
+  dentro del marco del comercio. Inicio de sesión, alta de cuenta, comercios e invitación se
+  verifican con dos planos, página y tarjeta, porque agregarles una barra violaría FR-032.

@@ -263,7 +263,8 @@ un token y se verifica que el cambio se refleja en todas las vistas que lo usan.
 #### Planos de superficie, elevación y bordes
 
 - **FR-010**: El sistema MUST definir tres planos —fondo de página, tarjeta y barra— con tonos
-  distintos entre sí. La tarjeta MUST separarse del fondo, además, por borde o por elevación.
+  distintos entre sí. La tarjeta MUST separarse del fondo, además, por borde o por elevación. La
+  barra existe solo dentro del marco del comercio. Las vistas fuera de él no la agregan (FR-032).
 - **FR-011**: La elevación MUST ser una escala corta con un uso asignado a cada nivel: plano, tarjeta,
   barra y superpuesto (menús, diálogos). Un elemento MUST NOT usar un nivel distinto del que le
   corresponde a su papel.
@@ -410,8 +411,10 @@ SC-006, que se verifica antes de integrar.*
   de nivel A ni AA (SC-014 de la 001), en los dos esquemas.
 - **SC-004**: En el 100% de las vistas y diálogos, como máximo un elemento lleva el color de acento,
   y cuando lo lleva es la acción principal declarada para esa pantalla.
-- **SC-005**: En el 100% de las vistas, los tres planos tienen colores de fondo distintos entre sí y
-  la tarjeta se separa del fondo por borde o elevación, en los dos esquemas.
+- **SC-005**: En el 100% de las vistas, los planos que la vista tiene se distinguen: dentro del
+  marco del comercio, página, tarjeta y barra tienen colores de fondo distintos entre sí; fuera de
+  él (inicio de sesión, alta de cuenta, comercios e invitación), página y tarjeta. La tarjeta se
+  separa del fondo por borde o elevación, en los dos esquemas.
 - **SC-006**: Las garantías vigentes pasan con sus umbrales actuales, sin pruebas eliminadas,
   omitidas ni aflojadas: 0 px de desplazamiento horizontal a 360 px; el 100% de las zonas táctiles
   de al menos 44 px; suma de saltos de diseño igual a 0 durante la carga; estructura visible en menos
