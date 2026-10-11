@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { call, idTokenOf, MULTI, OWNER, productAsOwner, signIn } from './support';
 
 /** Lo que tarda en llegar cada respuesta de Firestore: suficiente para ver el esqueleto. */
@@ -114,12 +114,12 @@ test.describe('vacío y error', () => {
     await expect(page.getByText('Creá la primera para empezar a organizar tu catálogo.')).toBeVisible();
   });
 
-  test('el árbol que no llega del servidor da error con reintento, no un árbol vacío', async ({ page, context }) => {
+  /** Abre Categorías sin red, con la vista ya descargada: lo que falta son los datos, no el código. */
+  async function treeWithoutNetwork(page: Page, context: BrowserContext): Promise<string> {
     const name = `Vuelve ${Date.now()}`;
     await rootCategory(name);
     await page.goto('/login');
     await signIn(page, OWNER);
-    // La vista ya descargada: sin red, lo que falta son los datos, no el código.
     const link = page.getByRole('link', { name: 'Categorías', exact: true });
     await link.click();
     await expect(page.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible();
@@ -130,10 +130,37 @@ test.describe('vacío y error', () => {
     await link.click();
     await expect(page.getByText('No pudimos cargar las categorías')).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText('Todavía no hay categorías')).toHaveCount(0);
+    return name;
+  }
+
+  // El reintento se pide SIN red. Con red, la vista se recupera sola apenas el servidor responde
+  // (`listen.ts`, T096 de la 001): el error sale del DOM unos 20 ms después de reconectar, y un clic
+  // en "Reintentar" después de `setOffline(false)` compite con esa recuperación. Si pierde, el botón
+  // ya no existe y el clic espera hasta el tope (la flaky que destapó T001 de la 003). Sin red, el
+  // error se queda hasta el clic.
+  //
+  // Y el clic tiene que dar una señal: al recargar, `resource` conserva el error anterior hasta que
+  // llega el resultado nuevo, y sin red eso son los 10 s de `OFFLINE_AFTER_MS` sin ningún cambio en la
+  // vista (el defecto que encontró esta misma investigación). Mientras reintenta, el botón lo dice.
+  test('el árbol que no llega del servidor da error con reintento, no un árbol vacío', async ({ page, context }) => {
+    const name = await treeWithoutNetwork(page, context);
+
+    await page.getByRole('button', { name: 'Reintentar' }).click();
+    const retrying = page.getByRole('button', { name: 'Reintentando…' });
+    await expect(retrying).toBeVisible();
+    await expect(retrying).toHaveAttribute('aria-disabled', 'true');
+    await expect(retrying).toBeFocused();
 
     await context.setOffline(false);
-    await page.getByRole('button', { name: 'Reintentar' }).click();
     await expect(page.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('al volver la red, el árbol se recupera solo, sin reintentar', async ({ page, context }) => {
+    const name = await treeWithoutNetwork(page, context);
+
+    await context.setOffline(false);
+    await expect(page.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('No pudimos cargar las categorías')).toHaveCount(0);
   });
 
   test('un comercio sin acceso lo dice y ofrece reintentar', async ({ page }) => {

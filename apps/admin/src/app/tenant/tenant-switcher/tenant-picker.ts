@@ -15,7 +15,7 @@ import { MyTenants } from '../my-tenants';
   template: `
     <h1>Tus comercios</h1>
     @if (tenants.error()) {
-      <ui-error-state heading="No pudimos cargar tus comercios" (retry)="tenants.reload()" />
+      <ui-error-state heading="No pudimos cargar tus comercios" [retrying]="tenants.status() === 'reloading'" (retry)="tenants.reload()" />
     } @else if (tenants.hasValue()) {
       @if (tenants.value().length === 0) {
         <ui-empty-state

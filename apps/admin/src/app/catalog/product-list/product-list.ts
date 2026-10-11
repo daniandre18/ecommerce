@@ -127,7 +127,7 @@ const NO_FILTERS: Filters = { search: '', status: 'all', attribute: 'none', attr
     }
 
     @if (products.error()) {
-      <ui-error-state heading="No pudimos cargar el catálogo" (retry)="products.reload()" />
+      <ui-error-state heading="No pudimos cargar el catálogo" [retrying]="products.status() === 'reloading'" (retry)="products.reload()" />
     } @else if (listed(); as list) {
       @if (list.length === 0) {
         @if (filtered()) {

@@ -32,7 +32,7 @@ const pending = (read: { hasValue(): boolean; error(): unknown }) => !read.hasVa
       <section aria-labelledby="personas">
         <h2 id="personas">Personas</h2>
         @if (members.error() || roles.error()) {
-          <ui-error-state heading="No pudimos cargar el equipo" (retry)="members.reload(); roles.reload()" />
+          <ui-error-state heading="No pudimos cargar el equipo" [retrying]="members.status() === 'reloading' || roles.status() === 'reloading'" (retry)="members.reload(); roles.reload()" />
         } @else if (members.hasValue() && roles.hasValue()) {
           <app-members-section [tenantId]="id()" [members]="members.value()" [roles]="roles.value()" />
         }
@@ -41,7 +41,7 @@ const pending = (read: { hasValue(): boolean; error(): unknown }) => !read.hasVa
       <section aria-labelledby="invitaciones">
         <h2 id="invitaciones">Invitar</h2>
         @if (invitations.error() || roles.error()) {
-          <ui-error-state heading="No pudimos cargar las invitaciones" (retry)="invitations.reload(); roles.reload()" />
+          <ui-error-state heading="No pudimos cargar las invitaciones" [retrying]="invitations.status() === 'reloading' || roles.status() === 'reloading'" (retry)="invitations.reload(); roles.reload()" />
         } @else if (invitations.hasValue() && roles.hasValue()) {
           <app-invitations-section [tenantId]="id()" [invitations]="invitations.value()" [roles]="roles.value()" />
         }
@@ -50,7 +50,7 @@ const pending = (read: { hasValue(): boolean; error(): unknown }) => !read.hasVa
       <section aria-labelledby="roles">
         <h2 id="roles">Roles</h2>
         @if (roles.error()) {
-          <ui-error-state heading="No pudimos cargar los roles" (retry)="roles.reload()" />
+          <ui-error-state heading="No pudimos cargar los roles" [retrying]="roles.status() === 'reloading'" (retry)="roles.reload()" />
         } @else if (roles.hasValue()) {
           <app-roles-section [tenantId]="id()" [roles]="roles.value()" />
         }

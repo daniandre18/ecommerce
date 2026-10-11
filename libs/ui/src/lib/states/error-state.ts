@@ -14,7 +14,14 @@ import { MatButton } from '@angular/material/button';
     @if (message(); as detail) {
       <p class="message">{{ detail }}</p>
     }
-    <button matButton="outlined" type="button" (click)="retry.emit()">Reintentar</button>
+    <!--
+      Mientras reintenta, el botón lo dice y no acepta otro clic, pero conserva el foco: \`disabled\`
+      se lo quitaría a quien lo acaba de activar. Con \`disabledInteractive\` el clic igual llega, y
+      por eso lo descarta \`onRetry\`.
+    -->
+    <button matButton="outlined" type="button" [disabled]="retrying()" disabledInteractive (click)="onRetry()">
+      {{ retrying() ? 'Reintentando…' : 'Reintentar' }}
+    </button>
   `,
   styles: `
     :host {
@@ -43,5 +50,17 @@ export class ErrorState {
   /** "heading" y no "title": `title` choca con la propiedad del DOM y dispara un tooltip nativo. */
   readonly heading = input('No pudimos cargar esta información');
   readonly message = input<string>();
+  /**
+   * La vista está volviendo a cargar. Al recargar, `resource` conserva el error anterior hasta que
+   * llega el resultado nuevo: sin esta señal, el estado de error no cambiaba, y sin red eso duraba los
+   * 10 s de `OFFLINE_AFTER_MS` (hallazgo de T001 de la 003). Se le pasa `status() === 'reloading'` de
+   * los recursos que reintenta, no `isLoading()`: un recurso en su carga inicial no está reintentando,
+   * y con `isLoading()` un error de uno mientras otro todavía carga bloqueaba el reintento.
+   */
+  readonly retrying = input(false);
   readonly retry = output<void>();
+
+  protected onRetry(): void {
+    if (!this.retrying()) this.retry.emit();
+  }
 }

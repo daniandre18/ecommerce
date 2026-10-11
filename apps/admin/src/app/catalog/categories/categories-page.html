@@ -50,7 +50,7 @@
 <div role="alert" class="failure">{{ failure() }}</div>
 
 @if (tree.error()) {
-  <ui-error-state heading="No pudimos cargar las categorías" (retry)="tree.reload()" />
+  <ui-error-state heading="No pudimos cargar las categorías" [retrying]="tree.status() === 'reloading'" (retry)="tree.reload()" />
 } @else if (ready(); as tree) {
   @if (empty()) {
     <ui-empty-state heading="Todavía no hay categorías" [message]="canWrite() ? 'Creá la primera para empezar a organizar tu catálogo.' : ''" />
