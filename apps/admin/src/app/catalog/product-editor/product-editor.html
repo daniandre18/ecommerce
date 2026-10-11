@@ -1,7 +1,8 @@
 <a class="back" [routerLink]="catalogLink()">← Catálogo</a>
 
 @if (product.error() || categoryTree.error() || sections.error()) {
-  <ui-error-state heading="No pudimos cargar el producto" (retry)="product.reload(); variants.reload(); categoryTree.reload(); sections.reload()" />
+  <ui-error-state heading="No pudimos cargar el producto" [retrying]="product.status() === 'reloading' || variants.status() === 'reloading' || categoryTree.status() === 'reloading' || sections.status() === 'reloading'"
+    (retry)="product.reload(); variants.reload(); categoryTree.reload(); sections.reload()" />
 } @else if (missing()) {
   <ui-empty-state heading="Este producto no existe" message="Puede que el enlace esté mal escrito.">
     <a matButton [routerLink]="catalogLink()">Volver al catálogo</a>
@@ -56,7 +57,7 @@
   </section>
 
   @if (variants.error()) {
-    <ui-error-state heading="No pudimos cargar las variantes" (retry)="variants.reload()" />
+    <ui-error-state heading="No pudimos cargar las variantes" [retrying]="variants.status() === 'reloading'" (retry)="variants.reload()" />
   } @else if (variants.hasValue() && currency(); as money) {
     <!-- Sin catalog.write, el estado se lee en el encabezado y las opciones en las variantes (T079). -->
     <section *appHasPermission="'catalog.write'" aria-labelledby="estado">

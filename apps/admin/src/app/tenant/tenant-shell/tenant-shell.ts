@@ -50,12 +50,14 @@ import { MyTenants } from '../my-tenants';
       <ui-error-state
         heading="No pudimos conectarnos"
         message="Revisá tu conexión. Cuando vuelva, el comercio se abre solo."
+        [retrying]="tenant.status() === 'reloading' || memberAccess.status() === 'reloading'"
         (retry)="tenant.reload(); memberAccess.reload()"
       />
     } @else if (noAccess()) {
       <ui-error-state
         heading="No pudimos abrir este comercio"
         message="Puede que no exista o que no tengas acceso. Revisá el código o pedile acceso a su Propietario."
+        [retrying]="tenant.status() === 'reloading' || memberAccess.status() === 'reloading'"
         (retry)="tenant.reload(); memberAccess.reload()"
       />
     } @else {

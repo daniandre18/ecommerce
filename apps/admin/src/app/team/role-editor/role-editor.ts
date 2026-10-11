@@ -47,7 +47,7 @@ interface Draft {
     } @else if (!access()?.isOwner) {
       <ui-empty-state heading="Solo el Propietario administra los roles" message="Si necesitás un cambio, pedíselo a quien es Propietario del comercio." />
     } @else if (roles.error()) {
-      <ui-error-state heading="No pudimos cargar el rol" (retry)="roles.reload()" />
+      <ui-error-state heading="No pudimos cargar el rol" [retrying]="roles.status() === 'reloading'" (retry)="roles.reload()" />
     } @else if (!roles.hasValue()) {
       <ui-skeleton rows="4" label="Cargando el rol…" />
     } @else if (role(); as current) {

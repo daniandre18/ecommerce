@@ -101,7 +101,7 @@ const nextDay = (day: Date) => new Date(day.getFullYear(), day.getMonth(), day.g
       @if (invalidRange()) {
         <p role="alert" class="failure">La fecha «desde» es posterior a «hasta».</p>
       } @else if (firstPage.error()) {
-        <ui-error-state heading="No pudimos cargar la bitácora" (retry)="firstPage.reload()" />
+        <ui-error-state heading="No pudimos cargar la bitácora" [retrying]="firstPage.status() === 'reloading'" (retry)="firstPage.reload()" />
       } @else if (!firstPageNamed()) {
         <ui-skeleton rows="5" rowHeight="72px" label="Cargando la bitácora…" />
       } @else if (entries().length === 0) {

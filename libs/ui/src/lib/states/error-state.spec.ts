@@ -44,4 +44,31 @@ describe('ErrorState', () => {
     await fixture.whenStable();
     expect(retries).toBe(1);
   });
+
+  // Hallazgo de T001 de la 003: al recargar, `resource` conserva el error anterior hasta que llega el
+  // nuevo resultado. Sin red, eso son 10 s en los que la vista no cambia: el clic no daba ninguna señal.
+  it('mientras reintenta, lo dice y no acepta otro clic, sin perder el foco', async () => {
+    const { fixture, host } = await render({ retrying: true });
+    let retries = 0;
+    fixture.componentInstance.retry.subscribe(() => retries++);
+
+    const button = host.querySelector('button');
+    expect(button?.textContent?.trim()).toBe('Reintentando…');
+    expect(button?.getAttribute('aria-disabled')).toBe('true');
+    // Sin el atributo `disabled`: el botón conserva el foco de quien lo acaba de activar.
+    expect(button?.hasAttribute('disabled')).toBe(false);
+
+    button?.click();
+    await fixture.whenStable();
+    expect(retries).toBe(0);
+  });
+
+  it('cuando el reintento termina, vuelve a ofrecerlo', async () => {
+    const { fixture, host } = await render({ retrying: true });
+    fixture.componentRef.setInput('retrying', false);
+    await fixture.whenStable();
+    const button = host.querySelector('button');
+    expect(button?.textContent?.trim()).toBe('Reintentar');
+    expect(button?.getAttribute('aria-disabled')).toBeNull();
+  });
 });
