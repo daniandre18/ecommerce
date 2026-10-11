@@ -45,3 +45,7 @@
   referencias internas se actualizaron con la renumeración.
 - Hallazgo para el plan: la verificación automática del build hoy solo controla la frontera de capas,
   no el tamaño. FR-035 pide extenderla.
+- Revisión del 2026-10-10, desde el plan (research §11 y §13): el escenario 1 de la historia 1 pasa
+  a "editor sin acento", justificado por el principio de FR-008. Se agrega FR-009a (el color de error
+  en botones, solo para lo destructivo) y FR-021a (paginador y pestañas definidos sin estilos, con una
+  compuerta que impide usarlos sin su tratamiento). Se insertan con sufijo para no renumerar.

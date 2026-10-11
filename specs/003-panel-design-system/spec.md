@@ -52,9 +52,11 @@ cada nivel tipográfico se diferencia del contiguo en más de un atributo.
 
 **Acceptance Scenarios**:
 
-1. **Given** el editor de un producto, **When** se abre, **Then** el fondo de la página, las tarjetas
-   de sus secciones y la barra superior se ven como tres planos distintos, y "Guardar" es el único
-   control con el color de acento.
+1. **Given** el editor de un producto, que no tiene acción principal (cada sección se guarda por
+   separado y ninguna completa por sí sola la tarea de la pantalla), **When** se abre, **Then** el
+   fondo de la página, las tarjetas de sus secciones y la barra superior se ven como tres planos
+   distintos, ningún control lleva el color de acento, y los botones que guardan cada sección se ven
+   todos iguales.
 2. **Given** el listado de productos visto por un colaborador sin permiso para crear productos,
    **When** se abre, **Then** ningún control lleva el color de acento: sin acción principal
    disponible, el acento no se usa como decoración.
@@ -230,12 +232,20 @@ un token y se verifica que el cambio se refleja en todas las vistas que lo usan.
 
 - **FR-007**: La paleta MUST definir un color primario, que da la identidad (barra, selección, enlaces,
   indicadores activos), y un color de acento distinto, reservado para la acción principal.
-- **FR-008**: Cada pantalla —una vista o un diálogo— MUST tener como máximo un elemento con el color
-  de acento, y ese elemento MUST ser su acción principal. El acento MUST NOT usarse como decoración ni
-  en acciones secundarias.
+- **FR-008**: El acento señala la acción principal de una pantalla; una pantalla sin acción
+  principal no lleva acento. Cada pantalla —una vista o un diálogo— MUST tener como máximo un
+  elemento con el color de acento, y ese elemento MUST ser su acción principal. El acento MUST NOT
+  usarse como decoración ni en acciones secundarias. Si una pantalla tiene acción principal se decide
+  por su tarea, no por cuántos botones muestra: si la pantalla cambia, se vuelve a preguntar si alguna
+  acción completa esa tarea.
 - **FR-009**: La paleta MUST definir colores con significado para error, aviso, éxito e información,
   cada uno con sus pares de texto y fondo, para estados de los controles y para indicadores como el
   estado de un producto.
+- **FR-009a**: Entre las acciones, el color de error MUST reservarse para las destructivas: archivar,
+  eliminar, dar de baja, traspasar la propiedad, descartar cambios. Un botón en ese color MUST NOT
+  usarse para nada más, y en un botón el color de error nunca indica una validación fallida. La
+  acción destructiva tiene su propio papel en el catálogo, distinto del error de validación (FR-024),
+  aunque compartan tono.
 
 #### Planos de superficie, elevación y bordes
 
@@ -271,8 +281,13 @@ un token y se verifica que el cambio se refleja en todas las vistas que lo usan.
 #### Tratamiento de componentes y estados
 
 - **FR-021**: El sistema MUST definir un tratamiento propio, derivado de la referencia, para cada
-  componente que usa el panel: al menos tabla, tarjeta, campo de formulario, paginador, pestañas,
-  barra de herramientas, botón, chip, diálogo y menú.
+  componente y patrón que usa el panel: al menos tarjeta, tabla y barra (hoy son marcado propio, no
+  componentes de la biblioteca), campo de formulario, botón, chip, diálogo y menú.
+- **FR-021a**: Paginador y pestañas, que ninguna vista usa, MUST quedar definidos —qué token usa cada
+  estado— sin emitir estilos. Un estilo de un componente que ninguna vista usa no lo verifica ninguna
+  prueba, y envejece sin que nadie lo note. Una vista que adopte uno de los dos MUST incluir su
+  tratamiento y su cobertura de pruebas en el mismo cambio, y una verificación automática MUST
+  fallar si el componente se usa sin su tratamiento.
 - **FR-022**: Cada componente interactivo MUST definir los estados que le apliquen entre reposo,
   hover, foco, activo, deshabilitado, cargando, error y vacío, con los mismos tokens en todo el panel.
 - **FR-023**: El foco con teclado MUST ser siempre visible, con un indicador de contraste de al menos
@@ -462,4 +477,4 @@ automatizada, y por lo tanto MUST NOT bloquear un despliegue.*
 | VII. Trazabilidad inmutable | Sin cambios |
 | VIII. Optimización de carga percibida | FR-017, FR-027, FR-034 a FR-036; SC-006, SC-007 |
 | IX. Enfoque mobile-first | FR-020, FR-023 a FR-026, FR-030; SC-002, SC-003, SC-006 |
-| X. Regla de garantía automática | FR-005, FR-031, FR-035, FR-038, FR-039: las nuevas verificaciones bloquean la integración; FR-033: ninguna existente se afloja |
+| X. Regla de garantía automática | FR-005, FR-021a, FR-031, FR-035, FR-038, FR-039: las nuevas verificaciones bloquean la integración; FR-033: ninguna existente se afloja |
