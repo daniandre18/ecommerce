@@ -98,7 +98,8 @@ esta fase. La US3 solo depende de la Fase 1.
   - `light-dark(a, b)` se separa en `light: a` y `dark: b`, y un valor sin `light-dark` vale igual en los dos.
   - Las cadenas `var(--ds-x)` → `var(--ds-y)` → valor se resuelven.
   - Un color con alfa se compone sobre un fondo dado.
-  - Una referencia a un token inexistente lanza un error que lo nombra. Hecho: más `color.spec.ts` (la fórmula de WCAG contra las razones de la referencia que cita research §2). Mutaciones: invertir el esquema tumba 4 casos; quitar la detección de ciclos, 1
+  - Una referencia a un token inexistente lanza un error que lo nombra.
+  - **Hecho**: más `color.spec.ts` (la fórmula de WCAG contra las razones de la referencia que cita research §2). Mutaciones: invertir el esquema tumba 4 casos; quitar la detección de ciclos, 1
 - [X] T005 [P] Pruebas de contraste en `apps/admin/design-system/contrast.spec.ts`, con las reglas de `data-model.md` ("Par de contraste") al pie de la letra:
   - Umbral por `kind`: `text` 4,5; `large-text` 3; `ui` 3.
   - `declared` coincide con la razón calculada, redondeada a 2 decimales, en **los dos** esquemas.
@@ -107,7 +108,8 @@ esta fase. La US3 solo depende de la Fase 1.
   - `--ds-focus-ring` se declara contra los tres planos, el superpuesto y el fondo del acento.
   - Un par que nombra un token inexistente falla.
   - Un par en `state: 'disabled'` se declara con `kind: 'ui'` y no se exige.
-  - Los mensajes son los de `contracts/gates.md`. Hecho: el verificador es `contrast.ts` (`checkPairs`, `checkCoverage`), probado contra `fixtures/contrast/` con pares que tienen que fallar (bajo el umbral, mal declarado, token inexistente, cobertura incompleta). Mutaciones: sin comparar con lo declarado, sin eximir el deshabilitado y sin exigir el foco contra lo superpuesto y el acento: cada una tumba su caso
+  - Los mensajes son los de `contracts/gates.md`.
+  - **Hecho**: el verificador es `contrast.ts` (`checkPairs`, `checkCoverage`), probado contra `fixtures/contrast/` con pares que tienen que fallar (bajo el umbral, mal declarado, token inexistente, cobertura incompleta). Mutaciones: sin comparar con lo declarado, sin eximir el deshabilitado y sin exigir el foco contra lo superpuesto y el acento: cada una tumba su caso
 - [X] T006 [P] Pruebas de jerarquía tipográfica (FR-015) en `apps/admin/design-system/typography.spec.ts`: recorre los niveles de `typography-levels.ts` en orden y exige que dos niveles contiguos difieran en al menos **dos** de: tamaño, peso, color y espaciado. El espaciado entre letras y el interlineado cuentan como **un** solo atributo (`contracts/tokens.md`). Con un caso que falla sobre `fixtures/typography/`: dos niveles que solo cambian de peso Hecho: `typography.ts`. Mutación: con un solo atributo de diferencia, cae el caso de "solo cambia de peso"
 - [X] T007 [P] Pruebas de planos en el catálogo (la mitad de SC-005 que no necesita navegador) en `apps/admin/design-system/planes.spec.ts`: `--ds-surface-page`, `--ds-surface-card` y `--ds-surface-bar` son distintos entre sí en **cada** esquema; `--ds-border-width` es mayor que 0; `--ds-border-subtle` existe. El mensaje es el de `contracts/gates.md` Hecho: `planes.ts`. Mutación: mirando solo el esquema claro, cae el caso de la tarjeta y la barra iguales en oscuro
 - [ ] T008 [P] Pruebas del verificador de literales en `apps/admin/design-system/literals.spec.ts`, con `apps/admin/design-system/fixtures/literals/` (`research.md` §5):
@@ -134,7 +136,8 @@ esta fase. La US3 solo depende de la Fase 1.
   - **Todos** los tokens de `contracts/tokens.md`, con los nombres textuales: planos, texto, marca y acción (incluido `--ds-action-destructive` como papel propio, distinto de `--ds-status-error`, FR-009a), estados con significado, bordes y foco, tipografía (`-size`, `-weight`, `-line-height`, `-tracking` y el atajo `--ds-type-{nivel}`), espaciado, radio, borde, elevación, densidad y movimiento.
   - Color y elevación con `light-dark()`. Todo definido **solo** desde `_palette.scss`, las escalas u otro token, con un comentario de origen por token (`data-model.md`).
   - `styles.scss` lo incluye. Ninguna vista lo usa todavía.
-  - Depende de T011. Hecho: tipografía en `rem`, para que siga al tamaño de letra del sistema (edge case de texto ampliado)
+  - Depende de T011.
+  - **Hecho**: tipografía en `rem`, para que siga al tamaño de letra del sistema (edge case de texto ampliado)
 - [X] T013 `apps/admin/design-system/contrast-pairs.ts`: el catálogo de pares de `data-model.md` con las razones declaradas por esquema, hasta que T005 pase. Si un par no cumple, se ajusta el valor en `_palette.scss` **en luminosidad, conservando tono y saturación** (`research.md` §2), y se anota el valor final. Depende de T010 y T012 Hecho: 43 pares, todos AA en los dos esquemas; las razones se calcularon con el mismo `color.ts` que las verifica. Mutación sobre la paleta real: con el texto secundario en `#8a8a8a`, el catálogo falla (el paso 3 de "de verdad fallan" del quickstart)
 - [X] T014 [P] (después de T010 y T012) `apps/admin/design-system/typography-levels.ts`, con el orden `page-title`, `section-title`, `subtitle`, `body`, `label`, `help` y su color (`contracts/tokens.md`), hasta que T006 pase. Con los tokens de T012, T007 también pasa
 - [ ] T015 [P] Verificador de literales (después de T010 y T012, porque sugiere tokens a partir del catálogo compilado):
