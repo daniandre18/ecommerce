@@ -1,0 +1,2 @@
+# Worktree de la rama base que arma `admin:bundle-check`: tiene otra copia de cada project.json.
+.bundle-base/

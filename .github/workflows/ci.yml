@@ -35,12 +35,16 @@ jobs:
   # La misma frontera, verificada sobre lo que llega al navegador (T103 de la 002): construye el panel
   # de producción y falla si algún fragmento trae código de servidor de application. La regla de
   # módulos cubre los imports; esta, cualquier camino que se le escape.
+  # Y el tamaño de la carga inicial contra la rama base al integrar (FR-034, FR-035 de la 003): 0 B
+  # más de JavaScript y hasta 10 KB comprimidos más de estilos. La base se construye en un worktree.
   bundle-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/setup-workspace
-      - run: npx nx run admin:bundle-check --skip-nx-cache
+      - run: npx nx run admin:bundle-check --skip-nx-cache --base=${{ github.event.pull_request.base.sha || github.event.before }}
 
   # Vitest no chequea tipos: las pruebas pueden pasar con el código roto. Por eso va aparte.
   typecheck:
