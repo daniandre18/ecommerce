@@ -1,4 +1,5 @@
-import { Component, input, output } from '@angular/core';
+import { LiveAnnouncer } from '@angular/cdk/a11y';
+import { Component, effect, inject, input, output } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 
 /**
@@ -59,6 +60,21 @@ export class ErrorState {
    */
   readonly retrying = input(false);
   readonly retry = output<void>();
+
+  private readonly announcer = inject(LiveAnnouncer);
+
+  constructor() {
+    // El `alert` se anunció al aparecer, y reintentar no cambia su contenido: sin esto, un lector de
+    // pantalla no se enteraba ni de que empezó ni de que volvió a fallar (T057 de la 003). Si el
+    // reintento sale bien, la vista reemplaza al estado de error y el anuncio es el de la vista.
+    let previous = false;
+    effect(() => {
+      const retrying = this.retrying();
+      if (retrying && !previous) void this.announcer.announce('Reintentando…');
+      if (!retrying && previous) void this.announcer.announce(`${this.heading()}. Puedes volver a intentarlo.`, 'assertive');
+      previous = retrying;
+    });
+  }
 
   protected onRetry(): void {
     if (!this.retrying()) this.retry.emit();

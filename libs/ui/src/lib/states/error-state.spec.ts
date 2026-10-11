@@ -1,8 +1,16 @@
+import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { TestBed } from '@angular/core/testing';
 import { ErrorState } from './error-state';
 
 // T030 — FR-037: toda vista tiene un estado de error comprensible con acción de reintento.
 describe('ErrorState', () => {
+  const announcer = { announce: vi.fn(async () => undefined) };
+
+  beforeEach(() => {
+    announcer.announce.mockClear();
+    TestBed.configureTestingModule({ providers: [{ provide: LiveAnnouncer, useValue: announcer }] });
+  });
+
   const render = async (inputs: Record<string, unknown> = {}) => {
     const fixture = TestBed.createComponent(ErrorState);
     for (const [name, value] of Object.entries(inputs)) fixture.componentRef.setInput(name, value);
@@ -70,5 +78,28 @@ describe('ErrorState', () => {
     const button = host.querySelector('button');
     expect(button?.textContent?.trim()).toBe('Reintentar');
     expect(button?.getAttribute('aria-disabled')).toBeNull();
+  });
+
+  // T057 de la 003: el cambio de estado también tiene que llegar a un lector de pantalla. El `alert`
+  // ya se anunció al aparecer, y su contenido no cambia al reintentar: sin anuncio, quien no ve la
+  // pantalla no sabe ni que empezó ni que volvió a fallar. Mismo mecanismo que la tabla (T093 de la 001).
+  it('no anuncia nada al aparecer: eso ya lo hace el alert', async () => {
+    await render({ heading: 'No pudimos cargar el catálogo' });
+    expect(announcer.announce).not.toHaveBeenCalled();
+  });
+
+  it('anuncia que reintenta, sin mover el foco', async () => {
+    const { fixture } = await render({ heading: 'No pudimos cargar el catálogo' });
+    fixture.componentRef.setInput('retrying', true);
+    await fixture.whenStable();
+    expect(announcer.announce).toHaveBeenCalledExactlyOnceWith('Reintentando…');
+  });
+
+  it('si el reintento vuelve a fallar, lo anuncia con prioridad', async () => {
+    const { fixture } = await render({ heading: 'No pudimos cargar el catálogo', retrying: true });
+    announcer.announce.mockClear();
+    fixture.componentRef.setInput('retrying', false);
+    await fixture.whenStable();
+    expect(announcer.announce).toHaveBeenCalledExactlyOnceWith('No pudimos cargar el catálogo. Puedes volver a intentarlo.', 'assertive');
   });
 });

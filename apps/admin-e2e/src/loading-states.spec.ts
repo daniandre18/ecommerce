@@ -150,6 +150,8 @@ test.describe('vacío y error', () => {
     await expect(retrying).toBeVisible();
     await expect(retrying).toHaveAttribute('aria-disabled', 'true');
     await expect(retrying).toBeFocused();
+    // Y le llega a un lector de pantalla: el `alert` no cambia al reintentar (T057 de la 003).
+    await expect(page.locator('.cdk-live-announcer-element')).toHaveText('Reintentando…');
 
     await context.setOffline(false);
     await expect(page.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible({ timeout: 15_000 });
