@@ -49,3 +49,5 @@
   a "editor sin acento", justificado por el principio de FR-008. Se agrega FR-009a (el color de error
   en botones, solo para lo destructivo) y FR-021a (paginador y pestañas definidos sin estilos, con una
   compuerta que impide usarlos sin su tratamiento). Se insertan con sufijo para no renumerar.
+- Sesión del 2026-10-10: FR-033a, la suite e2e completa como compuerta en CI y primera tarea, con la
+  línea base en verde antes de tocar tokens. El rendimiento sigue en local.

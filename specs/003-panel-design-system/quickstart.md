@@ -109,5 +109,6 @@ npx nx run admin-e2e:e2e      # escritorio, móvil 360 y oscuro: desborde, 44 px
 npx nx run admin-e2e:perf     # estructura < 1 s y contenido < 3 s en móvil típico; 100 colaboradores
 ```
 
-Esperado: todas pasan **sin cambios de umbral**. El diff de `apps/admin-e2e/src` solo cambia textos
+`admin-e2e:e2e` corre además en el trabajo `e2e` de CI y bloquea (FR-033a). `perf` se corre en
+local antes de integrar. Esperado: todas pasan **sin cambios de umbral**. El diff de `apps/admin-e2e/src` solo cambia textos
 esperados con voseo y agrega `design-system.spec.ts` y el proyecto `oscuro`.

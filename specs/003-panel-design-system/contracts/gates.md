@@ -3,10 +3,9 @@
 **Feature**: 003-panel-design-system · Requisitos: FR-005, FR-031, FR-033, FR-035, FR-038, FR-039 ·
 Principio X
 
-Cómo se invoca cada compuerta, qué mira y qué dice cuando falla. Las cuatro primeras son nuevas y
-corren en CI. Las e2e se amplían y siguen el régimen de la 001 y la 002: se corren antes de integrar,
-fuera de CI. Si pasan a CI está pendiente de decisión: ver "Decisión pendiente" en el
-[plan](../plan.md).
+Cómo se invoca cada compuerta, qué mira y qué dice cuando falla. Todas corren en CI y bloquean la
+integración, incluida la suite e2e completa (FR-033a, research §15). La única excepción es
+`admin-e2e:perf`, que sigue corriéndose antes de integrar.
 
 ## Resumen
 
@@ -18,9 +17,11 @@ fuera de CI. Si pasan a CI está pendiente de decisión: ver "Decisión pendient
 | Componentes adoptados sin tratamiento | `npx nx run admin:design-check` | ídem | Sí | FR-021a |
 | Planos distintos en el catálogo | `npx nx run admin:design-check` | ídem | Sí | SC-005, la parte de los tokens |
 | Tamaño inicial | `npx nx run admin:bundle-check` | `bundle-check` (ya existe; se amplía) | Sí | SC-007 |
-| Acento, planos, colores forzados | `npx nx run admin-e2e:e2e` (`design-system.spec.ts`) | — | Antes de integrar | SC-004, SC-005, FR-013 |
-| axe en los dos esquemas | `npx nx run admin-e2e:e2e` (`a11y.spec.ts`, proyecto `oscuro`) | — | Antes de integrar | SC-003 |
-| Garantías vigentes | `npx nx run admin-e2e:e2e` y `npx nx run admin-e2e:perf` | — | Antes de integrar | SC-006 |
+| Suite e2e completa (línea base desde la primera tarea) | `npx nx run admin-e2e:e2e` | `e2e` (nuevo) | Sí | FR-033a |
+| Acento, planos, colores forzados | `design-system.spec.ts`, dentro de la suite | `e2e` | Sí | SC-004, SC-005, FR-013 |
+| axe en los dos esquemas | `a11y.spec.ts`, proyecto `oscuro` | `e2e` | Sí | SC-003 |
+| Garantías vigentes: 360 px, 44 px, saltos de diseño | `mobile`, `loading-states` y `keyboard`, dentro de la suite | `e2e` | Sí | SC-006 |
+| Garantías vigentes: tiempos de carga, 100 colaboradores | `npx nx run admin-e2e:perf` | — | Antes de integrar (ruido en máquinas compartidas) | SC-006 |
 
 **`design-check` en CI**: el objetivo `test` del panel corre el ejecutor de Angular, que no ve
 `apps/admin/design-system/`. `design-check` es un objetivo Vitest propio, con su `vite.config.mts`,

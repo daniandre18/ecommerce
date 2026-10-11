@@ -30,6 +30,19 @@ panel; no cambia qué hace ni cómo está organizada ninguna pantalla.
   que la persona elija esquema queda **fuera**: la spec nunca lo incluyó y ahora lo excluye de forma
   explícita (Fuera de Alcance).
 
+### Sesión 2026-10-10
+
+- **Q: ¿Las e2e pasan a ser compuerta en CI?** → A: **sí, la suite completa, como primera tarea de
+  la feature y antes de tocar ningún token** (FR-033a). Esta feature cambia el estilo de todas las
+  vistas a la vez, y el 50 % de sus criterios automáticos (SC-003 a SC-006) se verifica solo en las
+  e2e. Es la primera vez que el riesgo más probable, una regresión visual en alguna vista, cae justo
+  donde no hay compuerta. Diez minutos por PR cuestan menos que descubrirlo en producción, y la
+  inversión queda para las features siguientes. Se descarta llevar solo las e2e de esta feature: las
+  vistas que cambian de estilo son todas, una selección parcial deja fuera regresiones que esta
+  feature puede causar, y después nadie recuerda que era parcial. Las pruebas de **rendimiento**
+  siguen en local: en máquinas compartidas dan ruido, y un umbral que falla al azar enseña a
+  ignorar la compuerta.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - El panel tiene jerarquía visual: se sabe dónde mirar y qué tocar (Priority: P1)
@@ -320,6 +333,13 @@ un token y se verifica que el cambio se refleja en todas las vistas que lo usan.
   omitirse ni aflojarse; actualizar el texto que una prueba espera por el cambio de tratamiento
   (FR-037) no cuenta como aflojarla.
 
+- **FR-033a**: La suite completa de pruebas de extremo a extremo del panel MUST correr en la
+  integración continua y su fallo MUST bloquear la integración. Su primera corrida en verde MUST
+  ocurrir **antes** de aplicar ningún token: esa corrida fija la línea base, y cualquier fallo
+  posterior es atribuible al rediseño. Las pruebas de rendimiento (estructura visible, contenido útil
+  y catálogo con 100 colaboradores) quedan fuera de esta compuerta y siguen corriéndose antes de
+  integrar, porque en máquinas compartidas sus tiempos dan ruido y no señal.
+
 #### Tamaño de la carga inicial
 
 - **FR-034**: Respecto de la rama base, la carga inicial del panel MUST crecer **0 bytes de
@@ -378,7 +398,8 @@ un token y se verifica que el cambio se refleja en todas las vistas que lo usan.
 ### Criterios verificables automáticamente
 
 *Son compuertas de despliegue: el principio X exige que su incumplimiento bloquee el paso a
-producción.*
+producción. Todas bloquean en la integración continua (FR-033a), salvo la parte de rendimiento de
+SC-006, que se verifica antes de integrar.*
 
 - **SC-001**: 0 colores, tamaños de fuente, espaciados, radios, elevaciones o anchos de borde escritos
   a mano en los estilos del panel fuera de la lista de excepciones, verificado sobre el 100% de los
@@ -477,4 +498,4 @@ automatizada, y por lo tanto MUST NOT bloquear un despliegue.*
 | VII. Trazabilidad inmutable | Sin cambios |
 | VIII. Optimización de carga percibida | FR-017, FR-027, FR-034 a FR-036; SC-006, SC-007 |
 | IX. Enfoque mobile-first | FR-020, FR-023 a FR-026, FR-030; SC-002, SC-003, SC-006 |
-| X. Regla de garantía automática | FR-005, FR-021a, FR-031, FR-035, FR-038, FR-039: las nuevas verificaciones bloquean la integración; FR-033: ninguna existente se afloja |
+| X. Regla de garantía automática | FR-005, FR-021a, FR-031, FR-033a, FR-035, FR-038, FR-039: las nuevas verificaciones bloquean la integración; FR-033: ninguna existente se afloja |

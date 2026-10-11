@@ -433,3 +433,42 @@ final (`--ds-row-height`, `--ds-radius-md`, `--ds-space-*`). Si uno cambia, camb
 vista cuyo alto dependía del interlineado de `--mat-sys-body-large` puede cambiar de alto, y si su
 esqueleto tenía el alto viejo, aparece un salto. Las e2e de CLS lo detectan. La tarea de cada vista
 incluye su esqueleto.
+
+## 15. Las e2e como compuerta en CI (FR-033a)
+
+**Decisión** (sesión del 2026-10-10): un trabajo `e2e` nuevo en `ci.yml` corre la suite completa
+(`npx nx run admin-e2e:e2e`) y bloquea la integración. Es la **primera tarea** de la feature, y su
+primera corrida en verde ocurre **antes** de aplicar ningún token. Esa corrida es la línea base: un
+fallo posterior se atribuye al rediseño, no a la suite ni al entorno. Las razones están en las
+Clarifications de la spec.
+
+**Cómo es el trabajo**, sobre lo que ya existe:
+
+- `setup-workspace` y `setup-emulators` (Java 21 y la caché de los emuladores), como los trabajos
+  `rules` e `integration`.
+- **firebase-tools global**, en la versión fijada en `FIREBASE_TOOLS_VERSION`: el `webServer` de
+  `playwright.config.ts` llama a `firebase emulators:start`, no a `npx firebase-tools@…`. Los otros
+  trabajos usan `npx --yes`, y este necesita el binario en el `PATH`.
+- **Solo Chromium**: `npx playwright install --with-deps chromium`. Los dos proyectos actuales, y
+  `oscuro` cuando llegue, son `Desktop Chrome`.
+- `CI=true`, que la configuración ya interpreta: `forbidOnly`, `retries: 2`, reportero `github` y
+  `reuseExistingServer: false`. El puerto 4320 del panel no choca con nada en el runner.
+- **Artefactos al fallar**: `test-results/`, con las trazas de `trace: 'on-first-retry'`, subidos con
+  `actions/upload-artifact`, para que un fallo en CI se pueda diagnosticar sin reproducirlo.
+- **Required status check**: el comentario de `ci.yml` dice que los seis trabajos tienen que estar
+  marcados como obligatorios en la protección de `main`. Pasan a ser siete. Marcarlo es un paso
+  manual en GitHub, y la tarea lo deja como verificación explícita: sin eso, la compuerta no bloquea
+  nada.
+
+**Fuera**: `admin-e2e:perf`. En máquinas compartidas sus tiempos dan ruido, y un umbral que falla al
+azar enseña a ignorar la compuerta. Sigue corriéndose antes de integrar.
+
+**`globalTimeout` de 10 minutos**: hoy la suite corre en serie (`workers: 1`) por los cuelgues que se
+vieron en paralelo, y el proyecto `oscuro` le suma `a11y` y `design-system`. La corrida de línea base
+mide la duración real en el runner. Si el margen no alcanza para `oscuro`, se sube el tope **con esa
+medida a la vista**. El tope es una protección contra cuelgues, no un umbral de ninguna garantía, así
+que ajustarlo no afloja ninguna prueba (FR-033).
+
+**Inestabilidad**: `retries: 2` absorbe un fallo aislado, y el reportero `github` lo marca como
+*flaky* sin ocultarlo. Una prueba que necesita reintentos con frecuencia es un defecto que se
+corrige, no algo que se tolera.

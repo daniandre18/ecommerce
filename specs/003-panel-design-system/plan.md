@@ -58,7 +58,7 @@ base al integrar (SC-007). Se mantienen SC-008 y SC-009 de la 001 sin cambios (S
 existen. El tope de 8 KB de estilos por componente se mantiene (FR-036). 44 px táctiles y 360 px sin
 desborde. Ninguna prueba vigente pierde umbral (FR-033).
 
-**Scale/Scope**: 40 requisitos funcionales y 10 criterios de éxito. Superficie del panel: 10 vistas,
+**Scale/Scope**: 43 requisitos funcionales (40 más FR-009a, FR-021a y FR-033a) y 10 criterios de éxito. Superficie del panel: 10 vistas,
 5 diálogos, 258 valores escritos a mano para migrar, 29 archivos con voseo y 36 componentes con
 estilos (9 `.scss` y 27 en línea).
 
@@ -77,11 +77,10 @@ estilos (9 `.scss` y 27 en línea).
 | VII. Trazabilidad inmutable | ➖ | No toca la bitácora |
 | VIII. Carga percibida | ✅ | +0 B de JS, por construcción (research §3). Esqueletos atados a los mismos tokens que el contenido (§14). La estructura de `index.html` queda verificada contra los tokens (§4). Sin fuentes descargadas (FR-017) |
 | IX. Mobile-first | ✅ | Zona táctil en un solo token (`--ds-touch-target`). Contraste AA declarado y probado en los dos esquemas. axe en `oscuro`. Colores forzados verificados. Las e2e de 360 px y 44 px, sin cambios |
-| X. Garantía automática | ⚠️ | Cuatro compuertas nuevas que bloquean en CI (contracts/gates.md), más la de componentes adoptados. Ninguna existente se afloja. El inventario de pantallas obliga a declarar la acción principal de toda pantalla nueva. **Pero** SC-003 a SC-006 dependen de e2e que no corren en CI: ver "Decisión pendiente" |
+| X. Garantía automática | ✅ | Cuatro compuertas nuevas que bloquean en CI (contracts/gates.md), más la de componentes adoptados. Las e2e pasan a CI como primera tarea, con la línea base en verde antes de tocar tokens (FR-033a). Ninguna compuerta existente se afloja. El inventario de pantallas obliga a declarar la acción principal de toda pantalla nueva. El rendimiento sigue en local |
 
-**Resultado del gate: PASA, con una decisión pendiente.** El principio X solo exige como mínimo
-permisos y precios, y esta feature no toca ninguno de los dos, así que no hay violación. Pero la spec
-llama "compuertas de despliegue" a SC-003 a SC-006, y hoy no bloquean nada en CI.
+**Resultado del gate: PASA.** La única brecha del primer pase (SC-003 a SC-006 sin compuerta en CI)
+se cerró con FR-033a, salvo el rendimiento, que queda en local por decisión explícita.
 
 **Re-evaluación tras la fase 1**: el diseño no introdujo violaciones. Dos decisiones refuerzan el
 cumplimiento. Mover los estilos de `App` a la hoja global convierte "0 bytes de JS" en una propiedad
@@ -141,13 +140,14 @@ apps/admin/project.json         objetivo design-check; lint = eslint + literals;
 libs/ui/src/lib/states/         skeleton, empty-state, error-state → var(--ds-*)
 
 apps/admin-e2e/
-├── playwright.config.ts        proyecto `oscuro` (colorScheme: 'dark'), solo para a11y y design-system
+├── playwright.config.ts        proyecto `oscuro` (colorScheme: 'dark'), solo para a11y y design-system;
+│                               globalTimeout solo si la medida de la línea base lo pide
 └── src/design-system.spec.ts   (nuevo) acento, planos, colores forzados, foco, error con ícono
     src/*.spec.ts               solo textos esperados con voseo
 
 apps/functions/src/bootstrap/guard.ts            "No tienes permiso…"
 libs/application/src/use-cases/team/invitations.ts   "Ya eres miembro…"
-.github/workflows/ci.yml        bundle-check: checkout con historial y build de la base
+.github/workflows/ci.yml        trabajo e2e nuevo (primera tarea); bundle-check: build de la base
 package.json                    postcss-scss; sass y postcss directos
 ```
 
@@ -178,12 +178,12 @@ son del panel, se ejecutan como objetivos Nx del panel y no se empaquetan.
    prueba nadie. `adoption.spec.ts` impide usarlos sin su tratamiento, y el contrato dice qué hace
    quien los adopte.
 
-## Decisión pendiente: la mitad de los criterios no tiene compuerta en CI
+## Decisión: las e2e pasan a ser compuerta en CI (2026-10-10)
 
-**Respuesta corta: el 50 %.** De los 8 criterios automáticos de la spec, **4 se verifican solo en
-las e2e** (SC-003 a SC-006), y las e2e no corren en CI desde la 001.
+**El problema: el 50 %.** De los 8 criterios automáticos de la spec, **4 se verifican solo en las
+e2e** (SC-003 a SC-006), y las e2e no corrían en CI desde la 001.
 
-| Criterio | Dónde se verifica | ¿Compuerta en CI? |
+| Criterio | Dónde se verifica | ¿Compuerta en CI antes de FR-033a? |
 |---|---|---|
 | SC-001 valores literales | `admin:lint` | ✅ |
 | SC-002 contraste de los pares | `design-check` | ✅ |
@@ -194,7 +194,7 @@ las e2e** (SC-003 a SC-006), y las e2e no corren en CI desde la 001.
 | SC-007 tamaño inicial | `bundle-check` | ✅ |
 | SC-008 voseo y usted | `design-check` | ✅ |
 
-**Por requisito**, de 42 (los 40 originales más FR-009a y FR-021a):
+**Por requisito**, de 42 (los 40 originales más FR-009a y FR-021a; FR-033a es la decisión misma):
 
 - **Solo en e2e**: FR-008, FR-009a, FR-013, FR-016, FR-020, FR-024, FR-025, FR-027 y FR-033. Son 9.
 - **A medias**: FR-010 y FR-023. Los tokens se verifican en CI, y su aplicación en las vistas, en la
@@ -208,19 +208,28 @@ contrasten, que nadie escriba un valor a mano y que el arranque no crezca. Lo qu
 44 px, de saltos de diseño o de axe en alguna vista, y esa es exactamente la mitad sin compuerta. En la
 001 y la 002, las e2e cubrían vistas nuevas. Acá cubren cambios en las que ya funcionaban.
 
-**Opciones**:
+**Decisión: opción B** (FR-033a, research §15). Un trabajo `e2e` en CI corre la suite completa y
+bloquea la integración. Es la **primera tarea** de la feature, y su corrida en verde ocurre **antes de
+aplicar ningún token**: así queda la línea base, y cualquier fallo posterior es atribuible al
+rediseño. Diez minutos por PR cuestan menos que descubrir una regresión en producción, y la compuerta
+queda para las features siguientes.
 
-| Opción | Qué implica | Costo |
-|---|---|---|
-| **A. Como en la 001 y la 002** | Las e2e se corren en local antes de integrar. La compuerta es la disciplina de quien integra | Ninguno. Lo que se arriesga es que una regresión llegue a `main` |
-| **B. Trabajo `e2e` en CI** (recomendada) | `admin-e2e:e2e` contra emuladores, con los proyectos `escritorio`, `movil-360` y `oscuro`. `perf` sigue en local: medir tiempos en máquinas compartidas da ruido, no señal | Unos 10 minutos por PR (`globalTimeout`). La infraestructura ya existe: la acción `setup-emulators` y una `playwright.config.ts` preparada para CI (`retries`, `forbidOnly`, reportero `github`). Riesgo de inestabilidad: la e2e corre en serie por los cuelgues que se vieron en paralelo |
-| **C. Solo las e2e de esta feature en CI** | `design-system`, `a11y`, `mobile` y `loading-states` | Unos 5 minutos. Deja fuera `keyboard`, `pending-changes` y los flujos, que también se reestilizan |
+**Descartadas**:
 
-**Recomendación: B, como primera tarea de esta feature**, antes de migrar ninguna vista. Así cada
-migración se integra con la compuerta ya puesta, y el principio X queda cubierto en lo que más
-arriesga esta feature. Es una decisión de proyecto, porque cambia el costo de CI de todas las features
-siguientes. Por eso queda **pendiente de aprobación**, y `/speckit-tasks` la incluye o no según lo que
-se decida.
+- **A, local como en la 001 y la 002**: deja la mitad de los criterios a la disciplina de quien
+  integra, justo en la feature que más los arriesga.
+- **C, solo las e2e de esta feature**: las vistas que cambian de estilo son todas. Una selección
+  parcial deja fuera regresiones que esta feature puede causar, y después nadie recuerda que era
+  parcial.
+
+**Queda fuera de CI**: `admin-e2e:perf`, que es la parte de rendimiento de SC-006. En máquinas
+compartidas da ruido, y un umbral que falla al azar enseña a ignorar la compuerta. Se corre antes de
+integrar.
+
+**Con la decisión, la tabla queda así**: SC-001 a SC-005 y SC-007 a SC-008 bloquean en CI. SC-006
+bloquea en CI en 360 px, 44 px, saltos de diseño y axe, y en local en tiempos de carga y volumen. Los
+9 requisitos que se verificaban solo en la e2e pasan a tener compuerta. Los 7 de revisión manual
+siguen siendo manuales.
 
 ### Riesgos sin resolver
 
@@ -240,7 +249,13 @@ se decida.
   de escribir un override, conviene leer los tokens que expone el componente en
   `node_modules/@angular/material/<componente>/_m3-<componente>.scss`: los nombres cambian entre
   versiones mayores, y un token mal escrito no da error, simplemente no aplica.
-- Orden sugerido para `/speckit-tasks`: (0) el trabajo `e2e` en CI, si se aprueba la opción B;
+- **Primera tarea, obligatoria en `tasks.md`** (FR-033a): el trabajo `e2e` en `ci.yml`
+  (research §15). La tarea termina cuando: (a) la suite **completa** corre en ese trabajo y pasa en
+  verde sobre la rama **antes** de que exista ningún token o estilo nuevo; (b) se anota la duración
+  medida en el runner, que es la base del ajuste de `globalTimeout` si `oscuro` lo pide; (c) el
+  trabajo queda marcado como required status check de `main`. Ninguna otra tarea de estilos empieza
+  antes.
+- Orden sugerido para `/speckit-tasks`: (0) el trabajo `e2e` en CI, con la línea base en verde;
   (1) catálogo, compuertas y `_shell.scss`, con las vistas todavía en `--mat-sys-*` y la compuerta
   de literales en modo informe; (2) migración vista por vista, cada una con su esqueleto; (3) la
   compuerta de literales pasa a bloquear al llegar a 0; (4) lenguaje, independiente de la parte
