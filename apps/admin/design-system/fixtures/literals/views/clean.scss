@@ -1,0 +1,11 @@
+// Historia 4, escenario 2: solo tokens y excepciones declaradas.
+.ok {
+  margin: 0;
+  width: 100%;
+  inset: auto;
+  color: currentColor;
+  gap: var(--ds-space-2);
+  margin-inline: calc(-1 * var(--ds-space-3));
+  border: var(--ds-border-width) solid var(--ds-border-subtle);
+  font: inherit;
+}

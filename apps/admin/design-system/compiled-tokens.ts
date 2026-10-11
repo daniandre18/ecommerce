@@ -14,6 +14,8 @@ export interface CompiledTokens {
   names(): string[];
   /** El valor de un token en un esquema, con sus `var()` y sus `light-dark()` ya resueltos. */
   value(name: string, scheme: Scheme): string;
+  /** El valor tal como está escrito en el catálogo: dice si un token es un alias de otro. */
+  declared(name: string): string | undefined;
 }
 
 /**
@@ -41,7 +43,7 @@ export function readTokens(css: string): CompiledTokens {
     return pickScheme(raw, scheme).replace(/var\(\s*(--ds-[\w-]+)\s*\)/g, (_, ref: string) => value(ref, scheme, [...seen, name]));
   };
 
-  return { names: () => [...declared.keys()], value: (name, scheme) => value(name, scheme) };
+  return { names: () => [...declared.keys()], value: (name, scheme) => value(name, scheme), declared: (name) => declared.get(name) };
 }
 
 /** Reemplaza cada `light-dark(a, b)` por el argumento del esquema, respetando paréntesis anidados. */

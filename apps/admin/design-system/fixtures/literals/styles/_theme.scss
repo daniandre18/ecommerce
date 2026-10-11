@@ -1,0 +1,16 @@
+@use 'palette' as p;
+
+$local: #123456;
+
+// La concesión de _theme.scss: puede usar la paleta, y nada más.
+.allowed {
+  color: p.$blue-500;
+}
+
+.literal {
+  color: #3c5afe;
+}
+
+.not-palette {
+  color: $local;
+}
