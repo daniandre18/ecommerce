@@ -1,7 +1,7 @@
 # Compuertas del principio X de la constitución. Un merge se rechaza si falla cualquiera de estos
 # trabajos, sin excepción por plazos.
 #
-# IMPORTANTE: este archivo no bloquea nada por sí solo. Para que un merge se rechace, los seis
+# IMPORTANTE: este archivo no bloquea nada por sí solo. Para que un merge se rechace, los siete
 # trabajos tienen que estar marcados como "required status checks" en la protección de la rama
 # principal (Settings → Branches → Branch protection rules).
 name: ci
@@ -86,3 +86,32 @@ jobs:
           npx --yes firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}
           emulators:exec --only auth,firestore,storage --project demo-ecommerce
           "npm run test:infrastructure && npm run test:functions && npm run test:tools"
+
+  # La suite e2e completa del panel, contra los emuladores (FR-033a de la 003): 360 px sin desborde,
+  # zonas táctiles de 44 px, cero saltos de diseño, axe y los flujos. El rendimiento
+  # (`admin-e2e:perf`) queda fuera: en máquinas compartidas sus tiempos dan ruido, y un umbral que
+  # falla al azar enseña a ignorar la compuerta. Se corre antes de integrar.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-workspace
+      - uses: ./.github/actions/setup-emulators
+        with:
+          firebase-tools-version: ${{ env.FIREBASE_TOOLS_VERSION }}
+      # El `webServer` de playwright.config.ts levanta los emuladores con `firebase`, no con `npx`:
+      # el binario tiene que estar en el PATH, en la misma versión que el resto de los trabajos.
+      - run: npm install -g firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}
+      - run: npx playwright install --with-deps chromium
+      # GitHub define CI=true: la configuración activa forbidOnly, dos reintentos y el reportero github.
+      - run: npx nx run admin-e2e:e2e --skip-nx-cache
+      # Las trazas del primer reintento, para diagnosticar un fallo sin reproducirlo.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-test-results
+          path: |
+            apps/admin-e2e/test-results/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
