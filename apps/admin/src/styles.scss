@@ -4,6 +4,8 @@
 @use 'styles/tokens';
 // El tema de Material, con sus roles de color apuntando al catálogo (T021).
 @use 'styles/theme';
+// El tratamiento de los componentes de Material y las clases de patrón (T022, T023).
+@use 'styles/components';
 // Los estilos del componente raíz, fuera del JavaScript inicial (T017).
 @use 'styles/shell';
 

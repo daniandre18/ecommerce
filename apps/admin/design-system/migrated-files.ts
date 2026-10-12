@@ -6,5 +6,6 @@
  */
 export const MIGRATED_FILES: readonly string[] = [
   // Nacen limpios: el catálogo también pasa por la compuerta (T021, T022).
+  'apps/admin/src/styles/_components.scss',
   'apps/admin/src/styles/_theme.scss',
 ];
