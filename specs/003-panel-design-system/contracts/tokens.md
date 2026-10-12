@@ -21,7 +21,7 @@ sus pares de contraste.
 | `--ds-surface-bar` | Barra superior del comercio | Tinte del primario, distinto de la página |
 | `--ds-surface-overlay` | Diálogo y menú | Como la tarjeta, separada por elevación `overlay` |
 | `--ds-surface-hover` | Capa de hover de una fila o un control | Negro al 4 % (claro) y blanco al 6 % (oscuro), compuestos sobre el plano |
-| `--ds-surface-selected` | Fila seleccionada | Contenedor del primario |
+| `--ds-surface-selected` | Barra de selección (acciones masivas) y fila seleccionada | Propio (T021): un tinte del primario con margen para texto, primario y error encima |
 
 ### Texto e íconos
 

@@ -3,11 +3,11 @@ import type { ContrastPair } from './contrast';
 /**
  * Los pares de color del panel, con su razón por esquema (FR-029). `contrast.spec.ts` las recalcula
  * desde el CSS compilado: si un valor de `_palette.scss` cambia, la prueba falla hasta que la razón
- * nueva se declare aquí, y falla siempre que quede bajo el umbral de su tipo (FR-030, FR-031).
+ * nueva se declare aquí. Cada par exige su umbral de WCAG más 0,2 de margen (`MARGIN` en contrast.ts):
+ * 4,7 para texto, 3,2 para componentes de interfaz y 9,2 entre los dos tonos del anillo de foco.
  *
- * El anillo de foco es de dos tonos (técnica C40 de WCAG): 17,26:1 entre sus tonos, y contra cualquier
- * fondo del sistema, el tono que más contrasta da 5,14:1 o más. Un anillo de un solo color no podía
- * contrastar a la vez con planos casi negros y con el acento amarillo: daba 3,03 (research §2).
+ * El anillo de foco es de dos tonos (técnica C40): 17,26:1 entre sus tonos, y contra cualquier fondo del
+ * sistema el tono que más contrasta da 5,6:1 o más.
  */
 export const CONTRAST_PAIRS: readonly ContrastPair[] = [
   // Texto sobre los tres planos y lo superpuesto.
@@ -90,7 +90,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'page',
-    declared: { light: 4.81, dark: 7.41 },
+    declared: { light: 5.21, dark: 7.41 },
   },
   {
     id: 'text-link/surface-card',
@@ -99,7 +99,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'card',
-    declared: { light: 5.14, dark: 6.24 },
+    declared: { light: 5.56, dark: 6.24 },
   },
   {
     id: 'text-link/surface-bar',
@@ -108,7 +108,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'bar',
-    declared: { light: 4.54, dark: 6.85 },
+    declared: { light: 4.91, dark: 6.85 },
   },
   {
     id: 'text-link/surface-overlay',
@@ -117,7 +117,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'overlay',
-    declared: { light: 5.14, dark: 5.68 },
+    declared: { light: 5.56, dark: 5.68 },
   },
   // Deshabilitado: WCAG lo exime; se declara para que se vea y no se confunda con el error (FR-025).
   {
@@ -147,6 +147,43 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     plane: 'bar',
     declared: { light: 2.37, dark: 3.28 },
   },
+  // La superficie de selección (barra de acciones masivas): texto, botones de texto en primario y el error.
+  {
+    id: 'text-primary/surface-selected',
+    foreground: '--ds-text-primary',
+    background: '--ds-surface-selected',
+    kind: 'text',
+    state: 'rest',
+    plane: 'control',
+    declared: { light: 7.49, dark: 10.76 },
+  },
+  {
+    id: 'text-secondary/surface-selected',
+    foreground: '--ds-text-secondary',
+    background: '--ds-surface-selected',
+    kind: 'text',
+    state: 'rest',
+    plane: 'control',
+    declared: { light: 4.86, dark: 5.07 },
+  },
+  {
+    id: 'primary/surface-selected',
+    foreground: '--ds-primary',
+    background: '--ds-surface-selected',
+    kind: 'text',
+    state: 'rest',
+    plane: 'control',
+    declared: { light: 4.71, dark: 5.08 },
+  },
+  {
+    id: 'status-error/surface-selected',
+    foreground: '--ds-status-error',
+    background: '--ds-surface-selected',
+    kind: 'text',
+    state: 'rest',
+    plane: 'control',
+    declared: { light: 4.71, dark: 4.7 },
+  },
   // Texto sobre su contenedor: botones, chips y avisos.
   {
     id: 'on-primary/primary',
@@ -155,7 +192,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'control',
-    declared: { light: 5.14, dark: 6.92 },
+    declared: { light: 5.56, dark: 6.92 },
   },
   {
     id: 'on-primary-container/primary-container',
@@ -182,7 +219,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'control',
-    declared: { light: 5.19, dark: 7.04 },
+    declared: { light: 5.57, dark: 7.04 },
   },
   // Estados con significado (FR-009): el color sobre cada plano, y el texto sobre su contenedor.
   {
@@ -192,7 +229,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'error',
     plane: 'page',
-    declared: { light: 4.86, dark: 6.86 },
+    declared: { light: 5.21, dark: 6.86 },
   },
   {
     id: 'status-error/surface-card',
@@ -201,7 +238,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'error',
     plane: 'card',
-    declared: { light: 5.19, dark: 5.77 },
+    declared: { light: 5.57, dark: 5.77 },
   },
   {
     id: 'status-error/surface-bar',
@@ -210,7 +247,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'error',
     plane: 'bar',
-    declared: { light: 4.58, dark: 6.34 },
+    declared: { light: 4.91, dark: 6.34 },
   },
   {
     id: 'on-status-error-container/status-error-container',
@@ -228,7 +265,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'page',
-    declared: { light: 4.88, dark: 11.57 },
+    declared: { light: 5.21, dark: 11.57 },
   },
   {
     id: 'status-warning/surface-card',
@@ -237,7 +274,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'card',
-    declared: { light: 5.21, dark: 9.73 },
+    declared: { light: 5.56, dark: 9.73 },
   },
   {
     id: 'status-warning/surface-bar',
@@ -246,7 +283,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'bar',
-    declared: { light: 4.6, dark: 10.69 },
+    declared: { light: 4.91, dark: 10.69 },
   },
   {
     id: 'on-status-warning-container/status-warning-container',
@@ -264,7 +301,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'page',
-    declared: { light: 4.82, dark: 9.76 },
+    declared: { light: 5.22, dark: 9.76 },
   },
   {
     id: 'status-success/surface-card',
@@ -273,7 +310,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'card',
-    declared: { light: 5.15, dark: 8.21 },
+    declared: { light: 5.57, dark: 8.21 },
   },
   {
     id: 'status-success/surface-bar',
@@ -282,7 +319,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'bar',
-    declared: { light: 4.55, dark: 9.02 },
+    declared: { light: 4.92, dark: 9.02 },
   },
   {
     id: 'on-status-success-container/status-success-container',
@@ -425,7 +462,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'ui',
     state: 'focus',
     plane: 'control',
-    declared: { light: 5.19, dark: 6.4 },
+    declared: { light: 5.57, dark: 6.4 },
   },
   {
     id: 'focus-ring/primary',
@@ -435,6 +472,6 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'ui',
     state: 'focus',
     plane: 'control',
-    declared: { light: 5.14, dark: 6.92 },
+    declared: { light: 5.56, dark: 6.92 },
   },
 ];

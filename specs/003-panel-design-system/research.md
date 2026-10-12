@@ -99,6 +99,12 @@ se conserva. Con texto blanco da 1,6:1. Con texto oscuro da 10,31:1, y la refere
 en su toolbar. El acento deja así de competir con el primario azul por tono **y** por luminosidad,
 que es justo lo que la historia 1 pide de la acción principal.
 
+**Revisión del 2026-10-12, política de margen**: los valores de la tabla se ajustaron para pasar apenas
+la barra clara, y varios pares quedaron en 4,54 a 4,60. Pasar por 0,03 o 0,04 no es cumplir: cualquier
+ajuste de un fondo lo rompe. La compuerta exige ahora el umbral de WCAG **más 0,2** (`MARGIN`), y en
+claro se oscurecieron un poco, conservando tono y saturación: primario `#3252fe`, error y destructivo
+`#d00047`, éxito `#1e7560`, aviso `#955b00`. Todos quedan en 4,7 o más.
+
 **El valor exacto se fija en la implementación**: la tabla es el punto de partida. Lo que obliga es
 la prueba de §6. Si un ajuste visual cambia un valor, la prueba recalcula la razón y el catálogo de
 pares se actualiza con la razón nueva.

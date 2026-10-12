@@ -11,7 +11,7 @@
   --ds-surface-bar: light-dark(#{p.$blue-50}, #{p.$ink-850}); // propio: la barra, otro tinte del primario
   --ds-surface-overlay: light-dark(#{p.$white}, #{p.$ink-750}); // propio: diálogos y menús
   --ds-surface-hover: light-dark(#{p.$hover-light}, #{p.$hover-dark}); // referencia: hover tenue de la tabla
-  --ds-surface-selected: var(--ds-primary-container); // propio
+  --ds-surface-selected: light-dark(#{p.$blue-75}, #{p.$blue-850}); // propio: barra de selección y fila seleccionada
 
   // ── Texto ─────────────────────────────────────────────────────────────────────────────────────────
   --ds-text-primary: light-dark(#{p.$gray-700}, #{p.$gray-100}); // referencia: $dark-grey

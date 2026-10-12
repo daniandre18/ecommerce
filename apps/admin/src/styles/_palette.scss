@@ -6,16 +6,19 @@
 // código (FR-006). Lo que no cumplía AA se ajustó en luminosidad, conservando tono y saturación
 // (research §2). Las razones de cada par están en `apps/admin/design-system/contrast-pairs.ts`.
 
-// ── Azul: el primario de la referencia (colors.scss, $blue #536DFE), ajustado de 4,21 a 4,54+ sobre
-//    los tres planos. El fondo de página es su tinte ($background-color #F6F7FF).
+// ── Azul: el primario de la referencia (colors.scss, $blue #536DFE), ajustado de 4,21 a 4,7+ sobre
+//    los tres planos y la selección (4,5 de AA + 0,2 de margen). El fondo de página es su tinte
+//    ($background-color #F6F7FF).
 $blue-25: #f6f7ff;
 $blue-50: #eef0ff;
 $blue-100: #e3e7ff;
 $blue-150: #dfe3ff;
+$blue-75: #e8ebff;
 $blue-300: #8e9dff;
-$blue-500: #3c5afe;
+$blue-500: #3252fe;
 $blue-750: #1c2a99;
 $blue-800: #2c336f;
+$blue-850: #272e63;
 $blue-950: #10173f;
 
 // ── Amarillo: el acento cálido de la referencia ($yellow #ffc260), con texto oscuro (10,31:1) en lugar
@@ -23,15 +26,15 @@ $blue-950: #10173f;
 $yellow-100: #fff1d6;
 $yellow-150: #ffe2b0;
 $yellow-300: #ffc260;
-$yellow-700: #9b5f00;
+$yellow-700: #955b00;
 $yellow-800: #5c3800;
 $yellow-900: #3d2a00;
 
-// ── Rosa: el error de la referencia ($pink #ff4081), oscurecido de 3,33 a 4,58+ para el texto claro.
+// ── Rosa: el error de la referencia ($pink #ff4081), oscurecido de 3,33 a 4,7+ para el texto claro.
 $pink-100: #ffe3ec;
 $pink-150: #ffd9e4;
 $pink-400: #ff6b95;
-$pink-600: #d9004a;
+$pink-600: #d00047;
 $pink-800: #8a0030;
 $pink-900: #4d0019;
 $pink-950: #2a0010;
@@ -40,7 +43,7 @@ $pink-950: #2a0010;
 $green-100: #dcf5ee;
 $green-150: #b6f0e0;
 $green-400: #4fd1b0;
-$green-600: #1f7b65;
+$green-600: #1e7560;
 $green-800: #0f4a3c;
 $green-900: #0f3a30;
 

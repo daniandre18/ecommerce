@@ -65,7 +65,7 @@ interface ContrastPair {
 
 | Regla | Origen |
 |---|---|
-| Umbral por `kind`: `text` 4,5; `large-text` 3; `ui` 3; `two-tone` 9 (C40) | FR-030 |
+| Umbral por `kind`: `text` 4,5; `large-text` 3; `ui` 3; `two-tone` 9 (C40). **Más 0,2 de margen** en todos (`MARGIN`): pasar por 0,03 no es cumplir | FR-030; revisión del 2026-10-12 |
 | `declared` coincide con la razón calculada, redondeada a 2 decimales, en **los dos** esquemas | FR-031, SC-002 |
 | Todo token `--ds-text-*`, `--ds-on-*`, `--ds-icon-*`, `--ds-focus-ring-inner` y `--ds-focus-ring-outer` aparece en al menos un par | research §6 |
 | Todo `--ds-text-*` se declara contra los **tres** planos | FR-029 ("cada plano") |

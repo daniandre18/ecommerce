@@ -29,6 +29,13 @@ export interface ContrastPair {
  */
 export const THRESHOLD: Readonly<Record<ContrastKind, number>> = { text: 4.5, 'large-text': 3, ui: 3, 'two-tone': 9 };
 
+/**
+ * Política de margen del panel (revisión del 2026-10-12): cada par exige 0,2 sobre su umbral de WCAG.
+ * Pasar por 0,03 o 0,04 no es cumplir, es no incumplir por casualidad: cualquier ajuste de un fondo lo
+ * rompe. Con 0,2, un fondo puede moverse un paso de luminosidad sin que nada caiga bajo AA.
+ */
+export const MARGIN = 0.2;
+
 const SCHEMES: readonly Scheme[] = ['light', 'dark'];
 const PLANES: readonly DsToken[] = ['--ds-surface-page', '--ds-surface-card', '--ds-surface-bar'];
 const FOCUS_BACKGROUNDS: readonly DsToken[] = [...PLANES, '--ds-surface-overlay', '--ds-action-accent'];
@@ -53,8 +60,11 @@ export function checkPairs(tokens: CompiledTokens, pairs: readonly ContrastPair[
         break;
       }
       const threshold = THRESHOLD[pair.kind];
+      const required = round2(threshold + MARGIN);
       // WCAG exime a los controles deshabilitados: se declaran para que se vean, no se exigen.
-      if (pair.state !== 'disabled' && ratio < threshold) problems.push(`${pair.id} [${scheme}]: calculada ${fixed(ratio)} < ${decimal(threshold)} (${pair.kind})`);
+      if (pair.state !== 'disabled' && ratio < required) {
+        problems.push(`${pair.id} [${scheme}]: calculada ${fixed(ratio)} < ${decimal(required)} (${pair.kind}: ${decimal(threshold)} de WCAG + ${decimal(MARGIN)} de margen)`);
+      }
       else if (ratio !== pair.declared[scheme]) problems.push(`${pair.id} [${scheme}]: declarada ${fixed(pair.declared[scheme])}, calculada ${fixed(ratio)}`);
     }
   }

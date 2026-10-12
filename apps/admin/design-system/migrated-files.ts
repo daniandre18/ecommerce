@@ -4,4 +4,7 @@
  * T035) agrega aquí sus archivos, y T050 borra la lista: desde entonces bloquea en todo el panel.
  * Rutas desde la raíz del repositorio.
  */
-export const MIGRATED_FILES: readonly string[] = [];
+export const MIGRATED_FILES: readonly string[] = [
+  // Nacen limpios: el catálogo también pasa por la compuerta (T021, T022).
+  'apps/admin/src/styles/_theme.scss',
+];

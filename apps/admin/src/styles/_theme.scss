@@ -1,0 +1,70 @@
+@use '@angular/material' as mat;
+
+// El tema de Material 22 sobre el catálogo del panel (T021, research §1). `mat.theme` necesita una paleta
+// tonal completa —trece tonos de cinco grupos— para generar sus tokens de sistema. Construirla con los
+// colores del panel obligaría a escribir decenas de valores fuera de `_palette.scss`. En cambio, azure
+// queda solo como base estructural, y **todos** los roles de color que usa Material se redirigen a los
+// papeles `--ds-*` con `mat.theme-overrides`: el resultado se ve igual, y la fuente sigue siendo una
+// sola. Este es el único archivo que toca `--mat-sys-*` (FR-001, research §5).
+html {
+  @include mat.theme(
+    (
+      color: mat.$azure-palette,
+      // La fuente del sistema, como decidió la 001: nada que descargar (FR-017).
+      typography:
+        (
+          plain-family: var(--ds-font-family),
+          brand-family: var(--ds-font-family),
+        ),
+      density: 0,
+    )
+  );
+
+  @include mat.theme-overrides(
+    (
+      // Marca: el primario es la identidad. El secundario de Material toma la superficie de selección: lo
+      // usan barras como la de acciones masivas, con texto primario y de error encima.
+      primary: var(--ds-primary),
+      on-primary: var(--ds-on-primary),
+      primary-container: var(--ds-primary-container),
+      on-primary-container: var(--ds-on-primary-container),
+      inverse-primary: var(--ds-primary-container),
+      secondary: var(--ds-primary),
+      on-secondary: var(--ds-on-primary),
+      secondary-container: var(--ds-surface-selected),
+      on-secondary-container: var(--ds-text-primary),
+      // El terciario de Material es la información del panel.
+      tertiary: var(--ds-status-info),
+      on-tertiary: var(--ds-surface-card),
+      tertiary-container: var(--ds-status-info-container),
+      on-tertiary-container: var(--ds-on-status-info-container),
+      // Error: el de validación. La acción destructiva tiene su propio papel (FR-009a).
+      error: var(--ds-status-error),
+      on-error: var(--ds-on-action-destructive),
+      error-container: var(--ds-status-error-container),
+      on-error-container: var(--ds-on-status-error-container),
+      // Planos (FR-010): la página, la tarjeta y lo superpuesto. Sin tinte de elevación: la elevación es
+      // la de `--ds-elevation-*`.
+      background: var(--ds-surface-page),
+      on-background: var(--ds-text-primary),
+      surface: var(--ds-surface-page),
+      surface-dim: var(--ds-surface-page),
+      surface-bright: var(--ds-surface-card),
+      surface-container-lowest: var(--ds-surface-card),
+      surface-container-low: var(--ds-surface-card),
+      surface-container: var(--ds-surface-overlay),
+      surface-container-high: var(--ds-surface-overlay),
+      surface-container-highest: var(--ds-surface-bar),
+      surface-variant: var(--ds-surface-bar),
+      surface-tint: transparent,
+      on-surface: var(--ds-text-primary),
+      on-surface-variant: var(--ds-text-secondary),
+      // Contenedor inverso: el snack-bar.
+      inverse-surface: var(--ds-text-primary),
+      inverse-on-surface: var(--ds-surface-card),
+      // Bordes: el de los controles cumple 3:1 (WCAG 1.4.11); el sutil separa y decora.
+      outline: var(--ds-border-control),
+      outline-variant: var(--ds-border-subtle),
+    )
+  );
+}

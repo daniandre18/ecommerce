@@ -1,34 +1,25 @@
 @use '@angular/cdk';
 @use '@angular/material' as mat;
-// El catálogo de tokens del panel (003): define `--ds-*` en :root. Hasta T021 ninguna vista los usa.
+// El catálogo de tokens del panel (003): define `--ds-*` en :root.
 @use 'styles/tokens';
+// El tema de Material, con sus roles de color apuntando al catálogo (T021).
+@use 'styles/theme';
 // Los estilos del componente raíz, fuera del JavaScript inicial (T017).
 @use 'styles/shell';
 
 // Clase `cdk-visually-hidden`: texto solo para lectores de pantalla. La usan los estados de @ecommerce/ui.
 @include cdk.a11y-visually-hidden();
 
-// Tipografía del sistema en lugar de una fuente web: evita una descarga bloqueante antes del
-// primer render (principio VIII, carga percibida) y se lee bien en cualquier dispositivo.
-$system-font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-
+// Los dos esquemas del sistema operativo, sin código de arranque (FR-002, FR-034).
 html {
   color-scheme: light dark;
-
-  @include mat.theme(
-    (
-      color: mat.$azure-palette,
-      typography: $system-font,
-      density: 0,
-    )
-  );
 }
 
 body {
   margin: 0;
-  background: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-large);
+  background: var(--ds-surface-page);
+  color: var(--ds-text-primary);
+  font: var(--ds-type-body);
 }
 
 // La cruz de un chip mide 18 px: esta zona invisible de 48 px, como la de los botones de Material, la
