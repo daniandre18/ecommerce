@@ -8,5 +8,8 @@
   --ds-text-primary: light-dark(#4a4a4a, #ececf1);
   --ds-text-faint: light-dark(#bbbbbb, #44444c);
   --ds-text-orphan: light-dark(#000000, #ffffff);
-  --ds-focus-ring: light-dark(#3c5afe, #3c5afe);
+  --ds-focus-ring-inner: #ffffff;
+  --ds-focus-ring-outer: #10173f;
+  --ds-gray-a: #767676;
+  --ds-gray-b: #e0e0e0;
 }

@@ -8,9 +8,12 @@ Todos los valores son `--ds-*` ([tokens.md](./tokens.md)). Material se ajusta **
 
 **Estados comunes**, que no se repiten por fila:
 
-- **Foco**: `outline: var(--ds-focus-ring-width) solid var(--ds-focus-ring)` con
-  `outline-offset: var(--ds-focus-ring-offset)`. Lo tiene todo elemento con `:focus-visible` (FR-023).
-  El anillo es un `outline`: no lo tapa un borde ni una sombra, y no ocupa espacio.
+- **Foco**: anillo de dos tonos (técnica C40 de WCAG), en todo elemento con `:focus-visible` (FR-023).
+  El trazo claro es un `outline: var(--ds-focus-ring-width) solid var(--ds-focus-ring-inner)` con
+  `outline-offset: var(--ds-focus-ring-offset)`. El oscuro, un `box-shadow` de `--ds-focus-ring-outer`
+  cuyo radio de expansión cubre la separación, el trazo claro y `--ds-focus-ring-outer-width`. Así, el
+  claro queda entre dos bandas oscuras y se distingue sobre cualquier fondo. Ninguno de los dos ocupa
+  espacio. En colores forzados, el navegador quita la sombra y conserva el `outline`, con color de sistema.
 - **Hover**: capa `--ds-surface-hover` compuesta sobre el reposo. Nunca agrega información (FR-026).
 - **Deshabilitado**: `--ds-text-disabled`, `opacity` del token de Material y `cursor: not-allowed`.
   Nunca usa el tono de error ni su borde (FR-025).

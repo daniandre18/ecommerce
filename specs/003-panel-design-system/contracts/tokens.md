@@ -56,7 +56,7 @@ Para `{s}` en `error`, `warning`, `success` e `info`:
 |---|---|---|
 | `--ds-border-subtle` | Separa la tarjeta del fondo, y las filas entre sí | Decorativo: la tarjeta ya se distingue por el tono |
 | `--ds-border-control` | Límite de un campo, de un checkbox o de un botón con contorno | `ui`, 3:1 contra el plano (WCAG 1.4.11) |
-| `--ds-focus-ring` | Indicador de foco | `ui`, 3:1 contra los tres planos, el superpuesto y el acento (FR-023) |
+| `--ds-focus-ring-inner` / `--ds-focus-ring-outer` | Indicador de foco de dos tonos: trazo claro por dentro, oscuro por fuera (técnica C40 de WCAG) | `two-tone`: 9:1 entre los dos tonos (hoy 17,26). Con eso, contra cualquier fondo uno de los dos da 3:1 o más; contra los fondos del sistema, el peor caso es 5,14 (FR-023) |
 
 ## Tipografía (FR-014 a FR-017)
 
@@ -107,7 +107,8 @@ tarjetas, `space-8`.
 | `--ds-radius-pill` | 9999 px | Botones |
 | `--ds-border-width` | 1 px | Tarjeta, filas, contorno de un control |
 | `--ds-border-width-strong` | 2 px | Campo con foco o con error |
-| `--ds-focus-ring-width` | 3 px | Anillo de foco (hoy `3px` en `styles.scss`) |
+| `--ds-focus-ring-width` | 3 px | Trazo claro del anillo (el ancho que hoy usa `styles.scss`) |
+| `--ds-focus-ring-outer-width` | 2 px | Trazo oscuro, por fuera del claro |
 | `--ds-focus-ring-offset` | 2 px | Separación del anillo |
 | `--ds-elevation-flat` | `none` | Página, barra, filas |
 | `--ds-elevation-card` | Sombra difusa de la referencia; `none` en oscuro | Tarjeta |

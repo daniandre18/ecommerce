@@ -46,7 +46,11 @@
   // ── Bordes y foco (FR-013, FR-023) ────────────────────────────────────────────────────────────────
   --ds-border-subtle: light-dark(#{p.$gray-200}, #{p.$ink-700}); // decorativo: separa tarjeta y filas
   --ds-border-control: light-dark(#{p.$gray-500}, #{p.$gray-550}); // 3:1 contra los planos (WCAG 1.4.11)
-  --ds-focus-ring: light-dark(#{p.$blue-500}, #{p.$blue-520}); // 3:1 contra planos, superpuesto y acento
+  // El anillo de foco es de dos tonos (técnica C40 de WCAG): un trazo claro por dentro y uno oscuro por
+  // fuera, con 17,26:1 entre sí. Con 9:1 o más, todo fondo contrasta 3:1 o más con uno de los dos, así
+  // que el anillo no depende del plano, del esquema ni del color del control (FR-023).
+  --ds-focus-ring-inner: #{p.$white};
+  --ds-focus-ring-outer: #{p.$blue-950};
 
   // ── Tipografía (FR-014 a FR-017) ──────────────────────────────────────────────────────────────────
   // La fuente del sistema, como decidió la 001: nada que descargar. La jerarquía sale de tamaño, peso,
@@ -100,7 +104,8 @@
   --ds-radius-pill: 9999px; // botones
   --ds-border-width: 1px; // tarjeta, filas, contorno de un control
   --ds-border-width-strong: 2px; // campo con foco o con error
-  --ds-focus-ring-width: 3px; // el anillo de foco que ya usaba el panel
+  --ds-focus-ring-width: 3px; // el trazo claro: el ancho que ya usaba el panel
+  --ds-focus-ring-outer-width: 2px; // el trazo oscuro, por fuera del claro
   --ds-focus-ring-offset: 2px;
 
   // ── Elevación (FR-011): un nivel por papel ───────────────────────────────────────────────────────

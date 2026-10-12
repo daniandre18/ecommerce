@@ -5,8 +5,9 @@ import type { ContrastPair } from './contrast';
  * desde el CSS compilado: si un valor de `_palette.scss` cambia, la prueba falla hasta que la razón
  * nueva se declare aquí, y falla siempre que quede bajo el umbral de su tipo (FR-030, FR-031).
  *
- * El margen más justo es el del anillo de foco en oscuro (3,03 contra lo superpuesto y 3,09 contra el
- * acento): tiene que contrastar a la vez con planos casi negros y con un amarillo claro (research §2).
+ * El anillo de foco es de dos tonos (técnica C40 de WCAG): 17,26:1 entre sus tonos, y contra cualquier
+ * fondo del sistema, el tono que más contrasta da 5,14:1 o más. Un anillo de un solo color no podía
+ * contrastar a la vez con planos casi negros y con el acento amarillo: daba 3,03 (research §2).
  */
 export const CONTRAST_PAIRS: readonly ContrastPair[] = [
   // Texto sobre los tres planos y lo superpuesto.
@@ -44,7 +45,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'overlay',
-    declared: { light: 8.86, dark: 12.7 },
+    declared: { light: 8.86, dark: 12.04 },
   },
   {
     id: 'text-secondary/surface-page',
@@ -80,7 +81,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'overlay',
-    declared: { light: 5.74, dark: 5.98 },
+    declared: { light: 5.74, dark: 5.67 },
   },
   {
     id: 'text-link/surface-page',
@@ -116,7 +117,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'overlay',
-    declared: { light: 5.14, dark: 5.99 },
+    declared: { light: 5.14, dark: 5.68 },
   },
   // Deshabilitado: WCAG lo exime; se declara para que se vea y no se confunda con el error (FR-025).
   {
@@ -328,7 +329,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     plane: 'control',
     declared: { light: 8.71, dark: 11.16 },
   },
-  // Límites de controles (WCAG 1.4.11) y foco (FR-023, WCAG 2.4.11).
+  // Límites de controles (WCAG 1.4.11).
   {
     id: 'border-control/surface-page',
     foreground: '--ds-border-control',
@@ -356,49 +357,84 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     plane: 'bar',
     declared: { light: 3.39, dark: 4.04 },
   },
+  // Anillo de foco (FR-023): sus dos tonos entre sí (C40), y el margen contra cada fondo del sistema.
+  {
+    id: 'focus-ring-inner/focus-ring-outer',
+    foreground: '--ds-focus-ring-inner',
+    background: '--ds-focus-ring-outer',
+    kind: 'two-tone',
+    state: 'focus',
+    plane: 'control',
+    declared: { light: 17.26, dark: 17.26 },
+  },
   {
     id: 'focus-ring/surface-page',
-    foreground: '--ds-focus-ring',
+    foreground: '--ds-focus-ring-inner',
+    alternate: '--ds-focus-ring-outer',
     background: '--ds-surface-page',
     kind: 'ui',
     state: 'focus',
     plane: 'page',
-    declared: { light: 4.81, dark: 3.75 },
+    declared: { light: 16.17, dark: 18.49 },
   },
   {
     id: 'focus-ring/surface-card',
-    foreground: '--ds-focus-ring',
+    foreground: '--ds-focus-ring-inner',
+    alternate: '--ds-focus-ring-outer',
     background: '--ds-surface-card',
     kind: 'ui',
     state: 'focus',
     plane: 'card',
-    declared: { light: 5.14, dark: 3.15 },
+    declared: { light: 17.26, dark: 15.56 },
   },
   {
     id: 'focus-ring/surface-bar',
-    foreground: '--ds-focus-ring',
+    foreground: '--ds-focus-ring-inner',
+    alternate: '--ds-focus-ring-outer',
     background: '--ds-surface-bar',
     kind: 'ui',
     state: 'focus',
     plane: 'bar',
-    declared: { light: 4.54, dark: 3.46 },
+    declared: { light: 15.24, dark: 17.09 },
   },
   {
     id: 'focus-ring/surface-overlay',
-    foreground: '--ds-focus-ring',
+    foreground: '--ds-focus-ring-inner',
+    alternate: '--ds-focus-ring-outer',
     background: '--ds-surface-overlay',
     kind: 'ui',
     state: 'focus',
     plane: 'overlay',
-    declared: { light: 5.14, dark: 3.03 },
+    declared: { light: 17.26, dark: 14.18 },
   },
   {
     id: 'focus-ring/action-accent',
-    foreground: '--ds-focus-ring',
+    foreground: '--ds-focus-ring-inner',
+    alternate: '--ds-focus-ring-outer',
     background: '--ds-action-accent',
     kind: 'ui',
     state: 'focus',
     plane: 'control',
-    declared: { light: 3.22, dark: 3.09 },
+    declared: { light: 10.8, dark: 10.8 },
+  },
+  {
+    id: 'focus-ring/action-destructive',
+    foreground: '--ds-focus-ring-inner',
+    alternate: '--ds-focus-ring-outer',
+    background: '--ds-action-destructive',
+    kind: 'ui',
+    state: 'focus',
+    plane: 'control',
+    declared: { light: 5.19, dark: 6.4 },
+  },
+  {
+    id: 'focus-ring/primary',
+    foreground: '--ds-focus-ring-inner',
+    alternate: '--ds-focus-ring-outer',
+    background: '--ds-primary',
+    kind: 'ui',
+    state: 'focus',
+    plane: 'control',
+    declared: { light: 5.14, dark: 6.92 },
   },
 ];

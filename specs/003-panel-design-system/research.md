@@ -202,8 +202,14 @@ repositorio**: 0 hallazgos en el panel (SC-001).
   nombra un token que no existe.
 - **Colores con transparencia** (capas de estado de hover, por ejemplo): se componen sobre el fondo
   del par antes de calcular. Es lo que ve la persona.
-- **Foco**: el indicador (`--ds-focus-ring`) se declara como par `ui` contra **cada uno** de los tres
-  planos y contra el fondo del acento. FR-023 lo pide sobre cualquier plano.
+- **Foco**: el indicador es de **dos tonos** (técnica C40 de WCAG), revisado el 2026-10-12. Un anillo
+  de un solo color tenía que contrastar 3:1 a la vez con planos casi negros y con el acento amarillo
+  claro. La franja de luminancia que lo permitía era tan angosta que obligó a oscurecer lo superpuesto,
+  y aun así el margen quedó en 3,03 y 3,09: no incumplir por casualidad, no cumplir. Con un trazo claro
+  (`#ffffff`) por dentro y uno oscuro (`#10173f`) por fuera, a 17,26:1 entre sí, todo fondo contrasta
+  3:1 o más con uno de los dos (C40 pide 9:1), y el anillo deja de depender del fondo. Contra los fondos
+  del sistema, el peor caso es el botón primario claro: **5,14**. Lo superpuesto oscuro vuelve a
+  `#2a2a35`.
 
 **Por qué compilar y no leer el SCSS**: la razón tiene que salir de lo que llega al navegador, con
 los ajustes de `light-dark()` y las referencias resueltas. Leer las variables Sass reproduciría la

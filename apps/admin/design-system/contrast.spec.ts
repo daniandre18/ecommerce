@@ -53,13 +53,31 @@ describe('el verificador de contraste', () => {
     expect(checkPairs(fixture, [ghost])).toEqual([expect.stringContaining('--ds-text-ghost')]);
   });
 
-  it('exige que todo token de texto esté en un par, contra los tres planos, y el foco contra los planos, el superpuesto y el acento', () => {
+  it('exige que todo token de texto esté en un par, contra los tres planos, y el anillo de foco con sus dos tonos', () => {
     const problems = checkCoverage(fixture, [primaryOnCard]);
     expect(problems).toContain('--ds-text-orphan aparece en _tokens.scss y en ningún par');
     expect(problems).toContain('--ds-text-primary no se declara contra --ds-surface-page');
     expect(problems).toContain('--ds-text-primary no se declara contra --ds-surface-bar');
-    expect(problems).toContain('--ds-focus-ring no se declara contra --ds-action-accent');
+    expect(problems).toContain('--ds-focus-ring-inner no se declara contra --ds-action-accent');
+    expect(problems).toContain('El anillo de foco no declara el par de dos tonos entre --ds-focus-ring-inner y --ds-focus-ring-outer (C40)');
     expect(problems).not.toContain('--ds-text-primary no se declara contra --ds-surface-card');
+  });
+
+  // El anillo de foco es de dos tonos (técnica C40 de WCAG): si sus tonos tienen 9:1 entre sí, todo
+  // fondo contrasta 3:1 o más con uno de los dos, y el anillo deja de depender del fondo.
+  it('un par de dos tonos exige 9:1 entre los tonos', () => {
+    const twoTone = pair({ foreground: '--ds-focus-ring-inner', background: '--ds-focus-ring-outer', kind: 'two-tone', state: 'focus', plane: 'control', declared: { light: 17.26, dark: 17.26 } });
+    expect(checkPairs(fixture, [twoTone])).toEqual([]);
+    const weak = pair({ foreground: '--ds-gray-a', background: '--ds-gray-b', kind: 'two-tone', state: 'focus', plane: 'control', declared: { light: 3.44, dark: 3.44 } });
+    expect(checkPairs(fixture, [weak])).toEqual(['gray-a/gray-b [light]: calculada 3,44 < 9 (two-tone)', 'gray-a/gray-b [dark]: calculada 3,44 < 9 (two-tone)']);
+  });
+
+  it('contra un fondo, el anillo de dos tonos cuenta con el tono que más contrasta', () => {
+    // Sobre la tarjeta clara, el tono interior (blanco) da 1; el exterior, 17,26.
+    const ring = pair({ foreground: '--ds-focus-ring-inner', alternate: '--ds-focus-ring-outer', background: '--ds-surface-card', kind: 'ui', state: 'focus', declared: { light: 17.26, dark: 15.56 } });
+    expect(checkPairs(fixture, [ring])).toEqual([]);
+    const { alternate: _, ...single } = ring;
+    expect(checkPairs(fixture, [single])[0]).toBe('focus-ring-inner/surface-card [light]: calculada 1,00 < 3 (ui)');
   });
 });
 

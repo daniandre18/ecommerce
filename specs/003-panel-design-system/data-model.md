@@ -55,20 +55,21 @@ interface ContrastPair {
   readonly id: string;                       // 'text-secondary/surface-card'
   readonly foreground: `--ds-${string}`;     // texto, ícono, borde o indicador
   readonly background: `--ds-${string}`;     // uno de los planos, o el fondo de un control
-  readonly kind: 'text' | 'large-text' | 'ui';
+  readonly kind: 'text' | 'large-text' | 'ui' | 'two-tone';
   readonly state: 'rest' | 'hover' | 'focus' | 'active' | 'disabled' | 'loading' | 'error' | 'empty';
   readonly plane: 'page' | 'card' | 'bar' | 'overlay' | 'control';
   readonly declared: { readonly light: number; readonly dark: number };  // dos decimales
+  readonly alternate?: `--ds-${string}`;    // el otro tono de un indicador de dos tonos
 }
 ```
 
 | Regla | Origen |
 |---|---|
-| Umbral por `kind`: `text` 4,5; `large-text` 3; `ui` 3 | FR-030 |
+| Umbral por `kind`: `text` 4,5; `large-text` 3; `ui` 3; `two-tone` 9 (C40) | FR-030 |
 | `declared` coincide con la razón calculada, redondeada a 2 decimales, en **los dos** esquemas | FR-031, SC-002 |
-| Todo token `--ds-text-*`, `--ds-on-*`, `--ds-icon-*` y `--ds-focus-ring` aparece en al menos un par | research §6 |
+| Todo token `--ds-text-*`, `--ds-on-*`, `--ds-icon-*`, `--ds-focus-ring-inner` y `--ds-focus-ring-outer` aparece en al menos un par | research §6 |
 | Todo `--ds-text-*` se declara contra los **tres** planos | FR-029 ("cada plano") |
-| `--ds-focus-ring` se declara contra los tres planos, el superpuesto y el fondo del acento | FR-023 |
+| El anillo de foco declara su par `two-tone` (9:1 entre `--ds-focus-ring-inner` y `--ds-focus-ring-outer`, técnica C40), y se declara también contra los tres planos, el superpuesto y el acento con `alternate`: cuenta el tono que más contrasta | FR-023 |
 | Un par en `state: 'disabled'` **no** se exige (WCAG lo exime), pero se declara igual, con su razón y `kind: 'ui'`. Así queda a la vista y no se confunde con el error (FR-025) | Edge case |
 | Un color con transparencia se compone sobre `background` antes de calcular | research §6 |
 
@@ -176,7 +177,7 @@ cada uno es una fila de la tabla de tratamientos:
 
 ```text
 reposo ──hover──▶ hover          (solo refuerza: FR-026)
-   │  ──teclado──▶ foco          (anillo --ds-focus-ring, siempre visible)
+   │  ──teclado──▶ foco          (anillo de dos tonos, siempre visible)
    │  ──pulsar───▶ activo
    │  ──[disabled]▶ deshabilitado (opacidad + cursor + sin borde de error: FR-025)
    │  ──datos────▶ cargando ──▶ contenido | error | vacío   (SC-012 de la 001, sin cambios de forma)

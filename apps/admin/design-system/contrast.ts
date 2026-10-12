@@ -1,7 +1,7 @@
 import { contrastRatio, round2 } from './color';
 import type { CompiledTokens, Scheme } from './compiled-tokens';
 
-export type ContrastKind = 'text' | 'large-text' | 'ui';
+export type ContrastKind = 'text' | 'large-text' | 'ui' | 'two-tone';
 export type ContrastState = 'rest' | 'hover' | 'focus' | 'active' | 'disabled' | 'loading' | 'error' | 'empty';
 export type ContrastPlane = 'page' | 'card' | 'bar' | 'overlay' | 'control';
 export type DsToken = `--ds-${string}`;
@@ -10,6 +10,11 @@ export type DsToken = `--ds-${string}`;
 export interface ContrastPair {
   readonly id: string;
   readonly foreground: DsToken;
+  /**
+   * El otro tono de un indicador de dos tonos (el anillo de foco): contra el fondo cuenta el tono que
+   * más contrasta, porque basta con que uno de los dos se distinga (técnica C40 de WCAG).
+   */
+  readonly alternate?: DsToken;
   readonly background: DsToken;
   readonly kind: ContrastKind;
   readonly state: ContrastState;
@@ -18,12 +23,17 @@ export interface ContrastPair {
   readonly declared: { readonly light: number; readonly dark: number };
 }
 
-/** WCAG 2.2 AA (FR-030). */
-export const THRESHOLD: Readonly<Record<ContrastKind, number>> = { text: 4.5, 'large-text': 3, ui: 3 };
+/**
+ * WCAG 2.2 AA (FR-030). `two-tone` es la razón entre los dos tonos de un indicador (técnica C40): con
+ * 9:1 entre ellos, todo fondo contrasta 3:1 o más con uno de los dos.
+ */
+export const THRESHOLD: Readonly<Record<ContrastKind, number>> = { text: 4.5, 'large-text': 3, ui: 3, 'two-tone': 9 };
 
 const SCHEMES: readonly Scheme[] = ['light', 'dark'];
 const PLANES: readonly DsToken[] = ['--ds-surface-page', '--ds-surface-card', '--ds-surface-bar'];
 const FOCUS_BACKGROUNDS: readonly DsToken[] = [...PLANES, '--ds-surface-overlay', '--ds-action-accent'];
+const FOCUS_INNER = '--ds-focus-ring-inner';
+const FOCUS_OUTER = '--ds-focus-ring-outer';
 
 const decimal = (value: number) => (Number.isInteger(value) ? String(value) : String(value).replace('.', ','));
 const fixed = (value: number) => value.toFixed(2).replace('.', ',');
@@ -35,7 +45,9 @@ export function checkPairs(tokens: CompiledTokens, pairs: readonly ContrastPair[
     for (const scheme of SCHEMES) {
       let ratio: number;
       try {
-        ratio = round2(contrastRatio(tokens.value(pair.foreground, scheme), tokens.value(pair.background, scheme)));
+        const background = tokens.value(pair.background, scheme);
+        const tones = [pair.foreground, ...(pair.alternate ? [pair.alternate] : [])];
+        ratio = round2(Math.max(...tones.map((tone) => contrastRatio(tokens.value(tone, scheme), background))));
       } catch (error) {
         problems.push(`${pair.id} [${scheme}]: ${(error as Error).message}`);
         break;
@@ -57,9 +69,10 @@ export function checkPairs(tokens: CompiledTokens, pairs: readonly ContrastPair[
 export function checkCoverage(tokens: CompiledTokens, pairs: readonly ContrastPair[]): string[] {
   const problems: string[] = [];
   const foregrounds = (token: string) => pairs.filter((pair) => pair.foreground === token);
-  const mustPair = tokens.names().filter((name) => /^--ds-(text|on|icon)-/.test(name) || name === '--ds-focus-ring');
+  const mustPair = tokens.names().filter((name) => /^--ds-(text|on|icon)-/.test(name) || name === FOCUS_INNER || name === FOCUS_OUTER);
+  const appears = (token: string) => pairs.some((pair) => pair.foreground === token || pair.alternate === token || (pair.kind === 'two-tone' && pair.background === token));
   for (const token of mustPair) {
-    if (foregrounds(token).length === 0) problems.push(`${token} aparece en _tokens.scss y en ningún par`);
+    if (!appears(token)) problems.push(`${token} aparece en _tokens.scss y en ningún par`);
   }
   for (const token of tokens.names().filter((name) => name.startsWith('--ds-text-'))) {
     if (foregrounds(token).length === 0) continue;
@@ -67,9 +80,12 @@ export function checkCoverage(tokens: CompiledTokens, pairs: readonly ContrastPa
       if (!foregrounds(token).some((pair) => pair.background === plane)) problems.push(`${token} no se declara contra ${plane}`);
     }
   }
-  if (tokens.names().includes('--ds-focus-ring')) {
+  if (tokens.names().includes(FOCUS_INNER)) {
+    const twoTone = pairs.some((pair) => pair.kind === 'two-tone' && pair.foreground === FOCUS_INNER && pair.background === FOCUS_OUTER);
+    if (!twoTone) problems.push(`El anillo de foco no declara el par de dos tonos entre ${FOCUS_INNER} y ${FOCUS_OUTER} (C40)`);
+    // Lo garantiza el par de dos tonos; contra cada fondo se declara igual, para que el margen se vea.
     for (const background of FOCUS_BACKGROUNDS) {
-      if (!foregrounds('--ds-focus-ring').some((pair) => pair.background === background)) problems.push(`--ds-focus-ring no se declara contra ${background}`);
+      if (!foregrounds(FOCUS_INNER).some((pair) => pair.background === background && pair.alternate === FOCUS_OUTER)) problems.push(`${FOCUS_INNER} no se declara contra ${background}`);
     }
   }
   return problems;
