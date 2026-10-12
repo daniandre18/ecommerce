@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { call, EMULATORS, idTokenOf, OWNER, PASSWORD, productAsOwner, signIn } from './support';
+import { readOnlyCollaborator } from './design-system-support';
+import { call, idTokenOf, OWNER, productAsOwner, signIn } from './support';
 
 /** Un sufijo por corrida y por proyecto: los recorridos no chocan entre sí ni con corridas viejas. */
 const runId = () => `${test.info().project.name}-${Date.now()}`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -23,28 +24,6 @@ async function category(name: string, parentId: string | null = null): Promise<s
   const result = body.result as { ok: boolean; data: { categoryId: string } };
   expect(result.ok).toBe(true);
   return result.data.categoryId;
-}
-
-/**
- * Una cuenta nueva con un rol que solo lee el catálogo (Historia 2, escenario 10). El rol de
- * Catálogo sembrado sí edita el catálogo, así que no sirve para esto.
- */
-async function readOnlyCollaborator(run: string): Promise<string> {
-  const owner = await idTokenOf(OWNER);
-  const created = await call(owner, 'createRole', { tenantId: 't1', name: `Solo lectura ${run}` });
-  const { roleId } = (created.body.result as { data: { roleId: string } }).data;
-  await call(owner, 'updateRole', { tenantId: 't1', roleId, permissions: ['catalog.read'] });
-  const email = `lector-${run}@t1.test`;
-  const invited = await call(owner, 'inviteCollaborator', { tenantId: 't1', email, roleId });
-  const { token } = (invited.body.result as { data: { token: string } }).data;
-  await fetch(`${EMULATORS.auth}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=demo-key`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password: PASSWORD, returnSecureToken: true }),
-  });
-  const accepted = await call(await idTokenOf(email), 'acceptInvitation', { invitationToken: token });
-  expect(accepted.body.result).toEqual(expect.objectContaining({ ok: true }));
-  return email;
 }
 
 // T062 — Historia 2, pasos 1 a 7 de quickstart.md, en escritorio y a 360 px.

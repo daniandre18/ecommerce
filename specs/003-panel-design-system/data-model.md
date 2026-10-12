@@ -127,6 +127,7 @@ pantalla por pantalla, está en [contracts/primary-actions.md](./contracts/prima
 interface PrimaryAction {
   readonly screen: string;           // 'catálogo', 'diálogo: nuevo producto'
   readonly kind: 'view' | 'dialog';
+  readonly component: string;        // la clase: cruza la lista con las rutas y los diálogos
   readonly action: string | null;    // nombre accesible del botón, o null si no tiene
   readonly destructive: readonly string[];  // nombres de los botones destructivos visibles (FR-009a)
   readonly planes: 'page-card-bar' | 'page-card';  // dentro o fuera del marco del comercio (SC-005)
@@ -134,7 +135,8 @@ interface PrimaryAction {
 }
 ```
 
-**Reglas**: toda ruta de `app.routes.ts` con `loadComponent` y todo componente que se abre con
+**Reglas**: toda ruta de `app.routes.ts` con `loadComponent` —salvo los marcos declarados en
+`screens.ts`, hoy `TenantShell`— y todo componente que se abre con
 `MatDialog.open` figura en la lista. Una prueba unitaria compara la lista con esos dos inventarios y
 falla si falta una pantalla. En cada pantalla, el número de elementos con el acento computado es
 0 si `action` es `null`, y como máximo 1 si no lo es; cuando hay 1, su nombre accesible es `action`.
