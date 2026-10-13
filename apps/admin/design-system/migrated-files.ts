@@ -22,4 +22,7 @@ export const MIGRATED_FILES: readonly string[] = [
   // T027: autenticación.
   'apps/admin/src/app/auth/login/login.ts',
   'apps/admin/src/app/auth/sign-up/sign-up.ts',
+  // T028: comercios e invitación.
+  'apps/admin/src/app/tenant/tenant-switcher/tenant-picker.ts',
+  'apps/admin/src/app/team/accept-invitation/accept-invitation.ts',
 ];

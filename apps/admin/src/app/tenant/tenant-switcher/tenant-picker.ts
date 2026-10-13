@@ -19,13 +19,14 @@ import { MyTenants } from '../my-tenants';
     } @else if (tenants.hasValue()) {
       @if (tenants.value().length === 0) {
         <ui-empty-state
+          class="ds-card"
           heading="Tu cuenta no tiene comercios activos"
           message="Si te invitaron, aceptá la invitación desde el correo que recibiste."
         >
           <button matButton type="button" (click)="signOut.run()">Cerrar sesión</button>
         </ui-empty-state>
       } @else {
-        <ul>
+        <ul class="ds-card">
           @for (tenant of tenants.value(); track tenant.tenantId) {
             <li>
               <a [routerLink]="['/t', tenant.tenantId, 'catalog']">
@@ -38,23 +39,26 @@ import { MyTenants } from '../my-tenants';
         <button matButton type="button" (click)="signOut.run()">Cerrar sesión</button>
       }
     } @else {
-      <ui-skeleton rows="2" rowHeight="64px" label="Cargando tus comercios…" />
+      <!-- En la tarjeta, como la lista que reemplaza: mismo relleno, borde y radio (FR-027). -->
+      <ui-skeleton class="ds-card" rows="2" rowHeight="64px" label="Cargando tus comercios…" />
     }
   `,
   styles: `
     :host {
       display: block;
       max-width: 480px;
-      margin: 32px auto;
+      margin: var(--ds-space-8) auto;
     }
 
     h1 {
-      font: var(--mat-sys-headline-small);
+      margin: 0 0 var(--ds-space-6);
+      font: var(--ds-type-page-title);
+      letter-spacing: var(--ds-type-page-title-tracking);
     }
 
+    /* Fuera del comercio hay dos planos, página y tarjeta: la lista es la tarjeta (SC-005). */
     ul {
-      margin: 0 0 16px;
-      padding: 0;
+      margin: 0 0 var(--ds-space-4);
       list-style: none;
     }
 
@@ -64,10 +68,14 @@ import { MyTenants } from '../my-tenants';
       justify-content: center;
       min-height: 64px;
       box-sizing: border-box;
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--mat-sys-outline-variant);
+      padding: var(--ds-space-2) var(--ds-space-3);
+      border-bottom: var(--ds-border-width) solid var(--ds-border-subtle);
       color: inherit;
       text-decoration: none;
+    }
+
+    li:last-child a {
+      border-bottom-color: transparent;
     }
 
     a:hover .name {
@@ -75,12 +83,12 @@ import { MyTenants } from '../my-tenants';
     }
 
     .name {
-      font: var(--mat-sys-title-medium);
+      font: var(--ds-type-subtitle);
     }
 
     .role {
-      font: var(--mat-sys-body-medium);
-      color: var(--mat-sys-on-surface-variant);
+      font: var(--ds-type-body);
+      color: var(--ds-text-secondary);
     }
   `,
 })

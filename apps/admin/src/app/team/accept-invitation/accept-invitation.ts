@@ -23,6 +23,8 @@ const REJECTIONS: Readonly<Record<string, string>> = {
 @Component({
   selector: 'app-accept-invitation',
   imports: [MatButton, RouterLink],
+  // Fuera del comercio hay dos planos, página y tarjeta: la vista entera es la tarjeta (SC-005).
+  host: { class: 'ds-card' },
   template: `
     <h1>Te invitaron a un comercio</h1>
     @if (user.value(); as account) {
@@ -32,18 +34,25 @@ const REJECTIONS: Readonly<Record<string, string>> = {
     <div role="alert" class="failure">{{ failure() }}</div>
 
     @if (alreadyMember()) {
-      <a matButton="filled" [routerLink]="['/t', tenantId()]">Entrar al comercio</a>
+      <a matButton="filled" class="ds-primary-action" [routerLink]="['/t', tenantId()]">Entrar al comercio</a>
     } @else if (wrongAccount()) {
-      <button matButton="filled" type="button" (click)="signOut.run()">Cerrar sesión</button>
+      <!-- Secundaria: con otra cuenta no hay nada que aceptar acá, y salir no es la tarea de la vista. -->
+      <button matButton type="button" (click)="signOut.run()">Cerrar sesión</button>
     } @else {
-      <button matButton="filled" type="button" [disabled]="accepting()" (click)="accept()">Aceptar invitación</button>
+      <button matButton="filled" class="ds-primary-action" type="button" [disabled]="accepting()" (click)="accept()">Aceptar invitación</button>
     }
   `,
   styles: `
     :host {
       display: block;
       max-width: 480px;
-      margin: 48px auto;
+      margin: var(--ds-space-12) auto;
+    }
+
+    h1 {
+      margin: 0 0 var(--ds-space-6);
+      font: var(--ds-type-page-title);
+      letter-spacing: var(--ds-type-page-title-tracking);
     }
 
     .failure:empty {
@@ -51,9 +60,9 @@ const REJECTIONS: Readonly<Record<string, string>> = {
     }
 
     .failure {
-      margin-bottom: 16px;
-      color: var(--mat-sys-error);
-      font: var(--mat-sys-body-medium);
+      margin-bottom: var(--ds-space-4);
+      color: var(--ds-status-error);
+      font: var(--ds-type-body);
     }
   `,
 })

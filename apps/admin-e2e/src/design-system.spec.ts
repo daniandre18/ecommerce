@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { expectAccent, expectBackground, expectDestructive, expectPlanes, expectTypeHierarchy } from './design-system-support';
-import { OWNER, productAsOwner, signIn } from './support';
+import { call, idTokenOf, MULTI, OWNER, productAsOwner, signIn, signUpFromLink } from './support';
 
 // 003 — el sistema de diseño, medido en lo que el navegador computa. Corre en los tres proyectos,
 // `oscuro` incluido. Cada caso de una pantalla se titula `pantalla: <screen>`, con el `screen` textual
@@ -85,4 +85,59 @@ test('pantalla: crear cuenta', async ({ page }) => {
   await expectDestructive(page, []);
   await expectPlanes(page, 'page-card');
   await expectTypeHierarchy(page);
+});
+
+// T028: comercios e invitación, también fuera del marco: página y tarjeta, sin barra.
+test('pantalla: tus comercios', async ({ page }) => {
+  await page.goto('/login');
+  await signIn(page, MULTI);
+  await expect(page.getByRole('heading', { level: 1, name: 'Tus comercios' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Comercio Dos/ })).toBeVisible();
+  await expectAccent(page, null);
+  await expectDestructive(page, []);
+  await expectPlanes(page, 'page-card');
+  await expectTypeHierarchy(page);
+});
+
+/** Un enlace de invitación nuevo de la Propietaria de t1 para `email`, con el rol de Catálogo. */
+async function invitation(email: string): Promise<string> {
+  const { body } = await call(await idTokenOf(OWNER), 'inviteCollaborator', { tenantId: 't1', email, roleId: 'catalog' });
+  return `/invitation/${(body.result as { data: { token: string } }).data.token}`;
+}
+
+test.describe('pantalla: invitación', () => {
+  test('pendiente: el acento es "Aceptar invitación"', async ({ page }) => {
+    const email = `invitada-${Date.now()}@t1.test`;
+    await signUpFromLink(page, await invitation(email), email, 'Invitada');
+    await expectAccent(page, 'Aceptar invitación');
+    await expectDestructive(page, []);
+    await expectPlanes(page, 'page-card');
+    await expectTypeHierarchy(page);
+  });
+
+  // Los estados son excluyentes: si la cuenta ya es miembro, el acento pasa a "Entrar al comercio".
+  test('ya es miembro: el acento es "Entrar al comercio"', async ({ page }) => {
+    const email = `doble-${Date.now()}@t1.test`;
+    const [first, second] = [await invitation(email), await invitation(email)];
+    await signUpFromLink(page, first, email, 'Doble');
+    await page.getByRole('button', { name: 'Aceptar invitación' }).click();
+    await expect(page).toHaveURL(/\/t\/t1\/catalog$/);
+    await page.goto(second);
+    await page.getByRole('button', { name: 'Aceptar invitación' }).click();
+    await expect(page.getByRole('link', { name: 'Entrar al comercio' })).toBeVisible();
+    await expectAccent(page, 'Entrar al comercio');
+  });
+
+  // Con otra cuenta, lo único que queda es "Cerrar sesión", que es secundaria: ningún acento.
+  test('de otra cuenta: sin acento', async ({ page }) => {
+    const link = await invitation(`otra-${Date.now()}@t1.test`);
+    await page.goto('/login');
+    await signIn(page, OWNER);
+    await expect(page).toHaveURL(/\/t\/t1\/catalog$/);
+    await page.goto(link);
+    await page.getByRole('button', { name: 'Aceptar invitación' }).click();
+    await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible();
+    await expectAccent(page, null);
+    await expectDestructive(page, []);
+  });
 });
