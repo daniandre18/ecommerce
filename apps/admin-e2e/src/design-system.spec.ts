@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { expectAccent, expectBackground, expectDestructive } from './design-system-support';
+import { expectAccent, expectBackground, expectDestructive, expectPlanes, expectTypeHierarchy } from './design-system-support';
 import { OWNER, productAsOwner, signIn } from './support';
 
 // 003 — el sistema de diseño, medido en lo que el navegador computa. Corre en los tres proyectos,
@@ -66,4 +66,23 @@ test('marco del comercio: barra, nombre en título de sección y enlace activo e
   expect(found.tenant).toBe(found.expected.font);
   expect(found.link).toBe(found.expected.link);
   expect(found.underline, 'el enlace activo no depende solo del color (WCAG 1.4.1)').toBe('underline');
+});
+
+// T027: autenticación. Fuera del marco del comercio: página y tarjeta, sin barra (SC-005, FR-010).
+test('pantalla: iniciar sesión', async ({ page }) => {
+  await page.goto('/login');
+  await expect(page.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeVisible();
+  await expectAccent(page, 'Entrar');
+  await expectDestructive(page, []);
+  await expectPlanes(page, 'page-card');
+  await expectTypeHierarchy(page);
+});
+
+test('pantalla: crear cuenta', async ({ page }) => {
+  await page.goto('/signup');
+  await expect(page.getByRole('heading', { level: 1, name: 'Crear cuenta' })).toBeVisible();
+  await expectAccent(page, 'Crear cuenta');
+  await expectDestructive(page, []);
+  await expectPlanes(page, 'page-card');
+  await expectTypeHierarchy(page);
 });

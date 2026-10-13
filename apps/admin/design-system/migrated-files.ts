@@ -19,4 +19,7 @@ export const MIGRATED_FILES: readonly string[] = [
   'apps/admin/src/index.html',
   'apps/admin/src/styles/_shell.scss',
   'apps/admin/src/app/tenant/tenant-shell/tenant-shell.ts',
+  // T027: autenticación.
+  'apps/admin/src/app/auth/login/login.ts',
+  'apps/admin/src/app/auth/sign-up/sign-up.ts',
 ];

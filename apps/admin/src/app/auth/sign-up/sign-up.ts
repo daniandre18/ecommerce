@@ -25,7 +25,7 @@ const SIGN_UP_FAILURES: Record<SignUpFailure, string> = {
   imports: [FormField, MatFormField, MatLabel, MatHint, MatError, MatInput, MatButton, RouterLink],
   template: `
     <h1>Crear cuenta</h1>
-    <form novalidate (submit)="$event.preventDefault(); signUp()">
+    <form class="ds-card" novalidate (submit)="$event.preventDefault(); signUp()">
       <mat-form-field>
         <mat-label>Tu nombre</mat-label>
         <input matInput autocomplete="name" [formField]="signUpForm.displayName" />
@@ -54,7 +54,7 @@ const SIGN_UP_FAILURES: Record<SignUpFailure, string> = {
 
       <div role="alert" class="failure">{{ failure() }}</div>
 
-      <button matButton="filled" type="submit" [disabled]="signUpForm().submitting()">Crear cuenta</button>
+      <button matButton="filled" class="ds-primary-action" type="submit" [disabled]="signUpForm().submitting()">Crear cuenta</button>
     </form>
     <p class="other">¿Ya tenés cuenta? <a routerLink="/login" [queryParams]="{ returnUrl: returnUrl() }">Iniciá sesión</a></p>
   `,
@@ -62,13 +62,20 @@ const SIGN_UP_FAILURES: Record<SignUpFailure, string> = {
     :host {
       display: block;
       max-width: 400px;
-      margin: 48px auto;
+      margin: var(--ds-space-12) auto;
     }
 
+    h1 {
+      margin: 0 0 var(--ds-space-6);
+      font: var(--ds-type-page-title);
+      letter-spacing: var(--ds-type-page-title-tracking);
+    }
+
+    /* Fuera del comercio hay dos planos, página y tarjeta: el formulario es la tarjeta (SC-005). */
     form {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: var(--ds-space-2);
     }
 
     .failure:empty {
@@ -76,13 +83,13 @@ const SIGN_UP_FAILURES: Record<SignUpFailure, string> = {
     }
 
     .failure {
-      color: var(--mat-sys-error);
-      font: var(--mat-sys-body-medium);
+      color: var(--ds-status-error);
+      font: var(--ds-type-body);
     }
 
     .other {
-      margin-top: 16px;
-      font: var(--mat-sys-body-medium);
+      margin-top: var(--ds-space-4);
+      font: var(--ds-type-body);
     }
   `,
 })
