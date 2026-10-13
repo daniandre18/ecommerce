@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { expectAccent, expectBackground, expectDestructive, expectPlanes, expectTypeHierarchy } from './design-system-support';
+import { expectAccent, expectBackground, expectDestructive, expectPlanes, expectTypeHierarchy, readOnlyCollaborator } from './design-system-support';
 import { call, idTokenOf, MULTI, OWNER, productAsOwner, signIn, signUpFromLink } from './support';
 
 // 003 — el sistema de diseño, medido en lo que el navegador computa. Corre en los tres proyectos,
@@ -169,6 +169,19 @@ test.describe('pantalla: catálogo', () => {
     await expect(page.getByText('Todavía no hay productos')).toBeVisible();
     await expectAccent(page, 'Nuevo producto');
     await expectPlanes(page, 'page-card-bar');
+  });
+
+  // T030, historia 1, escenario 2: sin `catalog.write` no hay acción principal, así que no hay acento.
+  test('sin permiso de escritura: ningún acento', async ({ page }) => {
+    // Depende de T102 de la 001: si catalog.read sale del enumerado, usar un rol sin permisos.
+    const email = await readOnlyCollaborator(`sin-acento-${Date.now()}`);
+    await productAsOwner(`Solo lectura ${Date.now()}`);
+    await page.goto('/login');
+    await signIn(page, email);
+    await expect(page.getByRole('heading', { level: 1, name: 'Catálogo' })).toBeVisible();
+    await expect(page.locator('main ul li').first()).toBeVisible();
+    await expectAccent(page, null);
+    await expectDestructive(page, []);
   });
 });
 
