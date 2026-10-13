@@ -205,9 +205,10 @@ test('pantalla: producto', async ({ page }) => {
   await expectAccent(page, null);
   await expectDestructive(page, ['Archivar producto']);
   await expectPlanes(page, 'page-card-bar');
-  // La jerarquía tipográfica se verifica desde T032: el primer `h3` del editor es el de las imágenes
-  // (`image-upload`), que migra esa tarea.
-  // Cada sección del editor es una tarjeta.
+  // T032: con las imágenes migradas, el `h3` del editor (`image-upload`) ya está en su nivel.
+  await expectTypeHierarchy(page);
+  // Cada sección del editor es una tarjeta, y cada variante una fila del sistema (T032).
+  expect(await page.locator('app-variant-table li').evaluateAll((rows) => rows.filter((row) => !row.classList.contains('ds-table-row')).length)).toBe(0);
   const sections = page.locator('app-product-editor > section');
   expect(await sections.count()).toBeGreaterThan(0);
   expect(await sections.evaluateAll((all) => all.filter((section) => !section.classList.contains('ds-card')).length)).toBe(0);
@@ -229,4 +230,36 @@ test('pantalla: producto', async ({ page }) => {
   expect(fills.saves.length, 'hacen falta dos secciones con cambios para comparar').toBeGreaterThanOrEqual(2);
   for (const save of fills.saves) expect(save.background, save.name).toBe(fills.primary);
   await expectAccent(page, null);
+});
+
+// T032: los diálogos de las variantes. "Confirmar" es la tarea del primero; el de imágenes no tiene
+// acción principal: cada imagen se guarda por su cuenta y "Listo" solo cierra.
+test('pantalla: diálogo: qué valor tiene cada variante', async ({ page }) => {
+  const { url } = await productAsOwner(`Asignar ${Date.now()}`);
+  await page.goto(url);
+  await signIn(page, OWNER);
+  const only = page.getByRole('group', { name: /^Única/ });
+  const sku = only.getByLabel(/^SKU/);
+  await sku.fill(`SKU-${Date.now()}`);
+  await sku.press('Tab');
+  await expect(only).not.toContainText('Falta el SKU');
+  await page.getByRole('button', { name: 'Agregar opción' }).click();
+  const option = page.getByRole('group', { name: 'Opción nueva' });
+  await option.getByLabel('Nombre de la opción', { exact: true }).fill('Color');
+  const color = page.getByRole('group', { name: 'Color', exact: true });
+  await color.getByLabel('Valor 1', { exact: true }).fill('Rojo');
+  await page.getByRole('button', { name: 'Guardar opciones' }).click();
+  await expect(page.getByRole('dialog', { name: '¿Qué valor tiene cada variante?' })).toBeVisible();
+  await expectAccent(page, 'Confirmar', 'dialog');
+  await expectDestructive(page, [], 'dialog');
+});
+
+test('pantalla: diálogo: imágenes de una variante', async ({ page }) => {
+  const { url } = await productAsOwner(`Imágenes ${Date.now()}`);
+  await page.goto(url);
+  await signIn(page, OWNER);
+  await page.getByRole('group', { name: /^Única/ }).getByRole('button', { name: 'Imágenes de Única (0)' }).click();
+  await expect(page.getByRole('dialog', { name: 'Imágenes de Única' })).toBeVisible();
+  await expectAccent(page, null, 'dialog');
+  await expectDestructive(page, [], 'dialog');
 });

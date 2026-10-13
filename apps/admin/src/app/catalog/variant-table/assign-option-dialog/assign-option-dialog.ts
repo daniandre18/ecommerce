@@ -69,20 +69,20 @@ interface Row {
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button matButton type="button" mat-dialog-close>Cancelar</button>
-        <button matButton="filled" type="submit">Confirmar</button>
+        <button matButton="filled" class="ds-primary-action" type="submit">Confirmar</button>
       </mat-dialog-actions>
     </form>
   `,
   styles: `
     fieldset {
-      border: 1px solid var(--mat-sys-outline-variant);
-      border-radius: 8px;
-      margin: 0 0 8px;
-      padding: 8px 12px 0;
+      border: var(--ds-border-width) solid var(--ds-border-subtle);
+      border-radius: var(--ds-radius-md);
+      margin: 0 0 var(--ds-space-2);
+      padding: var(--ds-space-2) var(--ds-space-3) 0;
     }
 
     legend {
-      font: var(--mat-sys-title-small);
+      font: var(--ds-type-label);
     }
 
     mat-form-field {

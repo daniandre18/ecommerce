@@ -1,15 +1,15 @@
+// El separador y el hover son los de la fila del sistema (`.ds-table-row`, en el `<li>` de la tabla).
 :host {
   display: block;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  padding: var(--ds-space-3) 0;
 }
 
 .header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  column-gap: 4px;
-  margin-bottom: 8px;
+  column-gap: var(--ds-space-1);
+  margin-bottom: var(--ds-space-2);
 }
 
 .images {
@@ -20,22 +20,22 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--ds-space-2);
   margin: 0;
-  font: var(--mat-sys-title-medium);
+  font: var(--ds-type-subtitle);
   overflow-wrap: anywhere;
 }
 
 .incomplete {
-  font: var(--mat-sys-label-medium);
-  color: var(--mat-sys-error);
+  font: var(--ds-type-help);
+  color: var(--ds-status-error);
 }
 
 /* A 360 px quedan dos columnas: ninguna vista exige desplazamiento horizontal (FR-038). */
 .fields {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 8px;
+  gap: var(--ds-space-2);
 }
 
 mat-form-field {
@@ -44,14 +44,14 @@ mat-form-field {
 
 /* Historia 4 de la 002: el código de barras y el envío, plegados después de los campos de siempre. */
 .more-summary {
-  margin: 8px 0 0;
-  font: var(--mat-sys-body-small);
-  color: var(--mat-sys-on-surface-variant);
+  margin: var(--ds-space-2) 0 0;
+  font: var(--ds-type-help);
+  color: var(--ds-text-secondary);
   overflow-wrap: anywhere;
 }
 
 .more-fields {
-  margin-top: 8px;
+  margin-top: var(--ds-space-2);
 }
 
 .release {

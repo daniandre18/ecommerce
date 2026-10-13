@@ -4,25 +4,25 @@
 
 h2 {
   margin: 0;
-  font: var(--mat-sys-title-large);
+  font: var(--ds-type-section-title);
 }
 
 .hint {
-  margin: 4px 0 16px;
-  color: var(--mat-sys-on-surface-variant);
+  margin: var(--ds-space-1) 0 var(--ds-space-4);
+  color: var(--ds-text-secondary);
 }
 
 fieldset {
-  margin: 0 0 16px;
-  padding: 8px 12px;
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 12px;
+  margin: 0 0 var(--ds-space-4);
+  padding: var(--ds-space-2) var(--ds-space-3);
+  border: var(--ds-border-width) solid var(--ds-border-subtle);
+  border-radius: var(--ds-radius-lg);
   min-width: 0;
 }
 
 legend {
-  padding: 0 4px;
-  font: var(--mat-sys-title-medium);
+  padding: 0 var(--ds-space-1);
+  font: var(--ds-type-subtitle);
 }
 
 mat-form-field {
@@ -39,8 +39,8 @@ li {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
-  margin-bottom: 8px;
+  gap: var(--ds-space-1);
+  margin-bottom: var(--ds-space-2);
 }
 
 li mat-form-field {
@@ -52,7 +52,7 @@ li mat-form-field {
 .save-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--ds-space-1);
 }
 
 .value-actions button {
@@ -60,13 +60,13 @@ li mat-form-field {
 }
 
 .count {
-  font: var(--mat-sys-body-medium);
-  color: var(--mat-sys-on-surface-variant);
+  font: var(--ds-type-body);
+  color: var(--ds-text-secondary);
 }
 
 .count.over,
 .failure {
-  color: var(--mat-sys-error);
+  color: var(--ds-status-error);
 }
 
 .failure:empty {

@@ -22,9 +22,9 @@ import { IMAGE_STORAGE } from '../../core/client';
       width: 72px;
       height: 72px;
       flex: none;
-      border-radius: 8px;
+      border-radius: var(--ds-radius-md);
       overflow: hidden;
-      background: var(--mat-sys-surface-container-high);
+      background: var(--ds-surface-hover);
     }
 
     img {
@@ -34,8 +34,8 @@ import { IMAGE_STORAGE } from '../../core/client';
     }
 
     .fallback {
-      padding: 4px;
-      font: var(--mat-sys-label-small);
+      padding: var(--ds-space-1);
+      font: var(--ds-type-help);
       overflow: hidden;
     }
   `,

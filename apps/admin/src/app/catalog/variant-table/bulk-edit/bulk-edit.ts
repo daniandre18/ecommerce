@@ -61,27 +61,27 @@ const FIELD_NAMES: Record<BulkField, string> = { price: 'Precio', compareAtPrice
       position: sticky;
       bottom: 0;
       z-index: 1;
-      padding: 12px;
-      border-radius: 12px;
-      background: var(--mat-sys-secondary-container);
-      color: var(--mat-sys-on-secondary-container);
+      padding: var(--ds-space-3);
+      border-radius: var(--ds-radius-lg);
+      background: var(--ds-surface-selected);
+      color: var(--ds-text-primary);
     }
 
     .count {
-      margin: 0 0 8px;
-      font: var(--mat-sys-title-small);
+      margin: 0 0 var(--ds-space-2);
+      font: var(--ds-type-label);
     }
 
     .controls {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       align-items: center;
-      gap: 8px;
+      gap: var(--ds-space-2);
     }
 
     .failure {
-      margin-top: 8px;
-      color: var(--mat-sys-error);
+      margin-top: var(--ds-space-2);
+      color: var(--ds-status-error);
     }
 
     .failure:empty {
