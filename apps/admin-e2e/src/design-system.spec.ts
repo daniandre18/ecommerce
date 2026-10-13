@@ -44,3 +44,26 @@ test('pantalla: diálogo: confirmación', async ({ page }) => {
   await expectAccent(page, null, 'dialog');
   await expectDestructive(page, ['Salir sin guardar'], 'dialog');
 });
+
+// T026: el marco del comercio. No es una pantalla de primary-actions.ts (es `FRAMES`), pero toda vista
+// del comercio lo tiene: la barra, el nombre del comercio y el enlace de la sección abierta.
+test('marco del comercio: barra, nombre en título de sección y enlace activo en el color de enlace', async ({ page }) => {
+  await page.goto('/login');
+  await signIn(page, OWNER);
+  await expect(page.getByRole('heading', { level: 1, name: 'Catálogo' })).toBeVisible();
+
+  await expectBackground(page, 'app-tenant-shell header', '--ds-surface-bar');
+  const found = await page.evaluate(() => {
+    const probe = document.body.appendChild(document.createElement('p'));
+    probe.style.font = 'var(--ds-type-section-title)';
+    probe.style.color = 'var(--ds-text-link)';
+    const expected = { font: getComputedStyle(probe).fontSize + ' ' + getComputedStyle(probe).fontWeight, link: getComputedStyle(probe).color };
+    probe.remove();
+    const tenant = getComputedStyle(document.querySelector('app-tenant-shell .tenant') as Element);
+    const active = getComputedStyle(document.querySelector('app-tenant-shell nav [aria-current="page"]') as Element);
+    return { expected, tenant: tenant.fontSize + ' ' + tenant.fontWeight, link: active.color, underline: active.textDecorationLine };
+  });
+  expect(found.tenant).toBe(found.expected.font);
+  expect(found.link).toBe(found.expected.link);
+  expect(found.underline, 'el enlace activo no depende solo del color (WCAG 1.4.1)').toBe('underline');
+});

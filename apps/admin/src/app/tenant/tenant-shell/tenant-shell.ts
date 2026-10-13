@@ -25,7 +25,7 @@ import { MyTenants } from '../my-tenants';
       cambia el alto del encabezado ni empuja la vista (SC-009). Las acciones de la cuenta van en un
       menú para que no compitan por el ancho de una pantalla de 360 px.
     -->
-    <header>
+    <header class="ds-bar">
       <p class="tenant">{{ name() }}</p>
       <button matButton type="button" class="account" [matMenuTriggerFor]="account">Cuenta</button>
       <mat-menu #account="matMenu">
@@ -65,18 +65,22 @@ import { MyTenants } from '../my-tenants';
     }
   `,
   styles: `
+    /* La barra ocupa también el relleno de la página: así se lee como barra, y su contenido conserva
+       el ancho que tenía antes de tener fondo, que en 360 px es justo el que necesita la navegación. */
     header {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       grid-template-rows: 48px 48px;
       align-items: center;
-      column-gap: 8px;
-      margin-bottom: 8px;
+      column-gap: var(--ds-space-2);
+      margin-inline: calc(-1 * var(--ds-space-4));
+      margin-bottom: var(--ds-space-4);
+      padding-inline: var(--ds-space-4);
     }
 
     .tenant {
       margin: 0;
-      font: var(--mat-sys-title-medium);
+      font: var(--ds-type-section-title);
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
@@ -86,10 +90,11 @@ import { MyTenants } from '../my-tenants';
       grid-column: 1 / -1;
       display: flex;
       flex-wrap: nowrap;
-      margin-inline: -12px;
+      margin-inline: calc(-1 * var(--ds-space-3));
     }
 
     .active {
+      color: var(--ds-text-link);
       text-decoration: underline;
       text-underline-offset: 4px;
     }

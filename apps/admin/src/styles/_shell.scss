@@ -2,7 +2,11 @@
 // research §3). `App` es el único componente de la carga inicial: con sus estilos dentro del componente,
 // cada cambio de valor hacía crecer el JS inicial, y FR-034 no admite ni un byte. En la hoja global los
 // absorbe el presupuesto de estilos. Van anidados bajo `app-root` para que, como con el encapsulamiento
-// del componente, no alcancen a nada fuera de él. Los valores se migran a tokens en T026.
+// del componente, no alcancen a nada fuera de él. Los valores son tokens desde T026.
+// La falla de navegación es el aviso de error del sistema: con `@extend` desde la hoja y no con una clase
+// en la plantilla, porque la plantilla de `App` es JS inicial (T026).
+@use 'components';
+
 app-root {
   position: relative;
   display: block;
@@ -12,11 +16,11 @@ app-root {
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: var(--mat-sys-surface);
+    background: var(--ds-surface-page);
   }
 
   main {
-    padding: 16px;
+    padding: var(--ds-space-4);
     max-width: 1200px;
     margin-inline: auto;
   }
@@ -25,39 +29,37 @@ app-root {
     outline: none;
   }
 
-  // Visible solo al recibir el foco del teclado (WCAG 2.4.1).
+  // Visible solo al recibir el foco del teclado (WCAG 2.4.1). En colores invertidos, como el contenedor
+  // inverso de Material: el par es el de texto sobre tarjeta, con los papeles cambiados.
   .skip-link {
     position: absolute;
-    inset-inline-start: 8px;
-    inset-block-start: -48px;
-    padding: 8px 16px;
-    background: var(--mat-sys-inverse-surface);
-    color: var(--mat-sys-inverse-on-surface);
-    border-radius: 4px;
+    inset-inline-start: var(--ds-space-2);
+    inset-block-start: calc(-1 * var(--ds-space-12));
+    padding: var(--ds-space-2) var(--ds-space-4);
+    background: var(--ds-text-primary);
+    color: var(--ds-surface-card);
+    border-radius: var(--ds-radius-sm);
     z-index: 10;
   }
 
   .skip-link:focus {
-    inset-block-start: 8px;
+    inset-block-start: var(--ds-space-2);
   }
 
   .navigation-failure {
+    @extend .ds-notice, .ds-notice--error;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px 16px;
-    margin-bottom: 16px;
-    padding: 12px 16px;
-    border-radius: 12px;
-    background: var(--mat-sys-error-container);
-    color: var(--mat-sys-on-error-container);
+    gap: var(--ds-space-2) var(--ds-space-4);
+    margin-bottom: var(--ds-space-4);
   }
 
   .navigation-failure button {
-    min-height: 48px;
-    padding-inline: 16px;
-    border: 1px solid currentColor;
-    border-radius: 24px;
+    min-height: var(--ds-touch-target);
+    padding-inline: var(--ds-space-4);
+    border: var(--ds-border-width) solid; // sin color: el del borde por omisión es el del texto
+    border-radius: var(--ds-radius-pill);
     background: transparent;
     color: inherit;
     font: inherit;

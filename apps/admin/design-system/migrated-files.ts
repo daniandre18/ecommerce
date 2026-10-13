@@ -15,4 +15,8 @@ export const MIGRATED_FILES: readonly string[] = [
   // T025: los diálogos compartidos.
   'apps/admin/src/app/shared/confirm-dialog.ts',
   'apps/admin/src/app/shared/pending-changes/pending-changes.ts',
+  // T026: el marco. Los literales de index.html son copias de tokens, verificadas por boot.spec.ts.
+  'apps/admin/src/index.html',
+  'apps/admin/src/styles/_shell.scss',
+  'apps/admin/src/app/tenant/tenant-shell/tenant-shell.ts',
 ];
