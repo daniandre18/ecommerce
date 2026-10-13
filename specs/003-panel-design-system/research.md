@@ -491,13 +491,30 @@ que ajustarlo no afloja ninguna prueba (FR-033).
 del orden de medio minuto. El proyecto `oscuro` (T018) suma `a11y` y `design-system` sobre ese
 margen, así que es probable que T018 tenga que subir el tope, con esta medida a la vista. **Resultado de T018** (corrida 38152439034): con `oscuro`, 143 pruebas en 6 min 19 s; el tope no hizo falta subirlo.
 
-**Tope subido a 18 minutos** (2026-10-13, al cerrar T029): corrida 38464260412 sobre `6c2b9a8`, 179
-pasadas, 8 omitidas, 0 flaky, sin reintentos, y el paso e2e en **9,3 min**: unos 40 s de margen contra
-los 10. Cada caso de `design-system.spec.ts` corre en los tres proyectos, y T030 a T035 todavía suman
-casos, así que el tope se habría alcanzado sin que ninguna prueba fallara. Con 18 minutos, el margen
-sobre la medida es de unos 8,7 min. Ninguna prueba ni umbral cambió (FR-033). Si la suite se acerca otra
-vez al tope, la alternativa es partir el trabajo `e2e` en CI, no seguir subiéndolo. Primera corrida con el tope
-nuevo (38466004156 sobre `71f962a`, con T030): 182 pasadas, 8 omitidas, 0 flaky, en 9,5 min.
+**Duración medida y reparto en dos mitades**. El tope de 10 minutos se sostiene con estas medidas, todas
+del paso de pruebas (`nx run admin-e2e:e2e`), sacadas de las marcas de tiempo del log de CI:
+
+| Corrida | Reparto | Pruebas | Paso de pruebas | Reintentos |
+|---|---|---|---|---|
+| 38464260412 (`6c2b9a8`) | un runner | 179 pasadas, 8 omitidas | 562 s | 0 |
+| 38466004156 (`71f962a`) | un runner | 182 pasadas, 8 omitidas | 570 s | 0 |
+| 38472136770 (`71cd571`) | mitad 1/2 | 90 pasadas, 6 omitidas | 211 s | 0 |
+| 38472136770 (`71cd571`) | mitad 2/2 | 92 pasadas, 2 omitidas | 302 s | 0 |
+
+- **Lo que cuesta una prueba**: las tres de T030 sumaron 8 s al paso (de 562 a 570 s), unos 2,7 s cada
+  una. Entre esas dos corridas el *trabajo* sí subió 101 s, pero 88 s fueron `npm install -g
+  firebase-tools` (18 s en una, 106 s en la otra): red de npm, no pruebas. Por eso la medida es el
+  paso de pruebas y no el trabajo.
+- **Dónde está el tiempo** (local, con el reportero JSON, 182 pruebas en 290 s): `loading-states` es
+  ~3,5 s por prueba por las demoras simuladas, y `offline` ~5,6 s por el reloj de 10 s sin red; los
+  casos de `design-system` promedian 1,1 s. CI tarda ~1,7 veces lo de local.
+- **Decisión**: dos mitades en paralelo (`--shard`, matriz `e2e-shard` de `ci.yml`), cada una con sus
+  propios emuladores. La más lenta tarda 302 s, con 298 s de margen contra el tope: la mitad del tope
+  libre, no al filo. El trabajo `e2e` exige las dos mitades, así que el check obligatorio no cambia de
+  nombre. Cada mitad repite la preparación del runner (unos 60 a 80 s, más lo que tarde npm).
+- **Cuándo revisarlo**: si la mitad más lenta pasa de 7 minutos (70 % del tope), se reparte en tres o
+  se revisa qué prueba creció, antes de tocar el tope. Subirlo no es la salida: el tope protege de un
+  cuelgue, y uno más alto solo tarda más en avisar.
 
 **Inestabilidad**: `retries: 2` absorbe un fallo aislado, y el reportero `github` lo marca como
 *flaky* sin ocultarlo. Una prueba que necesita reintentos con frecuencia es un defecto que se
