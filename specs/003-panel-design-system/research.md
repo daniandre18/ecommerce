@@ -491,6 +491,13 @@ que ajustarlo no afloja ninguna prueba (FR-033).
 del orden de medio minuto. El proyecto `oscuro` (T018) suma `a11y` y `design-system` sobre ese
 margen, así que es probable que T018 tenga que subir el tope, con esta medida a la vista. **Resultado de T018** (corrida 38152439034): con `oscuro`, 143 pruebas en 6 min 19 s; el tope no hizo falta subirlo.
 
+**Tope subido a 18 minutos** (2026-10-13, al cerrar T029): corrida 38464260412 sobre `6c2b9a8`, 179
+pasadas, 8 omitidas, 0 flaky, sin reintentos, y el paso e2e en **9,3 min**: unos 40 s de margen contra
+los 10. Cada caso de `design-system.spec.ts` corre en los tres proyectos, y T030 a T035 todavía suman
+casos, así que el tope se habría alcanzado sin que ninguna prueba fallara. Con 18 minutos, el margen
+sobre la medida es de unos 8,7 min. Ninguna prueba ni umbral cambió (FR-033). Si la suite se acerca otra
+vez al tope, la alternativa es partir el trabajo `e2e` en CI, no seguir subiéndolo.
+
 **Inestabilidad**: `retries: 2` absorbe un fallo aislado, y el reportero `github` lo marca como
 *flaky* sin ocultarlo. Una prueba que necesita reintentos con frecuencia es un defecto que se
 corrige, no algo que se tolera.

@@ -22,8 +22,10 @@ export default defineConfig({
   // los emuladores atendiendo al resto— cuya causa no se encontró; en serie no aparecieron.
   fullyParallel: false,
   workers: 1,
-  // Un cuelgue no puede retener la corrida: falla entera a los 10 minutos.
-  globalTimeout: 10 * 60_000,
+  // Un cuelgue no puede retener la corrida: falla entera a los 18 minutos. Es una protección, no un
+  // umbral: se subió de 10 con la medida a la vista (research §15 de la 003), cuando la suite llegó a
+  // 9,3 min en CI con los casos de design-system.spec.ts, que corren en los tres proyectos.
+  globalTimeout: 18 * 60_000,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 2 : 0,
   reporter: process.env['CI'] ? 'github' : 'list',
