@@ -141,3 +141,42 @@ test.describe('pantalla: invitación', () => {
     await expectDestructive(page, []);
   });
 });
+
+// T029: el catálogo. El acento es "Nuevo producto", haya productos o no: "Crear producto" del estado vacío
+// es confirmación de sección, y el acento no cambia de lugar (contracts/primary-actions.md).
+test.describe('pantalla: catálogo', () => {
+  test('con productos, y con la barra de selección abierta, el único acento es "Nuevo producto"', async ({ page }) => {
+    await productAsOwner(`Catálogo ${Date.now()}`);
+    await page.goto('/login');
+    await signIn(page, OWNER);
+    await expect(page.getByRole('heading', { level: 1, name: 'Catálogo' })).toBeVisible();
+    await expect(page.locator('ui-skeleton')).toHaveCount(0);
+    await expectAccent(page, 'Nuevo producto');
+    await expectDestructive(page, []);
+    await expectPlanes(page, 'page-card-bar');
+    await expectTypeHierarchy(page);
+
+    // "Asignar" y "Agregar a la sección" son confirmaciones de sección: no suman acento.
+    await page.getByRole('checkbox', { name: /^Seleccionar «/ }).first().check();
+    await expect(page.getByRole('group', { name: 'Acción sobre los seleccionados' })).toBeVisible();
+    await expectAccent(page, 'Nuevo producto');
+  });
+
+  test('vacío: el acento sigue en "Nuevo producto", no en "Crear producto"', async ({ page }) => {
+    await page.goto('/login');
+    await signIn(page, MULTI);
+    await page.getByRole('link', { name: /Comercio Dos/ }).click();
+    await expect(page.getByText('Todavía no hay productos')).toBeVisible();
+    await expectAccent(page, 'Nuevo producto');
+    await expectPlanes(page, 'page-card-bar');
+  });
+});
+
+test('pantalla: diálogo: nuevo producto', async ({ page }) => {
+  await page.goto('/login');
+  await signIn(page, OWNER);
+  await page.getByRole('button', { name: 'Nuevo producto' }).click();
+  await expect(page.getByRole('dialog', { name: 'Nuevo producto' })).toBeVisible();
+  await expectAccent(page, 'Crear', 'dialog');
+  await expectDestructive(page, [], 'dialog');
+});

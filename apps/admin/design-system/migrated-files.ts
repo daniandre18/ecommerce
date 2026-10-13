@@ -25,4 +25,8 @@ export const MIGRATED_FILES: readonly string[] = [
   // T028: comercios e invitación.
   'apps/admin/src/app/tenant/tenant-switcher/tenant-picker.ts',
   'apps/admin/src/app/team/accept-invitation/accept-invitation.ts',
+  // T029: catálogo.
+  'apps/admin/src/app/catalog/product-list/product-list.ts',
+  'apps/admin/src/app/catalog/product-list/bulk-actions.ts',
+  'apps/admin/src/app/catalog/create-product/create-product-dialog.ts',
 ];

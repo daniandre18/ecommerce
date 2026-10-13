@@ -99,48 +99,50 @@ const SALE_DONE: Record<string, string> = {
     </div>
   `,
   styles: `
+    /* La barra de selección: un papel propio (\`--ds-surface-selected\`), con margen para el texto, el
+       primario y el error que van encima (T021). */
     .bulk {
-      margin-bottom: 16px;
-      padding: 12px 16px;
-      border-radius: 12px;
-      background: var(--mat-sys-secondary-container);
-      color: var(--mat-sys-on-secondary-container);
+      margin-bottom: var(--ds-space-4);
+      padding: var(--ds-space-3) var(--ds-space-4);
+      border-radius: var(--ds-radius-lg);
+      background: var(--ds-surface-selected);
+      color: var(--ds-text-primary);
     }
 
     .bulk-count {
-      margin: 0 0 8px;
-      font: var(--mat-sys-title-small);
+      margin: 0 0 var(--ds-space-2);
+      font: var(--ds-type-label);
     }
 
     .bulk-note {
-      margin: 0 0 8px;
+      margin: 0 0 var(--ds-space-2);
     }
 
     fieldset {
       /* Un fieldset toma por omisión el ancho de su contenido: el selector de categorías, el de la
          ruta más larga, lo estiraba más allá de los 360 px (T098 de la 002). */
       min-width: 0;
-      margin: 0 0 12px;
+      margin: 0 0 var(--ds-space-3);
       padding: 0;
       border: 0;
     }
 
     legend {
       padding: 0;
-      margin-bottom: 4px;
-      font: var(--mat-sys-label-large);
+      margin-bottom: var(--ds-space-1);
+      font: var(--ds-type-label);
     }
 
     .bulk-select {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: var(--ds-space-1);
       max-width: 360px;
-      font: var(--mat-sys-body-medium);
+      font: var(--ds-type-body);
     }
 
     .bulk-select select {
-      min-height: 48px;
+      min-height: var(--ds-touch-target);
       max-width: 100%;
       font: inherit;
     }
@@ -149,12 +151,12 @@ const SALE_DONE: Record<string, string> = {
       display: flex;
       flex-wrap: wrap;
       justify-content: flex-end;
-      gap: 8px;
-      margin-top: 8px;
+      gap: var(--ds-space-2);
+      margin-top: var(--ds-space-2);
     }
 
     .bulk-failure {
-      color: var(--mat-sys-error);
+      color: var(--ds-status-error);
     }
 
     .bulk-failure:empty {
