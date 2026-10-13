@@ -74,35 +74,35 @@ import { inTreeOrder, pathLabel } from '../../categories/category-messages';
   `,
   styles: `
     h2 {
-      margin: 0 0 4px;
-      font: var(--mat-sys-title-large);
+      margin: 0 0 var(--ds-space-1);
+      font: var(--ds-type-section-title);
     }
 
     .count,
     .none,
     .note {
-      margin: 0 0 8px;
-      color: var(--mat-sys-on-surface-variant);
+      margin: 0 0 var(--ds-space-2);
+      color: var(--ds-text-secondary);
     }
 
     mat-chip-set {
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: var(--ds-space-2);
     }
 
     /* Lo que ocupa una fila de chips: 32 px de alto y el mismo margen. */
     .chips-pending {
       height: 32px;
-      margin-bottom: 8px;
-      border-radius: 8px;
-      background: var(--mat-sys-surface-container-high);
+      margin-bottom: var(--ds-space-2);
+      border-radius: var(--ds-radius-md);
+      background: var(--ds-surface-hover);
     }
 
     .add {
       display: flex;
       flex-wrap: wrap;
       align-items: flex-end;
-      gap: 8px;
+      gap: var(--ds-space-2);
     }
 
     /* Sin min-width: 0, el selector toma el ancho de su ruta más larga y desborda a 360 px. */
@@ -111,12 +111,12 @@ import { inTreeOrder, pathLabel } from '../../categories/category-messages';
       flex: 1 1 220px;
       flex-direction: column;
       min-width: 0;
-      gap: 4px;
-      font: var(--mat-sys-body-medium);
+      gap: var(--ds-space-1);
+      font: var(--ds-type-body);
     }
 
     .select select {
-      min-height: 48px;
+      min-height: var(--ds-touch-target);
       max-width: 100%;
       font: inherit;
     }
@@ -125,12 +125,12 @@ import { inTreeOrder, pathLabel } from '../../categories/category-messages';
       display: flex;
       flex-wrap: wrap;
       justify-content: flex-end;
-      gap: 8px;
-      margin-top: 8px;
+      gap: var(--ds-space-2);
+      margin-top: var(--ds-space-2);
     }
 
     .failure {
-      color: var(--mat-sys-error);
+      color: var(--ds-status-error);
     }
 
     .failure:empty {

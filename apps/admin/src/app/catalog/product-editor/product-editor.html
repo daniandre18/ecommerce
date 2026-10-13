@@ -21,31 +21,31 @@
     <a class="history" [routerLink]="auditLink()" [queryParams]="{ product: current.id }">Ver sus cambios en la bitácora</a>
   }
 
-  <section aria-labelledby="datos">
+  <section class="ds-card" aria-labelledby="datos">
     <app-details-section [tenantId]="current.tenantId" [product]="current" />
   </section>
 
-  <section aria-labelledby="tienda">
+  <section class="ds-card" aria-labelledby="tienda">
     <app-storefront-section [tenantId]="current.tenantId" [product]="current" />
   </section>
 
-  <section aria-labelledby="envio">
+  <section class="ds-card" aria-labelledby="envio">
     <app-shipping-section [tenantId]="current.tenantId" [product]="current" />
   </section>
 
-  <section aria-labelledby="como-se-ofrece">
+  <section class="ds-card" aria-labelledby="como-se-ofrece">
     <app-presentation-section [tenantId]="current.tenantId" [product]="current" [sections]="view.sections" />
   </section>
 
-  <section aria-labelledby="categorias">
+  <section class="ds-card" aria-labelledby="categorias">
     <app-categories-section [tenantId]="current.tenantId" [product]="current" [tree]="view.tree" />
   </section>
 
-  <section aria-labelledby="catalogos-externos">
+  <section class="ds-card" aria-labelledby="catalogos-externos">
     <app-external-catalogs-section [tenantId]="current.tenantId" [product]="current" />
   </section>
 
-  <section>
+  <section class="ds-card">
     <app-image-upload
       heading="Imágenes del producto"
       [tenantId]="current.tenantId"
@@ -60,18 +60,18 @@
     <ui-error-state heading="No pudimos cargar las variantes" [retrying]="variants.status() === 'reloading'" (retry)="variants.reload()" />
   } @else if (variants.hasValue() && currency(); as money) {
     <!-- Sin catalog.write, el estado se lee en el encabezado y las opciones en las variantes (T079). -->
-    <section *appHasPermission="'catalog.write'" aria-labelledby="estado">
+    <section class="ds-card" *appHasPermission="'catalog.write'" aria-labelledby="estado">
       <app-status-control [tenantId]="current.tenantId" [product]="current" [variants]="variants.value()" [sections]="view.sections" />
     </section>
-    <section *appHasPermission="'catalog.write'" aria-labelledby="opciones">
+    <section class="ds-card" *appHasPermission="'catalog.write'" aria-labelledby="opciones">
       <app-options-editor [tenantId]="current.tenantId" [product]="current" [variants]="variants.value()" />
     </section>
-    <section aria-labelledby="variantes">
+    <section class="ds-card" aria-labelledby="variantes">
       <app-variant-table [tenantId]="current.tenantId" [product]="current" [variants]="variants.value()" [currency]="money" />
     </section>
   } @else {
-    <ui-skeleton rows="3" rowHeight="120px" label="Cargando las variantes…" />
+    <ui-skeleton class="ds-card" rows="3" rowHeight="120px" label="Cargando las variantes…" />
   }
 } @else {
-  <ui-skeleton rows="4" rowHeight="72px" label="Cargando el producto…" />
+  <ui-skeleton class="ds-card" rows="4" label="Cargando el producto…" />
 }

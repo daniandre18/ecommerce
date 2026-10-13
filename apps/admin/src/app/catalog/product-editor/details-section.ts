@@ -47,8 +47,8 @@ const detailsOf = (product: Product): Details => ({ name: product.name, descript
   `,
   styles: `
     h2 {
-      margin: 0 0 8px;
-      font: var(--mat-sys-title-large);
+      margin: 0 0 var(--ds-space-2);
+      font: var(--ds-type-section-title);
     }
 
     mat-form-field {
@@ -58,11 +58,11 @@ const detailsOf = (product: Product): Details => ({ name: product.name, descript
     .actions {
       display: flex;
       justify-content: flex-end;
-      gap: 8px;
+      gap: var(--ds-space-2);
     }
 
     .failure {
-      color: var(--mat-sys-error);
+      color: var(--ds-status-error);
     }
 
     .failure:empty {

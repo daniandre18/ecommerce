@@ -193,3 +193,40 @@ test('pantalla: diálogo: nuevo producto', async ({ page }) => {
   await expectAccent(page, 'Crear', 'dialog');
   await expectDestructive(page, [], 'dialog');
 });
+
+// T031: el editor de producto. Sin acción principal: se edita por partes, y cada sección se confirma
+// con su propio "Guardar", en primario. "Archivar producto" es la única destructiva.
+test('pantalla: producto', async ({ page }) => {
+  const { url } = await productAsOwner(`Editor ${Date.now()}`);
+  await page.goto(url);
+  await signIn(page, OWNER);
+  await expect(page.getByRole('group', { name: /^Única/ })).toBeVisible();
+  await expect(page.locator('ui-skeleton')).toHaveCount(0);
+  await expectAccent(page, null);
+  await expectDestructive(page, ['Archivar producto']);
+  await expectPlanes(page, 'page-card-bar');
+  // La jerarquía tipográfica se verifica desde T032: el primer `h3` del editor es el de las imágenes
+  // (`image-upload`), que migra esa tarea.
+  // Cada sección del editor es una tarjeta.
+  const sections = page.locator('app-product-editor > section');
+  expect(await sections.count()).toBeGreaterThan(0);
+  expect(await sections.evaluateAll((all) => all.filter((section) => !section.classList.contains('ds-card')).length)).toBe(0);
+
+  // Historia 1, escenario 1: con dos secciones con cambios, sus "Guardar" tienen el mismo fondo, el
+  // primario, y siguen sin acento.
+  await page.getByLabel('Nombre', { exact: true }).fill(`Editado ${Date.now()}`);
+  await page.locator('app-presentation-section mat-checkbox input').first().click();
+  const fills = await page.evaluate(() => {
+    const probe = document.body.appendChild(document.createElement('div'));
+    probe.style.background = 'var(--ds-primary)';
+    const primary = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    const saves = [...document.querySelectorAll<HTMLButtonElement>('main .mat-mdc-unelevated-button')]
+      .filter((button) => !button.disabled && /^Guardar/.test(button.textContent?.trim() ?? ''))
+      .map((button) => ({ name: button.textContent?.trim(), background: getComputedStyle(button).backgroundColor }));
+    return { primary, saves };
+  });
+  expect(fills.saves.length, 'hacen falta dos secciones con cambios para comparar').toBeGreaterThanOrEqual(2);
+  for (const save of fills.saves) expect(save.background, save.name).toBe(fills.primary);
+  await expectAccent(page, null);
+});

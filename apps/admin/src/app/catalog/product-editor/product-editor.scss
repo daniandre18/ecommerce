@@ -1,22 +1,23 @@
 :host {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--ds-space-4);
 }
 
 .back {
-  color: var(--mat-sys-primary);
+  color: var(--ds-text-link);
 }
 
 h1 {
   margin: 0;
-  font: var(--mat-sys-headline-small);
+  font: var(--ds-type-page-title);
+  letter-spacing: var(--ds-type-page-title-tracking);
   overflow-wrap: anywhere;
 }
 
 .status {
   margin: 0;
-  color: var(--mat-sys-on-surface-variant);
+  color: var(--ds-text-secondary);
 }
 
 /* Enlaces de texto con zona táctil de 48 px, como los botones de Material (T095). */
@@ -25,11 +26,11 @@ h1 {
   display: inline-flex;
   align-items: center;
   align-self: flex-start;
-  min-height: 48px;
+  min-height: var(--ds-touch-target);
 }
 
-section {
-  padding: 16px;
-  border-radius: 12px;
-  background: var(--mat-sys-surface-container-low);
+/* Cada sección es una tarjeta (`.ds-card`). Entre tarjetas, `--ds-space-8` (FR-019): el `gap` del
+   anfitrión más este margen. */
+section + section {
+  margin-top: var(--ds-space-4);
 }

@@ -46,7 +46,11 @@ async function loadSlowly(page: Page, url: string, ready: (page: Page) => Promis
   await expect(page.locator('ui-skeleton')).toHaveCount(0);
   // Lo que se acomoda justo después de llegar el contenido también cuenta.
   await page.waitForTimeout(300);
-  return layoutShift(page);
+  const shift = await layoutShift(page);
+  // El valor medido queda en el reporte, no solo si pasó: así se compara de una tarea a la siguiente.
+  test.info().annotations.push({ type: 'CLS', description: shift.toFixed(4) });
+  console.log(`CLS ${test.info().title} [${test.info().project.name}]: ${shift.toFixed(4)}`);
+  return shift;
 }
 
 /** "0 saltos perceptibles" (SC-009): por debajo de esto no se nota; 0,1 ya es el límite de "bueno". */

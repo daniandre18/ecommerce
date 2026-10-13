@@ -79,19 +79,19 @@ const fieldsOf = (product: Product): Fields => ({ mpn: product.mpn ?? '', ageGro
   `,
   styles: `
     h2 {
-      margin: 0 0 4px;
-      font: var(--mat-sys-title-large);
+      margin: 0 0 var(--ds-space-1);
+      font: var(--ds-type-section-title);
     }
 
     .note {
-      margin: 0 0 8px;
-      color: var(--mat-sys-on-surface-variant);
+      margin: 0 0 var(--ds-space-2);
+      color: var(--ds-text-secondary);
     }
 
     .fields {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: var(--ds-space-2);
     }
 
     /* Sin min-width: 0, un control flexible puede tomar el ancho de su contenido y desbordar. */
@@ -103,28 +103,28 @@ const fieldsOf = (product: Product): Fields => ({ mpn: product.mpn ?? '', ageGro
     .select {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      font: var(--mat-sys-body-medium);
+      gap: var(--ds-space-1);
+      font: var(--ds-type-body);
     }
 
     .select select {
-      min-height: 48px;
+      min-height: var(--ds-touch-target);
       max-width: 100%;
       font: inherit;
     }
 
     .over {
-      color: var(--mat-sys-error);
+      color: var(--ds-status-error);
     }
 
     .actions {
       display: flex;
       justify-content: flex-end;
-      margin-top: 8px;
+      margin-top: var(--ds-space-2);
     }
 
     .failure {
-      color: var(--mat-sys-error);
+      color: var(--ds-status-error);
     }
 
     .failure:empty {
