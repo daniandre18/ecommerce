@@ -496,7 +496,8 @@ pasadas, 8 omitidas, 0 flaky, sin reintentos, y el paso e2e en **9,3 min**: unos
 los 10. Cada caso de `design-system.spec.ts` corre en los tres proyectos, y T030 a T035 todavía suman
 casos, así que el tope se habría alcanzado sin que ninguna prueba fallara. Con 18 minutos, el margen
 sobre la medida es de unos 8,7 min. Ninguna prueba ni umbral cambió (FR-033). Si la suite se acerca otra
-vez al tope, la alternativa es partir el trabajo `e2e` en CI, no seguir subiéndolo.
+vez al tope, la alternativa es partir el trabajo `e2e` en CI, no seguir subiéndolo. Primera corrida con el tope
+nuevo (38466004156 sobre `71f962a`, con T030): 182 pasadas, 8 omitidas, 0 flaky, en 9,5 min.
 
 **Inestabilidad**: `retries: 2` absorbe un fallo aislado, y el reportero `github` lo marca como
 *flaky* sin ocultarlo. Una prueba que necesita reintentos con frecuencia es un defecto que se
