@@ -27,7 +27,8 @@ export default defineConfig({
   globalTimeout: 10 * 60_000,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 2 : 0,
-  reporter: process.env['CI'] ? 'github' : 'list',
+  // En CI, además, la duración de cada prueba en JSON: con ella se reparten las dos mitades del trabajo.
+  reporter: process.env['CI'] ? [['github'], ['json', { outputFile: 'reports/e2e.json' }]] : 'list',
   use: {
     baseURL: APP_URL,
     trace: 'on-first-retry',

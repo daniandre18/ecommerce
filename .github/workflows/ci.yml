@@ -76,9 +76,9 @@ jobs:
       - uses: ./.github/actions/setup-emulators
         with:
           firebase-tools-version: ${{ env.FIREBASE_TOOLS_VERSION }}
+      # `firebase` viene de setup-emulators, en la versión de FIREBASE_TOOLS_VERSION y sin bajarlo.
       - run: >
-          npx --yes firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}
-          emulators:exec --only firestore,storage --project demo-ecommerce "npm run test:rules"
+          firebase emulators:exec --only firestore,storage --project demo-ecommerce "npm run test:rules"
 
   # Atomicidad de la bitácora en ambos sentidos (FR-030, FR-033) y sembrador, contra los emuladores.
   integration:
@@ -90,8 +90,7 @@ jobs:
         with:
           firebase-tools-version: ${{ env.FIREBASE_TOOLS_VERSION }}
       - run: >
-          npx --yes firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}
-          emulators:exec --only auth,firestore,storage --project demo-ecommerce
+          firebase emulators:exec --only auth,firestore,storage --project demo-ecommerce
           "npm run test:infrastructure && npm run test:functions && npm run test:tools"
 
   # La suite e2e completa del panel, contra los emuladores (FR-033a de la 003): 360 px sin desborde,
@@ -113,12 +112,19 @@ jobs:
       - uses: ./.github/actions/setup-emulators
         with:
           firebase-tools-version: ${{ env.FIREBASE_TOOLS_VERSION }}
-      # El `webServer` de playwright.config.ts levanta los emuladores con `firebase`, no con `npx`:
-      # el binario tiene que estar en el PATH, en la misma versión que el resto de los trabajos.
-      - run: npm install -g firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}
+      # El `webServer` de playwright.config.ts levanta los emuladores con `firebase`, no con `npx`: lo
+      # deja en el PATH setup-emulators, en la misma versión que el resto de los trabajos.
       - run: npx playwright install --with-deps chromium
       # GitHub define CI=true: la configuración activa forbidOnly, dos reintentos y el reportero github.
       - run: npx nx run admin-e2e:e2e --skip-nx-cache --shard=${{ matrix.shard }}/2
+      # La duración de cada prueba en el runner, siempre: con ella se reparten las mitades (research §15).
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-durations-${{ matrix.shard }}
+          path: apps/admin-e2e/reports/
+          if-no-files-found: ignore
+          retention-days: 30
       # Las trazas del primer reintento, para diagnosticar un fallo sin reproducirlo.
       - uses: actions/upload-artifact@v4
         if: failure()
