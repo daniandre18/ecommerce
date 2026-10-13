@@ -4,8 +4,11 @@ import { call, EMULATORS, idTokenOf, OWNER, PASSWORD } from './support';
 // T020 de la 003 — ayudas de design-system.spec.ts. Comparan lo que el navegador **computa**, no las
 // clases: así se atrapa también un acento o un color destructivo puesto por otro camino (research §9).
 
-/** Dónde se busca: la vista, o solo el diálogo abierto, que es su propia pantalla (edge case de la spec). */
-export type Scope = 'view' | 'dialog';
+/**
+ * Dónde se busca: la vista; solo el diálogo abierto, que es su propia pantalla (edge case de la spec); o
+ * solo una parte de la vista, como un estado compartido, por su selector.
+ */
+export type Scope = 'view' | 'dialog' | { readonly selector: string };
 
 /** El color que el navegador computa para un token, en el esquema activo: el de una sonda con ese fondo. */
 async function tokenBackground(page: Page, token: string): Promise<string> {
@@ -23,9 +26,10 @@ async function namesWithBackground(page: Page, token: string, scope: Scope): Pro
   const color = await tokenBackground(page, token);
   return page.evaluate(
     ({ color, scope }) => {
-      const root = scope === 'dialog' ? document.querySelector('.cdk-overlay-container [role="dialog"]') : document.body;
-      if (!root) throw new Error('No hay un diálogo abierto');
-      return [...root.querySelectorAll<HTMLElement>('*')]
+      const root =
+        scope === 'view' ? document.body : document.querySelector(scope === 'dialog' ? '.cdk-overlay-container [role="dialog"]' : scope.selector);
+      if (!root) throw new Error(scope === 'dialog' ? 'No hay un diálogo abierto' : `No hay ningún ${JSON.stringify(scope)}`);
+      return [root, ...root.querySelectorAll<HTMLElement>('*')]
         .filter((element) => {
           const box = element.getBoundingClientRect();
           const style = getComputedStyle(element);
@@ -35,6 +39,12 @@ async function namesWithBackground(page: Page, token: string, scope: Scope): Pro
     },
     { color, scope },
   );
+}
+
+/** El fondo computado del primer elemento que coincide con el selector es el del token. */
+export async function expectBackground(page: Page, selector: string, token: string): Promise<void> {
+  const found = await page.locator(selector).first().evaluate((element) => getComputedStyle(element).backgroundColor);
+  expect(found, `${selector} no tiene el fondo de ${token}`).toBe(await tokenBackground(page, token));
 }
 
 /** SC-004: como máximo un elemento con el acento, y es la acción principal declarada; ninguno si es `null`. */

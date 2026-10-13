@@ -9,7 +9,8 @@ import { MatButton } from '@angular/material/button';
 @Component({
   selector: 'ui-error-state',
   imports: [MatButton],
-  host: { role: 'alert' },
+  // El fondo, el texto, el relleno y el radio son los del aviso de error del sistema (`.ds-notice--error`).
+  host: { role: 'alert', class: 'ds-notice ds-notice--error' },
   template: `
     <p class="heading">{{ heading() }}</p>
     @if (message(); as detail) {
@@ -29,21 +30,17 @@ import { MatButton } from '@angular/material/button';
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      gap: 8px;
-      padding: 16px;
-      border-radius: 12px;
-      background: var(--mat-sys-error-container);
-      color: var(--mat-sys-on-error-container);
+      gap: var(--ds-space-2);
     }
 
     .heading {
       margin: 0;
-      font: var(--mat-sys-title-medium);
+      font: var(--ds-type-subtitle);
     }
 
     .message {
       margin: 0;
-      font: var(--mat-sys-body-medium);
+      font: var(--ds-type-body);
     }
   `,
 })

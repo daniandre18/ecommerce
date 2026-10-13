@@ -23,6 +23,12 @@ describe('ErrorState', () => {
     expect(host.getAttribute('role')).toBe('alert');
   });
 
+  // 003, T024: el estado de error es el aviso de error del sistema, no un color propio.
+  it('lleva el aviso de error del sistema de diseño', async () => {
+    const { host } = await render();
+    expect([...host.classList]).toEqual(expect.arrayContaining(['ds-notice', 'ds-notice--error']));
+  });
+
   it('explica qué pasó con un texto por defecto comprensible', async () => {
     const { host } = await render();
     expect(host.textContent).toContain('No pudimos cargar esta información');

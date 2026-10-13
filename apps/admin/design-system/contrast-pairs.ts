@@ -256,7 +256,26 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'error',
     plane: 'control',
-    declared: { light: 8.22, dark: 12.26 },
+    declared: { light: 8.5, dark: 12.26 },
+  },
+  // "Reintentar" del estado de error (T024): botón `outlined` sobre el aviso de error.
+  {
+    id: 'primary/status-error-container',
+    foreground: '--ds-primary',
+    background: '--ds-status-error-container',
+    kind: 'text',
+    state: 'error',
+    plane: 'control',
+    declared: { light: 4.78, dark: 6.33 },
+  },
+  {
+    id: 'border-control/status-error-container',
+    foreground: '--ds-border-control',
+    background: '--ds-status-error-container',
+    kind: 'ui',
+    state: 'error',
+    plane: 'control',
+    declared: { light: 3.3, dark: 3.74 },
   },
   {
     id: 'status-warning/surface-page',

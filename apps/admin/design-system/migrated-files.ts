@@ -8,4 +8,8 @@ export const MIGRATED_FILES: readonly string[] = [
   // Nacen limpios: el catálogo también pasa por la compuerta (T021, T022).
   'apps/admin/src/styles/_components.scss',
   'apps/admin/src/styles/_theme.scss',
+  // T024: los estados compartidos, que usan todas las vistas.
+  'libs/ui/src/lib/states/empty-state.ts',
+  'libs/ui/src/lib/states/error-state.ts',
+  'libs/ui/src/lib/states/skeleton.ts',
 ];

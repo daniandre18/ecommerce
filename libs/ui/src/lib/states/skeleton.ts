@@ -20,17 +20,14 @@ import { Component, computed, input, numberAttribute } from '@angular/core';
     :host {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: var(--ds-space-2);
     }
 
+    /* La capa de hover sobre el plano, y una banda de la misma capa que la recorre: el esqueleto se ve
+       sobre la página, la tarjeta o la barra sin un color propio (contracts/component-treatments.md). */
     .skeleton-row {
-      border-radius: 8px;
-      background: linear-gradient(
-        90deg,
-        var(--mat-sys-surface-container-high) 25%,
-        var(--mat-sys-surface-container-highest) 50%,
-        var(--mat-sys-surface-container-high) 75%
-      );
+      border-radius: var(--ds-radius-md);
+      background: linear-gradient(90deg, transparent 25%, var(--ds-surface-hover) 50%, transparent 75%) var(--ds-surface-hover);
       background-size: 200% 100%;
       animation: shimmer 1.4s ease-in-out infinite;
     }
@@ -43,7 +40,8 @@ import { Component, computed, input, numberAttribute } from '@angular/core';
 })
 export class Skeleton {
   readonly rows = input(3, { transform: numberAttribute });
-  readonly rowHeight = input('48px');
+  /** Por omisión, la fila del listado (`--ds-row-height`); una vista con otra fila pasa la suya. */
+  readonly rowHeight = input('var(--ds-row-height)');
   readonly label = input('Cargando…');
 
   protected readonly rowIndexes = computed(() => {
