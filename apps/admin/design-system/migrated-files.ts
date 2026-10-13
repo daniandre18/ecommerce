@@ -12,4 +12,7 @@ export const MIGRATED_FILES: readonly string[] = [
   'libs/ui/src/lib/states/empty-state.ts',
   'libs/ui/src/lib/states/error-state.ts',
   'libs/ui/src/lib/states/skeleton.ts',
+  // T025: los diálogos compartidos.
+  'apps/admin/src/app/shared/confirm-dialog.ts',
+  'apps/admin/src/app/shared/pending-changes/pending-changes.ts',
 ];

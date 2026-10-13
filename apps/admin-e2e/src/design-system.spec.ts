@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { expectAccent, expectBackground, expectDestructive } from './design-system-support';
-import { OWNER, signIn } from './support';
+import { OWNER, productAsOwner, signIn } from './support';
 
 // 003 — el sistema de diseño, medido en lo que el navegador computa. Corre en los tres proyectos,
 // `oscuro` incluido. Cada caso de una pantalla se titula `pantalla: <screen>`, con el `screen` textual
@@ -28,4 +28,19 @@ test.describe('estados compartidos', () => {
     await expectAccent(page, null, { selector: 'ui-error-state' });
     await expectDestructive(page, [], { selector: 'ui-error-state' });
   });
+});
+
+// T025: el diálogo de confirmación. Sus cinco usos son destructivos, así que el caso usa uno, el de
+// salir con cambios sin guardar, que se abre desde cualquier editor.
+test('pantalla: diálogo: confirmación', async ({ page }) => {
+  const { url } = await productAsOwner(`Confirmación ${Date.now()}`);
+  await page.goto(url);
+  await signIn(page, OWNER);
+  await page.getByLabel('Nombre', { exact: true }).fill('Nombre a medio escribir');
+  await page.getByRole('link', { name: '← Catálogo' }).click();
+  await expect(page.getByRole('dialog', { name: 'Hay cambios sin guardar' })).toBeVisible();
+
+  // Destructiva sin acento (contracts/primary-actions.md, caso 3): el fondo de error, y nada más con él.
+  await expectAccent(page, null, 'dialog');
+  await expectDestructive(page, ['Salir sin guardar'], 'dialog');
 });
