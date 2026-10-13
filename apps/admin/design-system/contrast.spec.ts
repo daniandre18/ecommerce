@@ -27,18 +27,18 @@ describe('el verificador de contraste', () => {
   it('rechaza un par bajo el umbral de su tipo, por esquema', () => {
     const faint = pair({ foreground: '--ds-text-faint', background: '--ds-surface-card', declared: { light: 1.92, dark: 1.61 } });
     expect(checkPairs(fixture, [faint])).toEqual([
-      'text-faint/surface-card [light]: calculada 1,92 < 4,7 (text: 4,5 de WCAG + 0,2 de margen)',
-      'text-faint/surface-card [dark]: calculada 1,61 < 4,7 (text: 4,5 de WCAG + 0,2 de margen)',
+      'text-faint/surface-card [light]: calculada 1,92 < 5 (text: 4,5 de WCAG + 0,5 de margen)',
+      'text-faint/surface-card [dark]: calculada 1,61 < 5 (text: 4,5 de WCAG + 0,5 de margen)',
     ]);
   });
 
-  // Política de margen (revisión del 2026-10-12): pasar WCAG por 0,03 o 0,04 no es cumplir, es no
-  // incumplir por casualidad. Cualquier ajuste de un fondo lo rompe. Cada par exige 0,2 sobre su umbral.
-  it('rechaza un par que pasa WCAG por menos de 0,2', () => {
+  // Política de margen (T059): pasar WCAG por 0,03 o 0,04 no es cumplir, es no
+  // incumplir por casualidad. Cualquier ajuste de un fondo lo rompe. Cada par exige 0,5 sobre su umbral.
+  it('rechaza un par que pasa WCAG por menos de 0,5', () => {
     const thin = pair({ foreground: '--ds-text-thin', background: '--ds-surface-bar', plane: 'bar', declared: { light: 4.54, dark: 3.32 } });
     expect(checkPairs(fixture, [thin])).toEqual([
-      'text-thin/surface-bar [light]: calculada 4,54 < 4,7 (text: 4,5 de WCAG + 0,2 de margen)',
-      'text-thin/surface-bar [dark]: calculada 3,32 < 4,7 (text: 4,5 de WCAG + 0,2 de margen)',
+      'text-thin/surface-bar [light]: calculada 4,54 < 5 (text: 4,5 de WCAG + 0,5 de margen)',
+      'text-thin/surface-bar [dark]: calculada 3,32 < 5 (text: 4,5 de WCAG + 0,5 de margen)',
     ]);
   });
 
@@ -49,7 +49,7 @@ describe('el verificador de contraste', () => {
 
   it('un texto grande o un componente de interfaz se miden contra 3, no contra 4,5', () => {
     const large = pair({ foreground: '--ds-text-faint', background: '--ds-surface-card', kind: 'large-text', declared: { light: 1.92, dark: 1.61 } });
-    expect(checkPairs(fixture, [large])[0]).toBe('text-faint/surface-card [light]: calculada 1,92 < 3,2 (large-text: 3 de WCAG + 0,2 de margen)');
+    expect(checkPairs(fixture, [large])[0]).toBe('text-faint/surface-card [light]: calculada 1,92 < 3,5 (large-text: 3 de WCAG + 0,5 de margen)');
   });
 
   it('un par deshabilitado no se exige (WCAG lo exime), pero su razón declarada sí se verifica', () => {
@@ -79,7 +79,7 @@ describe('el verificador de contraste', () => {
     const twoTone = pair({ foreground: '--ds-focus-ring-inner', background: '--ds-focus-ring-outer', kind: 'two-tone', state: 'focus', plane: 'control', declared: { light: 17.26, dark: 17.26 } });
     expect(checkPairs(fixture, [twoTone])).toEqual([]);
     const weak = pair({ foreground: '--ds-gray-a', background: '--ds-gray-b', kind: 'two-tone', state: 'focus', plane: 'control', declared: { light: 3.44, dark: 3.44 } });
-    expect(checkPairs(fixture, [weak])).toEqual(['gray-a/gray-b [light]: calculada 3,44 < 9,2 (two-tone: 9 de WCAG + 0,2 de margen)', 'gray-a/gray-b [dark]: calculada 3,44 < 9,2 (two-tone: 9 de WCAG + 0,2 de margen)']);
+    expect(checkPairs(fixture, [weak])).toEqual(['gray-a/gray-b [light]: calculada 3,44 < 9,5 (two-tone: 9 de WCAG + 0,5 de margen)', 'gray-a/gray-b [dark]: calculada 3,44 < 9,5 (two-tone: 9 de WCAG + 0,5 de margen)']);
   });
 
   it('contra un fondo, el anillo de dos tonos cuenta con el tono que más contrasta', () => {
@@ -87,7 +87,7 @@ describe('el verificador de contraste', () => {
     const ring = pair({ foreground: '--ds-focus-ring-inner', alternate: '--ds-focus-ring-outer', background: '--ds-surface-card', kind: 'ui', state: 'focus', declared: { light: 17.26, dark: 15.56 } });
     expect(checkPairs(fixture, [ring])).toEqual([]);
     const { alternate: _, ...single } = ring;
-    expect(checkPairs(fixture, [single])[0]).toBe('focus-ring-inner/surface-card [light]: calculada 1,00 < 3,2 (ui: 3 de WCAG + 0,2 de margen)');
+    expect(checkPairs(fixture, [single])[0]).toBe('focus-ring-inner/surface-card [light]: calculada 1,00 < 3,5 (ui: 3 de WCAG + 0,5 de margen)');
   });
 });
 

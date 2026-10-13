@@ -13,12 +13,10 @@ $blue-25: #f6f7ff;
 $blue-50: #eef0ff;
 $blue-100: #e3e7ff;
 $blue-150: #dfe3ff;
-$blue-75: #e8ebff;
-$blue-300: #8e9dff;
-$blue-500: #3252fe;
+$blue-300: #9bb3ff;
+$blue-500: #4054e4;
 $blue-750: #1c2a99;
 $blue-800: #2c336f;
-$blue-850: #272e63;
 $blue-950: #10173f;
 
 // ── Amarillo: el acento cálido de la referencia ($yellow #ffc260), con texto oscuro (10,31:1) en lugar
@@ -26,15 +24,15 @@ $blue-950: #10173f;
 $yellow-100: #fff1d6;
 $yellow-150: #ffe2b0;
 $yellow-300: #ffc260;
-$yellow-700: #955b00;
+$yellow-700: #8b5e00;
 $yellow-800: #5c3800;
 $yellow-900: #3d2a00;
 
 // ── Rosa: el error de la referencia ($pink #ff4081), oscurecido de 3,33 a 4,7+ para el texto claro.
 $pink-100: #ffe8ef; // aclarado en T024 (003): "Reintentar" en primario sobre el aviso de error, con margen
 $pink-150: #ffd9e4;
-$pink-400: #ff6b95;
-$pink-600: #d00047;
+$pink-400: #ff97ae;
+$pink-600: #cb005c;
 $pink-800: #8a0030;
 $pink-900: #4d0019;
 $pink-950: #2a0010;
@@ -42,16 +40,16 @@ $pink-950: #2a0010;
 // ── Verde: el éxito de la referencia ($green #31C2A0), oscurecido para el texto claro.
 $green-100: #dcf5ee;
 $green-150: #b6f0e0;
-$green-400: #4fd1b0;
-$green-600: #1e7560;
+$green-400: #31c2a0;
+$green-600: #00755e;
 $green-800: #0f4a3c;
 $green-900: #0f3a30;
 
 // ── Violeta: la información de la referencia ($violet #9013FE), que ya cumplía.
 $violet-100: #f1e3ff;
 $violet-150: #ead6ff;
-$violet-300: #c39bff;
-$violet-600: #9013fe;
+$violet-300: #ab76ff;
+$violet-600: #9012fe;
 $violet-800: #5a0a9e;
 $violet-900: #351060;
 
@@ -60,10 +58,10 @@ $violet-900: #351060;
 $white: #ffffff;
 $gray-100: #ececf1;
 $gray-200: #e3e5f2;
-$gray-350: #a3a3ad;
+$gray-350: #b6b6b6;
 $gray-400: #9e9e9e;
-$gray-500: #80809a;
-$gray-550: #7a7a88;
+$gray-500: #7b7b95;
+$gray-550: #80809a;
 $gray-600: #666666;
 $gray-650: #6c6c74;
 $gray-700: #4a4a4a;

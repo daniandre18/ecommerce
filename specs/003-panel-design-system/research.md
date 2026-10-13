@@ -105,6 +105,15 @@ ajuste de un fondo lo rompe. La compuerta exige ahora el umbral de WCAG **más 0
 claro se oscurecieron un poco, conservando tono y saturación: primario `#3252fe`, error y destructivo
 `#d00047`, éxito `#1e7560`, aviso `#955b00`. Todos quedan en 4,7 o más.
 
+**Revisión de T059, paleta derivada de su objetivo**: con el margen de 0,2, seis colores compartidos se
+movieron para entrar (cuatro en T021, el superpuesto oscuro con el anillo de foco y `$pink-100` en T024),
+y tres pares quedaron a 0,01 de su mínimo sobre la barra de selección (T058). Eso dice que la paleta se
+partía del tono y se corregía. Ahora se deriva: la luminosidad de cada color semántico sale de su
+objetivo (WCAG + 0,5) contra todas las superficies en que se usa, en OKLCH, conservando el tono y la
+saturación de la referencia (`palette-derivation.ts`). El método, el objetivo, el par que restringe a cada
+color y su medición están en [contracts/tokens.md](./contracts/tokens.md), "Derivación de la paleta
+semántica". La tabla de arriba queda como historia de los valores de partida.
+
 **El valor exacto se fija en la implementación**: la tabla es el punto de partida. Lo que obliga es
 la prueba de §6. Si un ajuste visual cambia un valor, la prueba recalcula la razón y el catálogo de
 pares se actualiza con la razón nueva.

@@ -25,12 +25,13 @@ legend {
   font: var(--ds-type-label);
 }
 
+// Una confirmación, no una selección: un grupo con borde dentro de la tarjeta (T059 corrige el uso de
+// `--ds-surface-selected` que dejó T031).
 .confirm {
   margin: 0 0 var(--ds-space-4);
   padding: var(--ds-space-3) var(--ds-space-4);
+  border: var(--ds-border-width) solid var(--ds-border-subtle);
   border-radius: var(--ds-radius-lg);
-  background: var(--ds-surface-selected);
-  color: var(--ds-text-primary);
 }
 
 .confirm-heading {

@@ -1,4 +1,5 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, type Project } from '@playwright/test';
+import { FIRST_HALF } from './shards';
 
 /**
  * Un puerto propio, no el 4200 que usa `nx serve` por omisión: con `reuseExistingServer`, cualquier
@@ -9,13 +10,30 @@ const APP_PORT = 4320;
 const APP_URL = `http://localhost:${APP_PORT}`;
 
 /**
+ * En CI, la e2e corre en dos mitades paralelas, repartidas por duración medida (research §15 de la 003).
+ * La mitad 1 es la lista de `shards.ts`; la 2, todo lo demás, así que una prueba nueva cae en la 2 y
+ * nunca queda fuera. Sin `E2E_SHARD`, corre todo.
+ */
+const SHARD = process.env['E2E_SHARD'];
+if (SHARD !== undefined && SHARD !== '1' && SHARD !== '2') throw new Error(`E2E_SHARD tiene que ser 1 o 2, no "${SHARD}"`);
+const IGNORED = ['performance.spec.ts'];
+
+function half(project: Project): Project {
+  if (SHARD === undefined) return project;
+  const listed = [...(FIRST_HALF[project.name as string] ?? [])];
+  const allowed = project.testMatch as string[] | undefined;
+  if (SHARD === '1') return { ...project, testMatch: allowed ? listed.filter((file) => allowed.includes(file)) : listed };
+  return { ...project, testIgnore: [...IGNORED, ...listed] };
+}
+
+/**
  * Recorridos de extremo a extremo contra el panel servido localmente y los emuladores de Firebase.
  * Nunca contra un proyecto real: los emuladores corren con un proyecto `demo-*`.
  */
 export default defineConfig({
   testDir: './src',
   // El rendimiento se mide aparte, sobre el build optimizado: `nx run admin-e2e:perf`.
-  testIgnore: 'performance.spec.ts',
+  testIgnore: IGNORED,
   globalSetup: './global-setup.ts',
   // En serie: todas las pruebas comparten el comercio sembrado en los emuladores. Con varios
   // navegadores a la vez se observaron cuelgues intermitentes —navegadores ociosos esperando, con
@@ -23,7 +41,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   // Un cuelgue no puede retener la corrida: falla entera a los 10 minutos. En CI corre en dos mitades
-  // (`--shard`), y el tope vale para cada una (research §15 de la 003).
+  // (`E2E_SHARD`), y el tope vale para cada una (research §15 de la 003).
   globalTimeout: 10 * 60_000,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 2 : 0,
@@ -33,7 +51,7 @@ export default defineConfig({
     baseURL: APP_URL,
     trace: 'on-first-retry',
   },
-  projects: [
+  projects: ([
     { name: 'escritorio', use: { ...devices['Desktop Chrome'] } },
     // FR-038: los flujos frecuentes tienen que completarse a 360 px sin desplazamiento horizontal.
     {
@@ -47,7 +65,7 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], colorScheme: 'dark' },
       testMatch: ['a11y.spec.ts', 'design-system.spec.ts'],
     },
-  ],
+  ] satisfies Project[]).map(half),
   webServer: [
     {
       // Las callable corren desde su paquete: se empaqueta antes de levantar el emulador de Functions.

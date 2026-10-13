@@ -1,4 +1,12 @@
+@use 'sass:color';
+@use 'sass:math';
 @use 'palette' as p;
+
+// Un color compuesto en la compilación, con canales enteros: lo que la compuerta de contraste lee.
+@function opaque-mix($top, $bottom, $weight) {
+  $mixed: color.mix($top, $bottom, $weight);
+  @return rgb(math.round(color.channel($mixed, 'red', $space: rgb)), math.round(color.channel($mixed, 'green', $space: rgb)), math.round(color.channel($mixed, 'blue', $space: rgb)));
+}
 
 // Catálogo de tokens del panel (FR-001, contracts/tokens.md). Lo único que una vista puede escribir en
 // un estilo de color, tipografía, espaciado, radio, elevación o borde es `var(--ds-…)` de esta lista.
@@ -11,7 +19,10 @@
   --ds-surface-bar: light-dark(#{p.$blue-50}, #{p.$ink-850}); // propio: la barra, otro tinte del primario
   --ds-surface-overlay: light-dark(#{p.$white}, #{p.$ink-750}); // propio: diálogos y menús
   --ds-surface-hover: light-dark(#{p.$hover-light}, #{p.$hover-dark}); // referencia: hover tenue de la tabla
-  --ds-surface-selected: light-dark(#{p.$blue-75}, #{p.$blue-850}); // propio: barra de selección y fila seleccionada
+  // La selección no tiene color propio: es el primario con opacidad baja sobre la tarjeta, así sigue a la
+  // paleta derivada. Compuesto en la compilación, opaco, para que la compuerta lo mida. Nunca es el único
+  // indicador: la casilla y el contador ("N seleccionados") lo dicen sin color (WCAG 1.4.1, T059).
+  --ds-surface-selected: light-dark(#{opaque-mix(p.$blue-500, p.$white, 8%)}, #{opaque-mix(p.$blue-300, p.$ink-800, 20%)});
 
   // ── Texto ─────────────────────────────────────────────────────────────────────────────────────────
   --ds-text-primary: light-dark(#{p.$gray-700}, #{p.$gray-100}); // referencia: $dark-grey

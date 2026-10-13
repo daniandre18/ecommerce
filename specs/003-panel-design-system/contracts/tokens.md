@@ -21,7 +21,7 @@ sus pares de contraste.
 | `--ds-surface-bar` | Barra superior del comercio | Tinte del primario, distinto de la página |
 | `--ds-surface-overlay` | Diálogo y menú | Como la tarjeta, separada por elevación `overlay` |
 | `--ds-surface-hover` | Capa de hover de una fila o un control | Negro al 4 % (claro) y blanco al 6 % (oscuro), compuestos sobre el plano |
-| `--ds-surface-selected` | Barra de selección (acciones masivas) y fila seleccionada | Propio (T021): un tinte del primario con margen para texto, primario y error encima |
+| `--ds-surface-selected` | Barra de selección (acciones masivas) y edición masiva de variantes | El primario al 8 % sobre la tarjeta (20 % en oscuro), compuesto en la compilación: sigue a la paleta derivada (T059). Nunca es el único indicador de selección: la casilla y el contador ("N seleccionados") lo dicen sin color (WCAG 1.4.1) |
 
 ### Texto e íconos
 
@@ -50,13 +50,50 @@ Para `{s}` en `error`, `warning`, `success` e `info`:
 | `--ds-status-{s}` | Texto e ícono sobre cualquier plano |
 | `--ds-status-{s}-container` / `--ds-on-status-{s}-container` | Aviso en bloque: falla de navegación, error de carga, aviso de bloqueo |
 
+### Derivación de la paleta semántica (T059)
+
+Los colores semánticos **no se eligen y después se corrigen**: se derivan de su objetivo de contraste.
+De la referencia se toman el tono y la saturación (en OKLCH); la luminosidad es la más cercana a la de
+la referencia con la que el color cumple su objetivo **contra todas las superficies en que se usa a la
+vez**, en su esquema. Esas superficies son los pares de `contrast-pairs.ts` en los que aparece el color,
+como primer plano o como fondo. Lo hace `apps/admin/design-system/palette-derivation.ts`, y
+`palette-derivation.spec.ts` exige que `_palette.scss` tenga exactamente el valor derivado.
+
+**Objetivo**: el umbral de WCAG más 0,5 (`MARGIN` en `contrast.ts`): 5,0 para texto, 3,5 para texto
+grande y componentes, 9,5 entre los dos tonos del foco. Con 0,2, seis colores compartidos tuvieron que
+moverse para entrar, y varios pares quedaron a 0,01 del mínimo (T058).
+
+**Para cambiar un color**: no se edita el hex. Se cambia la referencia, o el objetivo, o se agrega el
+par del uso nuevo, y se vuelve a derivar. Si un uso nuevo deja a un color sin luminosidad posible, la
+derivación lo dice en vez de elegir un valor que no cumple.
+
+| Papel | Esquema | Variable | Referencia | Valor | Objetivo | Lo restringe | Medido | Pares |
+|---|---|---|---|---|---|---|---|---|
+| Primario: texto, enlaces, confirmación de sección y anillo activo | claro | `$blue-500` | `#536dfe` | `#4054e4` | 5 | `primary/status-error-container` | 5,00 (de 5,00 a 5,82) | 7 |
+| Primario en oscuro | oscuro | `$blue-300` | `#536dfe` | `#9bb3ff` | 5 | `primary/surface-selected` | 5,00 (de 5,00 a 9,06) | 7 |
+| Error y acción destructiva | claro | `$pink-600` | `#ff4081` | `#cb005c` | 5 | `status-error/surface-bar` | 5,02 (de 5,02 a 5,69) | 5 |
+| Error y acción destructiva en oscuro | oscuro | `$pink-400` | `#ff4081` | `#ff97ae` | 5 | `status-error/surface-selected` | 5,00 (de 5,00 a 9,30) | 5 |
+| Aviso (texto) | claro | `$yellow-700` | `#ffc260` | `#8b5e00` | 5 | `status-warning/surface-bar` | 5,01 (de 5,01 a 5,68) | 3 |
+| Éxito | claro | `$green-600` | `#31c2a0` | `#00755e` | 5 | `status-success/surface-bar` | 5,00 (de 5,00 a 5,67) | 3 |
+| Éxito en oscuro | oscuro | `$green-400` | `#31c2a0` | `#31c2a0` | 5 | `status-success/surface-card` | 6,93 (de 6,93 a 8,24) | 3 |
+| Información | claro | `$violet-600` | `#9013fe` | `#9012fe` | 5 | `status-info/surface-bar` | 5,01 (de 5,01 a 5,67) | 3 |
+| Información en oscuro | oscuro | `$violet-300` | `#9013fe` | `#ab76ff` | 5 | `status-info/surface-card` | 5,01 (de 5,01 a 5,96) | 3 |
+| Texto secundario | claro | `$gray-600` | `#6e6e6e` | `#666666` | 5 | `text-secondary/surface-bar` | 5,07 (de 5,07 a 5,74) | 5 |
+| Texto secundario en oscuro | oscuro | `$gray-350` | `#6e6e6e` | `#b6b6b6` | 5 | `text-secondary/surface-selected` | 5,03 (de 5,03 a 9,12) | 5 |
+| Contorno de control | claro | `$gray-500` | `#80809a` | `#7b7b95` | 3,5 | `border-control/status-error-container` | 3,53 (de 3,53 a 4,11) | 4 |
+| Contorno de control en oscuro | oscuro | `$gray-550` | `#80809a` | `#80809a` | 3,5 | `border-control/surface-card` | 4,05 (de 4,05 a 4,82) | 4 |
+
+"Lo restringe" es el par que fija la luminosidad: el que queda más cerca de su objetivo. "Medido" es
+esa razón, y el rango contra todas las superficies del color. Los planos, los tintes de contenedor y los
+colores "sobre" no se derivan: se verifican con la misma compuerta, al mismo objetivo.
+
 ### Bordes y foco
 
 | Token | Papel | Contraste |
 |---|---|---|
 | `--ds-border-subtle` | Separa la tarjeta del fondo, y las filas entre sí | Decorativo: la tarjeta ya se distingue por el tono |
 | `--ds-border-control` | Límite de un campo, de un checkbox o de un botón con contorno | `ui`, 3:1 contra el plano (WCAG 1.4.11) |
-| `--ds-focus-ring-inner` / `--ds-focus-ring-outer` | Indicador de foco de dos tonos: trazo claro por dentro, oscuro por fuera (técnica C40 de WCAG) | `two-tone`: 9:1 entre los dos tonos (hoy 17,26). Con eso, contra cualquier fondo uno de los dos da 3:1 o más; contra los fondos del sistema, el peor caso es 5,14 (FR-023) |
+| `--ds-focus-ring-inner` / `--ds-focus-ring-outer` | Indicador de foco de dos tonos: trazo claro por dentro, oscuro por fuera (técnica C40 de WCAG) | `two-tone`: 9:1 entre los dos tonos (hoy 17,26). Con eso, contra cualquier fondo uno de los dos da 3:1 o más; contra los fondos del sistema, el peor caso es 5,69, el botón destructivo claro (FR-023; 5,14 antes de T059) |
 
 ## Tipografía (FR-014 a FR-017)
 

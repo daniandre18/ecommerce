@@ -30,11 +30,12 @@ export interface ContrastPair {
 export const THRESHOLD: Readonly<Record<ContrastKind, number>> = { text: 4.5, 'large-text': 3, ui: 3, 'two-tone': 9 };
 
 /**
- * Política de margen del panel (revisión del 2026-10-12): cada par exige 0,2 sobre su umbral de WCAG.
- * Pasar por 0,03 o 0,04 no es cumplir, es no incumplir por casualidad: cualquier ajuste de un fondo lo
- * rompe. Con 0,2, un fondo puede moverse un paso de luminosidad sin que nada caiga bajo AA.
+ * Política de margen del panel: cada par exige 0,5 sobre su umbral de WCAG (5,0 para texto, 3,5 para
+ * componentes). Con 0,2, seis colores compartidos tuvieron que moverse para entrar, y varios pares
+ * quedaron a 0,01 del mínimo: un velo del 5 % los bajaba de AA (T058). Con 0,5, la paleta se deriva de
+ * ese objetivo (palette-derivation.ts) y un ajuste futuro de un fondo no la tumba (T059).
  */
-export const MARGIN = 0.2;
+export const MARGIN = 0.5;
 
 const SCHEMES: readonly Scheme[] = ['light', 'dark'];
 const PLANES: readonly DsToken[] = ['--ds-surface-page', '--ds-surface-card', '--ds-surface-bar'];

@@ -98,7 +98,8 @@ jobs:
   # (`admin-e2e:perf`) queda fuera: en máquinas compartidas sus tiempos dan ruido, y un umbral que
   # falla al azar enseña a ignorar la compuerta. Se corre antes de integrar.
   # La e2e en dos mitades, en paralelo y cada una con sus propios emuladores: en un solo runner pasaba
-  # los 9 minutos (research §15 de la 003). Playwright reparte las pruebas con `--shard`.
+  # los 9 minutos (research §15 de la 003). Se reparten por duración medida en CI, no por cantidad:
+  # `apps/admin-e2e/shards.ts` lista la mitad 1, y la 2 es todo lo demás (`E2E_SHARD`).
   e2e-shard:
     name: e2e (${{ matrix.shard }}/2)
     runs-on: ubuntu-latest
@@ -116,7 +117,9 @@ jobs:
       # deja en el PATH setup-emulators, en la misma versión que el resto de los trabajos.
       - run: npx playwright install --with-deps chromium
       # GitHub define CI=true: la configuración activa forbidOnly, dos reintentos y el reportero github.
-      - run: npx nx run admin-e2e:e2e --skip-nx-cache --shard=${{ matrix.shard }}/2
+      - run: npx nx run admin-e2e:e2e --skip-nx-cache
+        env:
+          E2E_SHARD: ${{ matrix.shard }}
       # La duración de cada prueba en el runner, siempre: con ella se reparten las mitades (research §15).
       - uses: actions/upload-artifact@v4
         if: always()
