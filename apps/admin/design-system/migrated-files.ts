@@ -60,4 +60,9 @@ export const MIGRATED_FILES: readonly string[] = [
   'apps/admin/src/app/catalog/product-editor/options-editor/options-editor.html',
   'apps/admin/src/app/catalog/product-editor/options-editor/options-editor.scss',
   'apps/admin/src/app/catalog/product-editor/options-editor/options-editor.ts',
+  // T033: categorías.
+  'apps/admin/src/app/catalog/categories/categories-page.html',
+  'apps/admin/src/app/catalog/categories/categories-page.scss',
+  'apps/admin/src/app/catalog/categories/categories-page.ts',
+  'apps/admin/src/app/catalog/categories/category-row.ts',
 ];

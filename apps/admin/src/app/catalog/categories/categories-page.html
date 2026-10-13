@@ -1,7 +1,7 @@
 <h1>Categorías</h1>
 
 @if (canWrite() && ready()) {
-  <form class="create" novalidate aria-labelledby="nueva" (submit)="$event.preventDefault(); create()">
+  <form class="create ds-card" novalidate aria-labelledby="nueva" (submit)="$event.preventDefault(); create()">
     <h2 id="nueva">Nueva categoría</h2>
     <div class="fields">
       <mat-form-field subscriptSizing="dynamic">
@@ -27,7 +27,7 @@
     <p class="slug-preview" aria-live="polite">{{ slugPreview()?.text ?? '' }}</p>
     <div role="alert" class="failure">{{ createFailure() }}</div>
     <div class="actions">
-      <button matButton="filled" type="submit" [disabled]="!canCreate()">Crear categoría</button>
+      <button matButton="filled" class="ds-primary-action" type="submit" [disabled]="!canCreate()">Crear categoría</button>
     </div>
   </form>
 }
@@ -53,7 +53,7 @@
   <ui-error-state heading="No pudimos cargar las categorías" [retrying]="tree.status() === 'reloading'" (retry)="tree.reload()" />
 } @else if (ready(); as tree) {
   @if (empty()) {
-    <ui-empty-state heading="Todavía no hay categorías" [message]="canWrite() ? 'Creá la primera para empezar a organizar tu catálogo.' : ''" />
+    <ui-empty-state class="ds-card" heading="Todavía no hay categorías" [message]="canWrite() ? 'Creá la primera para empezar a organizar tu catálogo.' : ''" />
   } @else if (filter() === 'all') {
     <div cdkDropListGroup>
       <ng-container [ngTemplateOutlet]="branch" [ngTemplateOutletContext]="{ $implicit: null, level: 1 }" />
@@ -62,7 +62,7 @@
     @if (filtered().length === 0) {
       <p class="none">{{ filter() === 'hidden' ? 'No hay categorías ocultas.' : 'No hay categorías visibles.' }}</p>
     } @else {
-      <ul class="flat">
+      <ul class="flat ds-card">
         @for (node of filtered(); track node.id; let i = $index) {
           @if (i < drawn()) {
             <li [attr.data-category]="node.id" aria-level="1">
@@ -75,7 +75,9 @@
   }
 
   <ng-template #branch let-parent let-level="level">
+    <!-- Solo el primer nivel es la tarjeta: los subárboles van adentro. -->
     <ul
+      [class.ds-card]="level === 1"
       cdkDropList
       [cdkDropListData]="parent"
       [attr.data-parent]="parent ?? 'root'"
@@ -97,5 +99,5 @@
     </ul>
   </ng-template>
 } @else {
-  <ui-skeleton rows="5" rowHeight="56px" label="Cargando las categorías…" />
+  <ui-skeleton class="ds-card" rows="5" rowHeight="56px" label="Cargando las categorías…" />
 }

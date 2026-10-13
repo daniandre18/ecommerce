@@ -1,24 +1,23 @@
 h1 {
-  margin: 0 0 16px;
-  font: var(--mat-sys-headline-small);
+  margin: 0 0 var(--ds-space-4);
+  font: var(--ds-type-page-title);
+  letter-spacing: var(--ds-type-page-title-tracking);
 }
 
 h2 {
-  margin: 0 0 8px;
-  font: var(--mat-sys-title-medium);
+  margin: 0 0 var(--ds-space-2);
+  font: var(--ds-type-section-title);
 }
 
+// El alta es una tarjeta (`.ds-card`); el árbol, otra.
 .create {
-  margin-bottom: 24px;
-  padding: 16px;
-  border-radius: 12px;
-  background: var(--mat-sys-surface-container-low);
+  margin-bottom: var(--ds-space-6);
 }
 
 .fields {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--ds-space-2);
 }
 
 /* Sin min-width: 0, el selector toma el ancho de su ruta más larga y desborda a 360 px. */
@@ -30,24 +29,24 @@ h2 {
 .select {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font: var(--mat-sys-body-medium);
+  gap: var(--ds-space-1);
+  font: var(--ds-type-body);
 }
 
 .select select {
-  min-height: 48px;
+  min-height: var(--ds-touch-target);
   max-width: 100%;
   font: inherit;
 }
 
 .filter {
   max-width: 320px;
-  margin-bottom: 16px;
+  margin-bottom: var(--ds-space-4);
 }
 
 .slug-preview {
-  margin: 8px 0;
-  font: var(--mat-sys-body-medium);
+  margin: var(--ds-space-2) 0;
+  font: var(--ds-type-body);
   overflow-wrap: anywhere;
 }
 
@@ -64,21 +63,24 @@ ul {
 
 /* Cada nivel, un poco más adentro; a 360 px, tres niveles siguen entrando (FR-038 de la 001). */
 li ul {
-  padding-left: 16px;
-  border-left: 1px solid var(--mat-sys-outline-variant);
+  padding-left: var(--ds-space-4);
+  border-left: var(--ds-border-width) solid var(--ds-border-subtle);
 }
 
+// El fondo es el de la tarjeta: al arrastrar, la fila se sigue viendo sobre lo que pasa por debajo.
 li {
-  border-bottom: 1px solid var(--mat-sys-outline-variant);
-  background: var(--mat-sys-surface);
+  border-bottom: var(--ds-border-width) solid var(--ds-border-subtle);
+  background: var(--ds-surface-card);
 }
 
-li li:last-child {
+li:last-child {
   border-bottom: 0;
 }
 
+// Lo que se arrastra flota sobre la vista: el plano y la elevación de lo superpuesto.
 .cdk-drag-preview {
-  box-shadow: var(--mat-sys-level3);
+  background: var(--ds-surface-overlay);
+  box-shadow: var(--ds-elevation-overlay);
 }
 
 .cdk-drag-placeholder {
@@ -86,11 +88,11 @@ li li:last-child {
 }
 
 .none {
-  color: var(--mat-sys-on-surface-variant);
+  color: var(--ds-text-secondary);
 }
 
 .failure {
-  color: var(--mat-sys-error);
+  color: var(--ds-status-error);
 }
 
 .failure:empty {

@@ -125,7 +125,7 @@ type Mode = 'idle' | 'rename' | 'slug' | 'move' | 'hide' | 'delete' | 'delete-bl
           <p aria-live="polite">{{ deleteWarning() }}</p>
           <div class="buttons">
             <button matButton type="button" (click)="cancel()">Cancelar</button>
-            <button matButton="filled" type="button" [disabled]="busy() || affected() === null" (click)="remove()">Eliminar</button>
+            <button matButton="filled" class="ds-destructive" type="button" [disabled]="busy() || affected() === null" (click)="remove()">Eliminar</button>
           </div>
         </div>
       }
@@ -140,14 +140,14 @@ type Mode = 'idle' | 'rename' | 'slug' | 'move' | 'hide' | 'delete' | 'delete-bl
     .line {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: var(--ds-space-2);
       min-height: 56px;
     }
 
     .handle {
       cursor: grab;
-      padding: 12px 4px;
-      color: var(--mat-sys-on-surface-variant);
+      padding: var(--ds-space-3) var(--ds-space-1);
+      color: var(--ds-text-secondary);
     }
 
     .info {
@@ -158,27 +158,28 @@ type Mode = 'idle' | 'rename' | 'slug' | 'move' | 'hide' | 'delete' | 'delete-bl
     }
 
     .category-name {
-      font: var(--mat-sys-title-small);
+      font: var(--ds-type-label);
       overflow-wrap: anywhere;
     }
 
     .category-path,
     .category-slug {
-      font: var(--mat-sys-body-small);
-      color: var(--mat-sys-on-surface-variant);
+      font: var(--ds-type-help);
+      color: var(--ds-text-secondary);
       overflow-wrap: anywhere;
     }
 
     .category-state {
-      font: var(--mat-sys-label-medium);
-      color: var(--mat-sys-on-surface-variant);
+      font: var(--ds-type-help);
+      color: var(--ds-text-secondary);
     }
 
+    /* La edición de una fila es un grupo con borde dentro de la tarjeta, no otro plano. */
     .panel {
-      margin: 0 0 12px;
-      padding: 12px 16px;
-      border-radius: 12px;
-      background: var(--mat-sys-surface-container);
+      margin: 0 0 var(--ds-space-3);
+      padding: var(--ds-space-3) var(--ds-space-4);
+      border: var(--ds-border-width) solid var(--ds-border-subtle);
+      border-radius: var(--ds-radius-lg);
     }
 
     .panel mat-form-field {
@@ -186,23 +187,23 @@ type Mode = 'idle' | 'rename' | 'slug' | 'move' | 'hide' | 'delete' | 'delete-bl
     }
 
     .panel p {
-      margin: 0 0 8px;
+      margin: 0 0 var(--ds-space-2);
     }
 
     .note {
-      font: var(--mat-sys-body-small);
-      color: var(--mat-sys-on-surface-variant);
+      font: var(--ds-type-help);
+      color: var(--ds-text-secondary);
     }
 
     .select {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      margin-bottom: 8px;
+      gap: var(--ds-space-1);
+      margin-bottom: var(--ds-space-2);
     }
 
     .select select {
-      min-height: 48px;
+      min-height: var(--ds-touch-target);
       max-width: 100%;
       font: inherit;
     }
@@ -211,11 +212,11 @@ type Mode = 'idle' | 'rename' | 'slug' | 'move' | 'hide' | 'delete' | 'delete-bl
       display: flex;
       flex-wrap: wrap;
       justify-content: flex-end;
-      gap: 8px;
+      gap: var(--ds-space-2);
     }
 
     .failure {
-      color: var(--mat-sys-error);
+      color: var(--ds-status-error);
     }
 
     .failure:empty {

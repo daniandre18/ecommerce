@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { expectAccent, expectBackground, expectDestructive, expectPlanes, expectTypeHierarchy, readOnlyCollaborator } from './design-system-support';
 import { call, idTokenOf, MULTI, OWNER, productAsOwner, signIn, signUpFromLink } from './support';
 
@@ -262,4 +262,46 @@ test('pantalla: diálogo: imágenes de una variante', async ({ page }) => {
   await expect(page.getByRole('dialog', { name: 'Imágenes de Única' })).toBeVisible();
   await expectAccent(page, null, 'dialog');
   await expectDestructive(page, [], 'dialog');
+});
+
+// T033: categorías. "Crear categoría" es la tarea de la vista; en cada fila, "Guardar", "Mover" y
+// "Ocultar" son confirmaciones de sección, y "Eliminar", destructiva.
+test.describe('pantalla: categorías', () => {
+  async function withCategory(page: Page): Promise<string> {
+    const name = `Diseño ${Date.now()}`;
+    await call(await idTokenOf(OWNER), 'createCategory', { tenantId: 't1', requestId: crypto.randomUUID(), parentId: null, name });
+    await page.goto('/login');
+    await signIn(page, OWNER);
+    await page.goto('/t/t1/categories');
+    await expect(page.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible();
+    // "Crear categoría" está deshabilitado hasta que hay un nombre, y deshabilitado no lleva el acento
+    // (FR-025): el acento se mide con la acción disponible.
+    await page.locator('[data-field="newName"]').fill(`Nueva ${Date.now()}`);
+    await expect(page.getByRole('button', { name: 'Crear categoría' })).toBeEnabled();
+    return name;
+  }
+
+  test('el único acento es "Crear categoría", con planos y jerarquía', async ({ page }) => {
+    await withCategory(page);
+    await expectAccent(page, 'Crear categoría');
+    await expectDestructive(page, []);
+    await expectPlanes(page, 'page-card-bar');
+    await expectTypeHierarchy(page);
+  });
+
+  test('una fila en edición no agrega acento, y al eliminar el destructivo es solo "Eliminar"', async ({ page }) => {
+    const name = await withCategory(page);
+    const row = page.locator('li', { has: page.getByRole('button', { name: `Acciones de «${name}»` }) }).first();
+    await page.getByRole('button', { name: `Acciones de «${name}»` }).click();
+    await page.getByRole('menuitem', { name: 'Renombrar' }).click();
+    await expect(row.getByRole('button', { name: 'Guardar' })).toBeVisible();
+    await expectAccent(page, 'Crear categoría');
+    await row.getByRole('button', { name: 'Cancelar' }).click();
+
+    await page.getByRole('button', { name: `Acciones de «${name}»` }).click();
+    await page.getByRole('menuitem', { name: 'Eliminar' }).click();
+    await expect(row.getByRole('button', { name: 'Eliminar' })).toBeEnabled();
+    await expectAccent(page, 'Crear categoría');
+    await expectDestructive(page, ['Eliminar']);
+  });
 });

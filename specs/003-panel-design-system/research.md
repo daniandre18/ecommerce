@@ -509,6 +509,8 @@ del paso de pruebas (`nx run admin-e2e:e2e`), sacadas de las marcas de tiempo de
 | 38466004156 (`71f962a`) | un runner | 182 pasadas, 8 omitidas | 570 s | 0 |
 | 38472136770 (`71cd571`) | mitad 1/2 | 90 pasadas, 6 omitidas | 211 s | 0 |
 | 38472136770 (`71cd571`) | mitad 2/2 | 92 pasadas, 2 omitidas | 302 s | 0 |
+| 38481450673 (`7a714b2`) | mitad 1, por duración | 98 pasadas | 229 s | 0 |
+| 38481450673 (`7a714b2`) | mitad 2, por duración | 93 pasadas, 8 omitidas | 224 s | 0 |
 
 - **Lo que cuesta una prueba**: las tres de T030 sumaron 8 s al paso (de 562 a 570 s), unos 2,7 s cada
   una. Entre esas dos corridas el *trabajo* sí subió 101 s, pero 88 s fueron `npm install -g
@@ -521,6 +523,16 @@ del paso de pruebas (`nx run admin-e2e:e2e`), sacadas de las marcas de tiempo de
   propios emuladores. La más lenta tarda 302 s, con 298 s de margen contra el tope: la mitad del tope
   libre, no al filo. El trabajo `e2e` exige las dos mitades, así que el check obligatorio no cambia de
   nombre. Cada mitad repite la preparación del runner (unos 60 a 80 s, más lo que tarde npm).
+- **Reparto por duración** (T059): `--shard` corta por cantidad de pruebas, y cada caso nuevo puede
+  desbalancearlo: con la misma suite dio 211 y 302 s (43 %) y, una corrida después, 309 y 301 s. Ahora
+  `apps/admin-e2e/balance-shards.ts` arma la mitad 1 con las duraciones del reporte JSON de CI (el
+  más largo primero, a la mitad más liviana) y la escribe en `shards.ts`; la mitad 2 es todo lo demás,
+  así que una prueba nueva nunca queda fuera (`E2E_SHARD`). Medido: 229 y 224 s, un 2 % de diferencia.
+  Se vuelve a generar cuando la diferencia pase del 15 %.
+- **`firebase-tools` en caché** (T059): instalarlo del registro en cada corrida tardaba de 15 a 106 s en
+  la e2e, sin cambios, según la red de npm, y `rules` e `integration` lo bajaban con `npx`. Ahora se
+  instala en `~/.firebase-tools`, cacheado por versión, desde `setup-emulators`. Con caché: de 2,3 a
+  4,4 s en los cuatro trabajos (corrida 38481450673).
 - **Cuándo revisarlo**: si la mitad más lenta pasa de 7 minutos (70 % del tope), se reparte en tres o
   se revisa qué prueba creció, antes de tocar el tope. Subirlo no es la salida: el tope protege de un
   cuelgue, y uno más alto solo tarda más en avisar.
