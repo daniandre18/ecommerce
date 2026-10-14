@@ -5,6 +5,10 @@ import { call, idTokenOf, MULTI, OWNER, productAsOwner, signIn, signUpFromLink }
 // 003 — el sistema de diseño, medido en lo que el navegador computa. Corre en los tres proyectos,
 // `oscuro` incluido. Cada caso de una pantalla se titula `pantalla: <screen>`, con el `screen` textual
 // de apps/admin/design-system/primary-actions.ts (G1).
+//
+// Los productos que crean estos casos empiezan con "DS-" y no contienen el nombre de ninguna sección
+// (Catálogo, Categorías, Equipo, Bitácora): el catálogo los muestra como enlaces, y otras pruebas buscan
+// los de la navegación por subcadena. "Bitácora 123" hacía que encontraran dos.
 
 // T024: los estados compartidos los usan todas las vistas, así que su caso va primero.
 test.describe('estados compartidos', () => {
@@ -33,7 +37,7 @@ test.describe('estados compartidos', () => {
 // T025: el diálogo de confirmación. Sus cinco usos son destructivos, así que el caso usa uno, el de
 // salir con cambios sin guardar, que se abre desde cualquier editor.
 test('pantalla: diálogo: confirmación', async ({ page }) => {
-  const { url } = await productAsOwner(`Confirmación ${Date.now()}`);
+  const { url } = await productAsOwner(`DS-Confirmación ${Date.now()}`);
   await page.goto(url);
   await signIn(page, OWNER);
   await page.getByLabel('Nombre', { exact: true }).fill('Nombre a medio escribir');
@@ -146,7 +150,7 @@ test.describe('pantalla: invitación', () => {
 // es confirmación de sección, y el acento no cambia de lugar (contracts/primary-actions.md).
 test.describe('pantalla: catálogo', () => {
   test('con productos, y con la barra de selección abierta, el único acento es "Nuevo producto"', async ({ page }) => {
-    await productAsOwner(`Catálogo ${Date.now()}`);
+    await productAsOwner(`DS-Listado ${Date.now()}`);
     await page.goto('/login');
     await signIn(page, OWNER);
     await expect(page.getByRole('heading', { level: 1, name: 'Catálogo' })).toBeVisible();
@@ -175,7 +179,7 @@ test.describe('pantalla: catálogo', () => {
   test('sin permiso de escritura: ningún acento', async ({ page }) => {
     // Depende de T102 de la 001: si catalog.read sale del enumerado, usar un rol sin permisos.
     const email = await readOnlyCollaborator(`sin-acento-${Date.now()}`);
-    await productAsOwner(`Solo lectura ${Date.now()}`);
+    await productAsOwner(`DS-Solo lectura ${Date.now()}`);
     await page.goto('/login');
     await signIn(page, email);
     await expect(page.getByRole('heading', { level: 1, name: 'Catálogo' })).toBeVisible();
@@ -197,7 +201,7 @@ test('pantalla: diálogo: nuevo producto', async ({ page }) => {
 // T031: el editor de producto. Sin acción principal: se edita por partes, y cada sección se confirma
 // con su propio "Guardar", en primario. "Archivar producto" es la única destructiva.
 test('pantalla: producto', async ({ page }) => {
-  const { url } = await productAsOwner(`Editor ${Date.now()}`);
+  const { url } = await productAsOwner(`DS-Editor ${Date.now()}`);
   await page.goto(url);
   await signIn(page, OWNER);
   await expect(page.getByRole('group', { name: /^Única/ })).toBeVisible();
@@ -235,7 +239,7 @@ test('pantalla: producto', async ({ page }) => {
 // T032: los diálogos de las variantes. "Confirmar" es la tarea del primero; el de imágenes no tiene
 // acción principal: cada imagen se guarda por su cuenta y "Listo" solo cierra.
 test('pantalla: diálogo: qué valor tiene cada variante', async ({ page }) => {
-  const { url } = await productAsOwner(`Asignar ${Date.now()}`);
+  const { url } = await productAsOwner(`DS-Asignar ${Date.now()}`);
   await page.goto(url);
   await signIn(page, OWNER);
   const only = page.getByRole('group', { name: /^Única/ });
@@ -255,7 +259,7 @@ test('pantalla: diálogo: qué valor tiene cada variante', async ({ page }) => {
 });
 
 test('pantalla: diálogo: imágenes de una variante', async ({ page }) => {
-  const { url } = await productAsOwner(`Imágenes ${Date.now()}`);
+  const { url } = await productAsOwner(`DS-Imágenes ${Date.now()}`);
   await page.goto(url);
   await signIn(page, OWNER);
   await page.getByRole('group', { name: /^Única/ }).getByRole('button', { name: 'Imágenes de Única (0)' }).click();
@@ -352,7 +356,7 @@ test('pantalla: rol', async ({ page }) => {
 // T035: la bitácora, de solo lectura: sin acción principal ni destructivas. Es la vista más densa en
 // texto, así que su caso mira también que cada entrada sea una fila del sistema.
 test('pantalla: bitácora', async ({ page }) => {
-  const { productId, variantId } = await productAsOwner(`Bitácora ${Date.now()}`);
+  const { productId, variantId } = await productAsOwner(`DS-Registro ${Date.now()}`);
   await call(await idTokenOf(OWNER), 'setVariantPrice', { tenantId: 't1', productId, changes: [{ variantId, version: 1, price: { amount: 52000, currency: 'COP' } }] });
   await page.goto('/login');
   await signIn(page, OWNER);
