@@ -1,0 +1,8 @@
+// Fixture de adoption.spec.ts: el mixin definido e incluido.
+@mixin ds-paginator {
+  color: inherit;
+}
+
+html {
+  @include ds-paginator;
+}
