@@ -133,12 +133,13 @@
   --ds-row-height: 72px; // fila del listado y de su esqueleto
   --ds-motion-short: 150ms; // cambio de estado de un control
 
-  // ── Capas de estado (FR-022, FR-026, T058) ───────────────────────────────────────────────────────
+  // ── Capas de estado (FR-022, FR-026, T058, T036) ─────────────────────────────────────────────────
   // El velo que Material pinta sobre un control en hover, con foco y al presionar. Al presionar pinta dos
-  // capas con la opacidad de presionado (el velo de `:active` y la onda), y es el peor caso: el texto del
-  // control sigue en su objetivo de contraste, como miden los pares con `layers` de contrast-pairs.ts. El foco lo indica el anillo de dos tonos
-  // (FR-023), no el velo; y el hover nunca agrega información (FR-026).
+  // capas con la opacidad de presionado (el velo de `:active` y la onda). El foco conserva la opacidad de
+  // Material: las casillas y los radios lo muestran con ese velo; los botones, además, con el anillo de dos
+  // tonos. El texto de un control sigue en su objetivo de contraste en cada estado, como miden los pares
+  // con `layers` de contrast-pairs.ts. El hover nunca agrega información (FR-026).
   --ds-state-hover-opacity: 0.04;
-  --ds-state-focus-opacity: 0.04;
+  --ds-state-focus-opacity: 0.12;
   --ds-state-pressed-opacity: 0.06;
 }

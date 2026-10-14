@@ -36,10 +36,27 @@ body {
   transform: translate(-50%, -50%);
 }
 
-// Foco siempre visible con teclado (WCAG 2.4.7 y 2.4.11).
+// Foco siempre visible con teclado (WCAG 2.4.7 y 2.4.11), con un anillo de dos tonos (técnica C40, FR-023):
+// el trazo claro es el `outline`, separado del control; el oscuro, una sombra que cubre la separación, el
+// trazo claro y su propio ancho. Entre los dos hay 17,26:1, así que sobre cualquier fondo uno de los dos
+// contrasta. Ninguno ocupa espacio. En colores forzados el navegador quita la sombra y deja el `outline`.
+@mixin focus-ring {
+  outline: var(--ds-focus-ring-width) solid var(--ds-focus-ring-inner);
+  outline-offset: var(--ds-focus-ring-offset);
+  box-shadow: 0 0 0 calc(var(--ds-focus-ring-offset) + var(--ds-focus-ring-width) + var(--ds-focus-ring-outer-width)) var(--ds-focus-ring-outer);
+}
+
 :focus-visible {
-  outline: 3px solid var(--mat-sys-primary);
-  outline-offset: 2px;
+  @include focus-ring;
+}
+
+// Los botones y las opciones de menú de Material se quitan el `outline` (`.mdc-button { outline: none }`), y
+// en colores forzados le ponen a todo botón un `outline` de 1 px, tenga foco o no. Su hoja llega después,
+// así que a igual especificidad ganaba: el foco era solo el velo, y en colores forzados no se distinguía
+// un botón con foco de uno sin él. `html` sube la regla un nivel.
+html .mat-mdc-button-base:focus-visible,
+html .mat-mdc-menu-item:focus-visible {
+  @include focus-ring;
 }
 
 // Respetar la preferencia de movimiento reducido (WCAG 2.3.3).

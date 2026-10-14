@@ -445,3 +445,80 @@ test.describe('estado presionado', () => {
     await measure(page, 'Reintentar (en el aviso de error)', failure.getByRole('button', { name: 'Reintentar', exact: true }));
   });
 });
+
+// T036 (FR-023): el anillo de foco de dos tonos (técnica C40). Con el teclado, un control sobre cada plano
+// —página, tarjeta, barra y diálogo— y la acción principal (fondo de acento) tienen el trazo claro
+// (`outline`) y el oscuro (`box-shadow`) con sus anchos. En colores forzados queda el `outline`.
+test.describe('foco', () => {
+  /** Lo que el navegador computa para el anillo de `target` con foco de teclado, y los valores de los tokens. */
+  async function ring(page: Page, target: ReturnType<Page['locator']>) {
+    await page.keyboard.press('Shift');
+    await target.focus();
+    // Un botón `filled` de Material anima su sombra (280 ms): se mide el anillo ya puesto, no a mitad.
+    await target.evaluate((element) => Promise.all(element.getAnimations().map((animation) => animation.finished.catch(() => undefined))));
+    return target.evaluate((element) => {
+      const probe = document.body.appendChild(document.createElement('div'));
+      probe.style.color = 'var(--ds-focus-ring-inner)';
+      probe.style.backgroundColor = 'var(--ds-focus-ring-outer)';
+      const inner = getComputedStyle(probe).color;
+      const outer = getComputedStyle(probe).backgroundColor;
+      const read = (token: string) => getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+      probe.remove();
+      const style = getComputedStyle(element);
+      return {
+        focusVisible: element.matches(':focus-visible'),
+        outline: `${style.outlineStyle} ${style.outlineWidth} ${style.outlineColor}`,
+        offset: style.outlineOffset,
+        shadow: style.boxShadow,
+        expected: {
+          outline: `solid ${read('--ds-focus-ring-width')} ${inner}`,
+          offset: read('--ds-focus-ring-offset'),
+          spread: `${Number.parseFloat(read('--ds-focus-ring-offset')) + Number.parseFloat(read('--ds-focus-ring-width')) + Number.parseFloat(read('--ds-focus-ring-outer-width'))}px`,
+          outer,
+        },
+      };
+    });
+  }
+
+  async function expectTwoTone(page: Page, name: string, target: ReturnType<Page['locator']>) {
+    const found = await ring(page, target);
+    expect(found.focusVisible, `${name}: foco de teclado`).toBe(true);
+    expect(found.outline, `${name}: trazo claro`).toBe(found.expected.outline);
+    expect(found.offset, `${name}: separación`).toBe(found.expected.offset);
+    expect(found.shadow, `${name}: trazo oscuro`).toContain(found.expected.outer);
+    expect(found.shadow, `${name}: ancho del trazo oscuro`).toContain(`0px 0px 0px ${found.expected.spread}`);
+  }
+
+  // Los campos de Material no llevan `outline`: su foco es la línea activa, en primario y más gruesa
+  // (contracts/component-treatments.md, "Campo de formulario"). El anillo es de todo lo demás.
+  test('sobre la página, la tarjeta, la barra, el acento y un diálogo', async ({ page }) => {
+    const { url } = await productAsOwner(`DS-Foco ${Date.now()}`);
+    await page.goto(url);
+    await signIn(page, OWNER);
+    await expect(page.getByRole('group', { name: /^Única/ })).toBeVisible();
+    await expectTwoTone(page, 'página (← Catálogo)', page.getByRole('link', { name: '← Catálogo', exact: true }));
+    await page.getByRole('link', { name: '← Catálogo', exact: true }).click();
+    await expect(page.locator('ui-skeleton')).toHaveCount(0);
+    await expectTwoTone(page, 'tarjeta (un producto)', page.locator('ul.ds-card a').first());
+    await expectTwoTone(page, 'barra (Categorías)', page.getByRole('link', { name: 'Categorías', exact: true }));
+    await expectTwoTone(page, 'acento (Nuevo producto)', page.getByRole('button', { name: 'Nuevo producto', exact: true }));
+    await page.getByRole('button', { name: 'Nuevo producto', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Nuevo producto', exact: true });
+    await expect(dialog).toBeVisible();
+    await expectTwoTone(page, 'diálogo (Cancelar)', dialog.getByRole('button', { name: 'Cancelar', exact: true }));
+  });
+
+  test('en colores forzados el anillo conserva el trazo', async ({ page }) => {
+    await page.emulateMedia({ forcedColors: 'active' });
+    await page.goto('/login');
+    await signIn(page, OWNER);
+    await expect(page.locator('ui-skeleton')).toHaveCount(0);
+    const found = await ring(page, page.getByRole('button', { name: 'Nuevo producto', exact: true }));
+    expect(found.focusVisible).toBe(true);
+    // El color lo pone el sistema; el ancho tiene que ser el del anillo. Sin él, Chrome dibuja su propio
+    // indicador de reserva (1 px), y "hay un trazo" no distinguiría uno de otro.
+    const [style, width] = found.outline.split(' ');
+    expect(style).toBe('solid');
+    expect(width).toBe(found.expected.outline.split(' ')[1]);
+  });
+});
