@@ -721,4 +721,69 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     plane: 'overlay',
     declared: { light: 7.32, dark: 8.52 },
   },
+  // Hover (T040, historia 2, escenario 5): el velo de `--ds-surface-hover` compuesto sobre el plano. Solo lo
+  // usa la fila del sistema (`.ds-table-row`), que vive en tarjetas, con texto primario, secundario, de
+  // enlace y de error. Sobre la página y la barra no hay hover con este velo (los botones usan el suyo, en
+  // los pares de presionado y con foco): declararlo exigiría un objetivo hipotético.
+  {
+    id: 'text-primary/surface-card/hover',
+    foreground: '--ds-text-primary',
+    background: '--ds-surface-card',
+    layers: [{ color: '--ds-surface-hover' }],
+    kind: 'text',
+    state: 'hover',
+    plane: 'card',
+    declared: { light: 8.11, dark: 11.06 },
+  },
+  {
+    id: 'text-secondary/surface-card/hover',
+    foreground: '--ds-text-secondary',
+    background: '--ds-surface-card',
+    layers: [{ color: '--ds-surface-hover' }],
+    kind: 'text',
+    state: 'hover',
+    plane: 'card',
+    declared: { light: 5.26, dark: 5.41 },
+  },
+  {
+    id: 'text-link/surface-card/hover',
+    foreground: '--ds-text-link',
+    background: '--ds-surface-card',
+    layers: [{ color: '--ds-surface-hover' }],
+    kind: 'text',
+    state: 'hover',
+    plane: 'card',
+    declared: { light: 6.25, dark: 6.93 },
+  },
+  {
+    id: 'status-error/surface-card/hover',
+    foreground: '--ds-status-error',
+    background: '--ds-surface-card',
+    layers: [{ color: '--ds-surface-hover' }],
+    kind: 'text',
+    state: 'hover',
+    plane: 'card',
+    declared: { light: 5.21, dark: 5.41 },
+  },
+  // Deshabilitado (T040): sobre el diálogo y sobre el contenedor de un botón `filled` deshabilitado
+  // (`--ds-surface-hover` sobre la tarjeta). WCAG lo exime: se declara para que se vea, no se exige.
+  {
+    id: 'text-disabled/surface-overlay',
+    foreground: '--ds-text-disabled',
+    background: '--ds-surface-overlay',
+    kind: 'ui',
+    state: 'disabled',
+    plane: 'overlay',
+    declared: { light: 2.68, dark: 2.72 },
+  },
+  {
+    id: 'text-disabled/surface-card/boton-filled',
+    foreground: '--ds-text-disabled',
+    background: '--ds-surface-card',
+    layers: [{ color: '--ds-surface-hover' }],
+    kind: 'ui',
+    state: 'disabled',
+    plane: 'card',
+    declared: { light: 2.45, dark: 2.5 },
+  },
 ];

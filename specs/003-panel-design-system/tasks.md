@@ -361,7 +361,7 @@ T024 y las vistas ya migradas, sobre las que corren sus casos.
   - **Caso** `colores forzados`, en el catálogo y en el editor: la tarjeta, la barra y la línea activa del campo tienen un borde de ancho mayor que 0 y estilo distinto de `none`. Falló por la barra antes del cambio; mutación: sin la regla, vuelve a fallar por la barra.
   - **Dos carreras de la prueba, corregidas**: "no hay esqueleto" ya es cierto en la página de inicio de sesión, así que a veces medía antes de llegar al catálogo (falló en `movil-360` y `oscuro`). Los casos esperan ahora el título "Catálogo"; la misma espera se agregó a otros dos casos que dependían, sin decirlo, de que su paso siguiente esperara por su cuenta. Con `--repeat-each 3`, 45 de 45.
   - **Verificación**: suite completa en local, 233 pasadas, 8 omitidas, 0 fallas; CLS 0,0000 en las doce mediciones. CSS inicial +4.198 B (+19 B esta tarea).
-- [ ] T040 [US2] Pares de estado en `apps/admin/design-system/contrast-pairs.ts` (historia 2, escenario 5):
+- [X] T040 [US2] Pares de estado en `apps/admin/design-system/contrast-pairs.ts` (historia 2, escenario 5):
   - hover (`--ds-surface-hover` compuesto sobre cada plano) con el texto encima;
   - fila seleccionada;
   - error (`--ds-status-error` sobre los tres planos; `--ds-on-status-error-container`);
@@ -370,6 +370,13 @@ T024 y las vistas ya migradas, sobre las que corren sus casos.
   - el anillo de foco ya se declara contra el acento, el destructivo y el primario desde la revisión de dos tonos (2026-10-12).
 
   `contrast.spec.ts` en verde.
+  - **Hecho**:
+    - **Hover**: cuatro pares con `layers: [{ color: '--ds-surface-hover' }]` sobre la tarjeta, donde vive la fila del sistema: texto primario (8,11 / 11,06), secundario (5,26 / 5,41), de enlace (6,25 / 6,93) y de error (5,21 / 5,41). Una capa puede declararse sin opacidad: el token ya trae su transparencia. **Diferencia con el texto de la tarea**: no se declara hover sobre la página ni sobre la barra. `--ds-surface-hover` solo lo usa la fila, que vive en tarjetas; los botones de la barra usan su propio velo, ya declarado en los pares de presionado y con foco. Declararlos exigía oscurecer el texto secundario por un uso que no existe (daban 4,93 y 4,65): un objetivo hipotético, lo que la compuerta de inventario quiere evitar.
+    - **Fila seleccionada**: no existe en el panel. Las filas no cambian de fondo al seleccionarse; lo dicen la casilla y el contador. La barra de selección ya tenía sus pares (texto primario, secundario, primario y error sobre `--ds-surface-selected`), y el estado presionado y con foco sobre ella (T058, T036).
+    - **Error, aviso, éxito e información**: ya estaban, sobre los tres planos y sobre sus contenedores.
+    - **Deshabilitado**: `text-disabled` sobre el diálogo (2,68 / 2,72) y sobre el contenedor de un botón `filled` deshabilitado (2,45 / 2,50), con `kind: 'ui'`: WCAG lo exime, se declara para que se vea y no se exige.
+    - **Foco**: los pares del anillo contra el acento, el destructivo y el primario ya estaban (T036).
+    - **Verificación**: la compuerta falló con los pares sin declarar, y con los dos de hover hipotéticos bajo el objetivo; con los reales, ningún color tuvo que moverse. `design-check` 69 de 69; suite completa en local, 233 pasadas, 8 omitidas, 0 fallas.
 
 **Checkpoint**: `a11y.spec.ts` en `escritorio` y `oscuro` sin incumplimientos (SC-003).
 `contrast.spec.ts` al 100 % (SC-002). Validar con `quickstart.md`, historia 2.

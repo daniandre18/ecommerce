@@ -30,7 +30,8 @@ export interface ContrastPair {
 
 export interface Layer {
   readonly color: DsToken;
-  readonly opacity: DsToken;
+  /** Sin opacidad, la capa va entera: un token que ya trae su transparencia, como `--ds-surface-hover`. */
+  readonly opacity?: DsToken;
 }
 
 /** El fondo con sus velos compuestos encima, opaco, como `rgb(...)`. */
@@ -47,7 +48,7 @@ export function layered(background: string, layers: readonly { readonly color: s
 export function backgroundOf(tokens: CompiledTokens, pair: ContrastPair, scheme: Scheme): string {
   const background = tokens.value(pair.background, scheme);
   if (!pair.layers?.length) return background;
-  return layered(background, pair.layers.map((layer) => ({ color: tokens.value(layer.color, scheme), opacity: Number(tokens.value(layer.opacity, scheme)) })));
+  return layered(background, pair.layers.map((layer) => ({ color: tokens.value(layer.color, scheme), opacity: layer.opacity ? Number(tokens.value(layer.opacity, scheme)) : 1 })));
 }
 
 /**

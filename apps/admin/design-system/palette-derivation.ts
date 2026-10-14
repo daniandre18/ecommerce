@@ -101,7 +101,7 @@ export function requirementsOf(value: string, scheme: Scheme, tokens: CompiledTo
     // Un deshabilitado no se exige (WCAG lo exime), y el anillo de dos tonos no depende de la paleta semántica.
     if (pair.state === 'disabled' || pair.kind === 'two-tone' || pair.alternate) continue;
     const side = (token: string): Side => (same(tokens.value(token, scheme), value) ? 'self' : tokens.value(token, scheme));
-    const layers = (pair.layers ?? []).map((layer) => ({ color: side(layer.color), opacity: Number(tokens.value(layer.opacity, scheme)) }));
+    const layers = (pair.layers ?? []).map((layer) => ({ color: side(layer.color), opacity: layer.opacity ? Number(tokens.value(layer.opacity, scheme)) : 1 }));
     const [foreground, background] = [side(pair.foreground), side(pair.background)];
     if (foreground === 'self' || background === 'self' || layers.some((layer) => layer.color === 'self')) {
       requirements.push({ pair: pair.id, foreground, background, layers, kind: pair.kind, target: TARGET[pair.kind] });
