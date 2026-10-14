@@ -8,23 +8,22 @@ import ts from 'typescript';
 import { parseColor } from './color';
 import { compileTokens, type CompiledTokens } from './compiled-tokens';
 import { LITERAL_EXCEPTIONS, type LiteralCategory, type LiteralException } from './literal-exceptions';
-import { MIGRATED_FILES } from './migrated-files';
 
 /** Un valor escrito a mano donde va un token (FR-005). */
 export interface LiteralFinding {
   readonly file: string;
   readonly line: number;
   readonly column: number;
-  /** `archivo:línea:columna  propiedad: valor  → sugerencia`. */
+  /** `archivo:línea:columna  propiedad: valor  → sugerencia`. Todo hallazgo bloquea (T050). */
   readonly message: string;
-  /** En un archivo migrado bloquea; en el resto, mientras dura la migración, solo se informa. */
-  readonly blocking: boolean;
 }
 
 export interface LiteralsResult {
   readonly findings: readonly LiteralFinding[];
   /** Problemas de la lista de excepciones: siempre bloquean. */
   readonly problems: readonly string[];
+  /** Excepciones que no excusaron ningún valor de los archivos revisados: muertas, si se revisó el panel entero. */
+  readonly unused: readonly string[];
 }
 
 export interface LiteralsInput {
@@ -33,7 +32,6 @@ export interface LiteralsInput {
   readonly files: readonly string[];
   readonly tokens: CompiledTokens;
   readonly exceptions: readonly LiteralException[];
-  readonly migrated: readonly string[];
 }
 
 // ── Qué se revisa, por propiedad (research §5) ────────────────────────────────────────────────────
@@ -120,8 +118,8 @@ function inScope(exception: LiteralException, file: string): boolean {
   return exception.scope === 'everywhere' || exception.scope.files.includes(file);
 }
 
-function excepted(literal: Literal, category: LiteralCategory, file: string, exceptions: readonly LiteralException[]): boolean {
-  return exceptions.some((exception) => {
+function excepted(literal: Literal, category: LiteralCategory, file: string, exceptions: readonly LiteralException[], used: Set<LiteralException>): boolean {
+  const match = exceptions.find((exception) => {
     if (!inScope(exception, file)) return false;
     if (exception.category !== 'any' && category !== 'any' && exception.category !== category) return false;
     if (exception.value === '*') return true;
@@ -129,6 +127,8 @@ function excepted(literal: Literal, category: LiteralCategory, file: string, exc
     if (exception.value === '0') return literal.kind === 'zero';
     return exception.value.toLowerCase() === literal.text.toLowerCase();
   });
+  if (match) used.add(match);
+  return match !== undefined;
 }
 
 function exceptionProblems(exceptions: readonly LiteralException[], files: readonly string[]): string[] {
@@ -315,8 +315,9 @@ function paletteNamespaces(root: Root): Set<string> {
 
 export function checkLiterals(input: LiteralsInput): LiteralsResult {
   const findings: LiteralFinding[] = [];
+  const used = new Set<LiteralException>();
   const report = (file: string, line: number, column: number, prop: string, value: string, hint: string) =>
-    findings.push({ file, line, column, message: `${file}:${line}:${column}  ${prop}: ${value.replace(/\s+/g, ' ')}  → ${hint}`, blocking: input.migrated.includes(file) });
+    findings.push({ file, line, column, message: `${file}:${line}:${column}  ${prop}: ${value.replace(/\s+/g, ' ')}  → ${hint}` });
 
   for (const file of input.files) {
     if (CATALOG.includes(file)) continue;
@@ -335,7 +336,8 @@ export function checkLiterals(input: LiteralsInput): LiteralsResult {
         if (!fromPalette) return report(file, line, column, prop, value, 'una variable Sass que no viene de la paleta');
       }
       const valueWithoutSass = value.replace(/(?:[\w-]+\.)?\$[\w-]+/g, ' ');
-      const offending = literalsIn(valueWithoutSass, category).find((literal) => !excepted(literal, category, file, input.exceptions));
+      // Todos los literales, no solo hasta el primero que no está exceptuado: así se sabe qué excepción se usa.
+      const offending = literalsIn(valueWithoutSass, category).filter((literal) => !excepted(literal, category, file, input.exceptions, used))[0];
       if (offending) report(file, line, column, prop, value, `usa var(${suggest(input.tokens, lower, category, offending)})`);
     };
 
@@ -353,7 +355,11 @@ export function checkLiterals(input: LiteralsInput): LiteralsResult {
     for (const decl of decls) check(decl.prop, decl.value, decl.line, decl.column, new Set());
   }
 
-  return { findings: findings.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.column - b.column), problems: exceptionProblems(input.exceptions, input.files) };
+  return {
+    findings: findings.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.column - b.column),
+    problems: exceptionProblems(input.exceptions, input.files),
+    unused: input.exceptions.filter((exception) => !used.has(exception)).map((exception) => `La excepción "${exception.value}" (${exception.category}) no excusa ningún valor del panel`),
+  };
 }
 
 /** Lo que revisa la compuerta: los estilos del panel y de `libs/ui`, sin pruebas ni configuración. */
@@ -375,13 +381,9 @@ export function panelFiles(root: string): string[] {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const root = fileURLToPath(new URL('../../../', import.meta.url));
-  const result = checkLiterals({ root, files: panelFiles(root), tokens: compileTokens(), exceptions: LITERAL_EXCEPTIONS, migrated: MIGRATED_FILES });
-  for (const finding of result.findings) console.log(`${finding.blocking ? '✗' : '·'} ${finding.message}`);
-  for (const problem of result.problems) console.log(`✗ ${problem}`);
-  const blocking = result.findings.filter((finding) => finding.blocking).length;
-  console.log(
-    `\n${result.findings.length} valores fuera del catálogo: ${blocking} bloquean (archivos migrados), ${result.findings.length - blocking} en archivos por migrar.` +
-      ` Excepciones: ${relative(root, fileURLToPath(new URL('./literal-exceptions.ts', import.meta.url)))}`,
-  );
-  process.exitCode = blocking > 0 || result.problems.length > 0 ? 1 : 0;
+  const result = checkLiterals({ root, files: panelFiles(root), tokens: compileTokens(), exceptions: LITERAL_EXCEPTIONS });
+  for (const finding of result.findings) console.log(`✗ ${finding.message}`);
+  for (const problem of [...result.problems, ...result.unused]) console.log(`✗ ${problem}`);
+  console.log(`\n${result.findings.length} valores fuera del catálogo. Excepciones: ${relative(root, fileURLToPath(new URL('./literal-exceptions.ts', import.meta.url)))}`);
+  process.exitCode = result.findings.length > 0 || result.problems.length > 0 || result.unused.length > 0 ? 1 : 0;
 }

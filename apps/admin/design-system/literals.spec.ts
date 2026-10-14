@@ -14,8 +14,8 @@ const tokens = compileTokens();
 
 const BASE: LiteralException[] = LITERAL_EXCEPTIONS.filter((exception) => exception.scope === 'everywhere');
 
-function run(files: string[], options: { migrated?: string[]; exceptions?: LiteralException[] } = {}): LiteralsResult {
-  return checkLiterals({ root: ROOT, files: files.map((file) => `${FIXTURES}/${file}`), tokens, exceptions: options.exceptions ?? BASE, migrated: options.migrated ?? files.map((file) => `${FIXTURES}/${file}`) });
+function run(files: string[], options: { exceptions?: LiteralException[] } = {}): LiteralsResult {
+  return checkLiterals({ root: ROOT, files: files.map((file) => `${FIXTURES}/${file}`), tokens, exceptions: options.exceptions ?? BASE });
 }
 
 const lines = (result: LiteralsResult) => result.findings.map((finding) => finding.message);
@@ -61,10 +61,15 @@ describe('el verificador de literales', () => {
     ]);
   });
 
-  it('trinquete: un hallazgo bloquea en un archivo migrado, y fuera de la lista solo se informa', () => {
-    const result = run(['views/four.scss', 'views/escapes.scss'], { migrated: [`${FIXTURES}/views/four.scss`] });
-    expect(result.findings.filter((finding) => finding.blocking).map((finding) => finding.file)).toEqual(Array(4).fill(`${FIXTURES}/views/four.scss`));
-    expect(result.findings.filter((finding) => !finding.blocking)).toHaveLength(5);
+  // T050: sin trinquete. Un valor fuera del catálogo bloquea en cualquier archivo del panel.
+  it('todo hallazgo bloquea, en cualquier archivo', () => {
+    const result = run(['views/four.scss', 'views/escapes.scss']);
+    expect(result.findings.map((finding) => finding.file)).toEqual([...Array(5).fill(`${FIXTURES}/views/escapes.scss`), ...Array(4).fill(`${FIXTURES}/views/four.scss`)]);
+  });
+
+  it('una excepción de alcance general que nada usa está muerta', () => {
+    const exceptions: LiteralException[] = [...BASE, { value: '7px', category: 'space', scope: 'everywhere', reason: 'nadie la usa' }];
+    expect(run(['views/four.scss'], { exceptions }).unused).toContain('La excepción "7px" (space) no excusa ningún valor del panel');
   });
 
   it('rechaza una excepción sin razón y una cuyo alcance no coincide con ningún archivo', () => {
@@ -79,8 +84,14 @@ describe('el verificador de literales', () => {
 });
 
 describe('el panel', () => {
+  const result = checkLiterals({ root: ROOT, files: panelFiles(ROOT), tokens, exceptions: LITERAL_EXCEPTIONS });
+
+  it('no tiene ningún valor fuera del catálogo (SC-001)', () => {
+    expect(result.findings.map((finding) => finding.message)).toEqual([]);
+  });
+
   it('ninguna excepción del catálogo está mal declarada o muerta', () => {
-    const result = checkLiterals({ root: ROOT, files: panelFiles(ROOT), tokens, exceptions: LITERAL_EXCEPTIONS, migrated: [] });
     expect(result.problems).toEqual([]);
+    expect(result.unused).toEqual([]);
   });
 });
