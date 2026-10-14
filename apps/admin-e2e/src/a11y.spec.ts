@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { call, idTokenOf, MULTI, OWNER, productAsOwner, productWithVariants, signIn } from './support';
+import { whilePressed } from './design-system-support';
+import { call, idTokenOf, MULTI, OWNER, productAsOwner, productWithVariants, signIn, startsWith } from './support';
 
 /** Los criterios de nivel A y AA de WCAG 2.0, 2.1 y 2.2: lo que exige SC-014. */
 const WCAG_AA = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22a', 'wcag22aa'];
@@ -33,17 +34,17 @@ async function loaded(page: Page) {
 test.describe('accesibilidad', () => {
   test('inicio de sesión y alta de cuenta', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Iniciar sesión', exact: true })).toBeVisible();
     await expectAccessible(page);
     await page.goto('/signup');
-    await expect(page.getByRole('heading', { name: 'Crear cuenta' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Crear cuenta', exact: true })).toBeVisible();
     await expectAccessible(page);
   });
 
   test('selección de comercio y catálogo vacío', async ({ page }) => {
     await page.goto('/login');
     await signIn(page, MULTI);
-    await expect(page.getByRole('heading', { name: 'Tus comercios' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Tus comercios', exact: true })).toBeVisible();
     await expectAccessible(page);
     await page.goto('/t/t2/catalog');
     await loaded(page);
@@ -74,8 +75,8 @@ test.describe('accesibilidad', () => {
     await loaded(page);
     await expectAccessible(page);
 
-    await page.getByRole('button', { name: 'Nuevo producto' }).click();
-    await expect(page.getByRole('dialog', { name: 'Nuevo producto' })).toBeVisible();
+    await page.getByRole('button', { name: 'Nuevo producto', exact: true }).click();
+    await expect(page.getByRole('dialog', { name: 'Nuevo producto', exact: true })).toBeVisible();
     await expectAccessible(page);
     await page.keyboard.press('Escape');
 
@@ -95,7 +96,7 @@ test.describe('accesibilidad', () => {
     await expectAccessible(page);
 
     await page.goto('/invitation/t1/no-existe');
-    await expect(page.getByRole('heading', { name: 'Te invitaron a un comercio' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Te invitaron a un comercio', exact: true })).toBeVisible();
     await expectAccessible(page);
   });
 
@@ -124,9 +125,9 @@ test.describe('accesibilidad', () => {
     await page.goto('/t/t1/categories');
     await loaded(page);
     await expectAccessible(page);
-    await page.getByRole('button', { name: `Acciones de «Accesible ${run}»` }).click();
+    await page.getByRole('button', { name: `Acciones de «Accesible ${run}»`, exact: true }).click();
     await page.getByRole('menuitem', { name: 'Ocultar', exact: true }).click();
-    await expect(page.getByText('También queda oculta en la tienda su subcategoría.')).toBeVisible();
+    await expect(page.getByText('También queda oculta en la tienda su subcategoría.', { exact: true })).toBeVisible();
     await expectAccessible(page);
 
     await page.goto(url);
@@ -150,7 +151,7 @@ test.describe('accesibilidad', () => {
     const { productId } = await productAsOwner(`En la que se elimina ${run}`);
     await call(owner, 'setProductCategories', { tenantId: 't1', productId, add: [leavingId], remove: [] });
     const act = async (name: string, action: string) => {
-      await page.getByRole('button', { name: `Acciones de «${name}»` }).click();
+      await page.getByRole('button', { name: `Acciones de «${name}»`, exact: true }).click();
       await page.getByRole('menuitem', { name: action, exact: true }).click();
     };
 
@@ -161,7 +162,7 @@ test.describe('accesibilidad', () => {
     await act(moving, 'Mover a…');
     await expect(page.getByRole('button', { name: 'Mover', exact: true })).toBeVisible();
     await act(leaving, 'Eliminar');
-    await expect(page.getByText(`1 producto dejará de estar en «${leaving}»`)).toBeVisible();
+    await expect(page.getByText(startsWith(`1 producto dejará de estar en «${leaving}»`))).toBeVisible();
     await expectAccessible(page);
   });
 
@@ -181,13 +182,16 @@ test.describe('accesibilidad', () => {
     await page.goto('/t/t1/catalog');
     await signIn(page, OWNER);
     await loaded(page);
-    await page.getByLabel('Mostrar').selectOption('category');
+    await page.getByLabel('Mostrar', { exact: true }).selectOption('category');
     await page.locator('[data-field="category"]').selectOption({ label: `Masiva ${run}` });
-    for (const name of [physical, digital]) await page.getByRole('checkbox', { name: `Seleccionar «${name}»` }).check();
-    await expect(page.getByText('2 seleccionados')).toBeVisible();
-    await page.getByRole('button', { name: 'Activar envío gratis' }).click();
-    await expect(page.getByRole('button', { name: 'Quitar de la selección y reintentar' })).toBeVisible();
+    for (const name of [physical, digital]) await page.getByRole('checkbox', { name: `Seleccionar «${name}»`, exact: true }).check();
+    await expect(page.getByText('2 seleccionados', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Activar envío gratis', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Quitar de la selección y reintentar', exact: true })).toBeVisible();
     await expectAccessible(page);
+    // T058: también con un botón de la barra presionado y la onda en su pico. Antes, axe a veces la
+    // encontraba a medio apagarse y la prueba fallaba al azar; ahora la mide siempre, en su peor momento.
+    await whilePressed(page, page.getByRole('button', { name: 'Mostrar el precio', exact: true }), () => expectAccessible(page));
   });
 
   test('editor: variantes con el código de barras y el envío desplegados, un GTIN inválido y catálogos externos', async ({ page }) => {
@@ -226,7 +230,7 @@ test.describe('accesibilidad', () => {
     });
     await expect(row.locator('mat-error')).toHaveCSS('color', errorColor);
     await expect(row).toContainText('Peso heredado del producto');
-    await expect(page.getByRole('heading', { name: 'Catálogos externos' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Catálogos externos', exact: true })).toBeVisible();
     await expectAccessible(page);
   });
 });

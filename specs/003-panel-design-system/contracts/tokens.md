@@ -69,19 +69,28 @@ derivación lo dice en vez de elegir un valor que no cumple.
 
 | Papel | Esquema | Variable | Referencia | Valor | Objetivo | Lo restringe | Medido | Pares |
 |---|---|---|---|---|---|---|---|---|
-| Primario: texto, enlaces, confirmación de sección y anillo activo | claro | `$blue-500` | `#536dfe` | `#4054e4` | 5 | `primary/status-error-container` | 5,00 (de 5,00 a 5,82) | 7 |
-| Primario en oscuro | oscuro | `$blue-300` | `#536dfe` | `#9bb3ff` | 5 | `primary/surface-selected` | 5,00 (de 5,00 a 9,06) | 7 |
-| Error y acción destructiva | claro | `$pink-600` | `#ff4081` | `#cb005c` | 5 | `status-error/surface-bar` | 5,02 (de 5,02 a 5,69) | 5 |
-| Error y acción destructiva en oscuro | oscuro | `$pink-400` | `#ff4081` | `#ff97ae` | 5 | `status-error/surface-selected` | 5,00 (de 5,00 a 9,30) | 5 |
+| Primario: texto, enlaces, confirmación de sección y anillo activo | claro | `$blue-500` | `#536dfe` | `#3949d8` | 5 | `primary/surface-selected/presionado` | 5,01 (de 5,01 a 6,73) | 12 |
+| Primario en oscuro | oscuro | `$blue-300` | `#536dfe` | `#a4baff` | 5 | `primary/surface-selected/presionado` | 5,01 (de 5,01 a 9,73) | 12 |
+| Error y acción destructiva | claro | `$pink-600` | `#ff4081` | `#cb005c` | 5 | `status-error/surface-selected` | 5,02 (de 5,02 a 5,69) | 6 |
+| Error y acción destructiva en oscuro | oscuro | `$pink-400` | `#ff4081` | `#ff7d9e` | 5 | `status-error/surface-selected` | 5,01 (de 5,01 a 7,85) | 6 |
 | Aviso (texto) | claro | `$yellow-700` | `#ffc260` | `#8b5e00` | 5 | `status-warning/surface-bar` | 5,01 (de 5,01 a 5,68) | 3 |
 | Éxito | claro | `$green-600` | `#31c2a0` | `#00755e` | 5 | `status-success/surface-bar` | 5,00 (de 5,00 a 5,67) | 3 |
 | Éxito en oscuro | oscuro | `$green-400` | `#31c2a0` | `#31c2a0` | 5 | `status-success/surface-card` | 6,93 (de 6,93 a 8,24) | 3 |
 | Información | claro | `$violet-600` | `#9013fe` | `#9012fe` | 5 | `status-info/surface-bar` | 5,01 (de 5,01 a 5,67) | 3 |
 | Información en oscuro | oscuro | `$violet-300` | `#9013fe` | `#ab76ff` | 5 | `status-info/surface-card` | 5,01 (de 5,01 a 5,96) | 3 |
-| Texto secundario | claro | `$gray-600` | `#6e6e6e` | `#666666` | 5 | `text-secondary/surface-bar` | 5,07 (de 5,07 a 5,74) | 5 |
-| Texto secundario en oscuro | oscuro | `$gray-350` | `#6e6e6e` | `#b6b6b6` | 5 | `text-secondary/surface-selected` | 5,03 (de 5,03 a 9,12) | 5 |
-| Contorno de control | claro | `$gray-500` | `#80809a` | `#7b7b95` | 3,5 | `border-control/status-error-container` | 3,53 (de 3,53 a 4,11) | 4 |
-| Contorno de control en oscuro | oscuro | `$gray-550` | `#80809a` | `#80809a` | 3,5 | `border-control/surface-card` | 4,05 (de 4,05 a 4,82) | 4 |
+| Texto secundario | claro | `$gray-600` | `#6e6e6e` | `#666666` | 5 | `text-secondary/surface-selected` | 5,07 (de 5,07 a 5,74) | 5 |
+| Texto secundario en oscuro | oscuro | `$gray-350` | `#6e6e6e` | `#a7a7a7` | 5 | `text-secondary/surface-selected` | 5,04 (de 5,04 a 7,69) | 5 |
+| Contorno de control | claro | `$gray-500` | `#80809a` | `#7d7d97` | 3,5 | `border-control/surface-bar` | 3,53 (de 3,53 a 4,00) | 3 |
+| Contorno de control en oscuro | oscuro | `$gray-550` | `#80809a` | `#80809a` | 3,5 | `border-control/surface-card` | 4,05 (de 4,05 a 4,82) | 3 |
+
+**Estados**: el inventario incluye el estado presionado de cada botón (pares con `layers`: el velo de
+`:active` y la onda, los dos a `--ds-state-pressed-opacity`), así que el primario se deriva también contra
+su propio velo. Las opacidades de estado son del panel (hover y foco 4 %, presionado 6 %), más tenues que
+las de Material (8 % y 12 %): con las de Material, el primario tendría que oscurecerse alrededor de un 20 %.
+
+**Inventario completo**: `expectDeclaredPairs` (`apps/admin-e2e/src/design-system-support.ts`) recorre en
+cada caso `pantalla:` todo texto visible en reposo y exige que su color y su fondo sean un par declarado. Si
+una vista estrena un emparejamiento, CI falla y obliga a declararlo, y con eso a re-derivar.
 
 "Lo restringe" es el par que fija la luminosidad: el que queda más cerca de su objetivo. "Medido" es
 esa razón, y el rango contra todas las superficies del color. Los planos, los tintes de contenedor y los

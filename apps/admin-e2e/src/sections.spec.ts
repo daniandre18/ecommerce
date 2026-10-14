@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { call, CATALOG, EMULATORS, idTokenOf, OWNER, productAsOwner, signIn } from './support';
+import { call, CATALOG, EMULATORS, idTokenOf, OWNER, productAsOwner, signIn, startsWith } from './support';
 
 type Section = 'featured' | 'offers';
 
@@ -52,8 +52,8 @@ test.describe('cómo se ofrece cada producto', () => {
       await page.goto(url);
       await signIn(page, OWNER);
       await box(page, 'priceVisible').uncheck();
-      await page.getByRole('button', { name: 'Guardar condiciones' }).click();
-      await expect(page.getByText('Condiciones de venta guardadas')).toBeVisible();
+      await page.getByRole('button', { name: 'Guardar condiciones', exact: true }).click();
+      await expect(page.getByText('Condiciones de venta guardadas', { exact: true })).toBeVisible();
       await page.goto(`/t/t1/audit?product=${productId}&type=sale-conditions.changed`);
       const entries = page.getByRole('listitem').filter({ hasText: 'Condiciones de venta: precio en la tienda' });
       await expect(entries).toHaveCount(1);
@@ -68,7 +68,7 @@ test.describe('cómo se ofrece cada producto', () => {
       await expect(box(catalog, 'priceVisible')).not.toBeChecked();
       await expect(box(catalog, 'priceVisible')).toBeDisabled();
       await expect(box(catalog, 'freeShipping')).toBeDisabled();
-      await expect(catalog.getByText('Las cambia quien puede modificar precios')).toBeVisible();
+      await expect(catalog.getByText(startsWith('Las cambia quien puede modificar precios'))).toBeVisible();
       await other.close();
     });
 
@@ -101,14 +101,14 @@ test.describe('cómo se ofrece cada producto', () => {
     await test.step('3. el 40 entra, con el contador "40 de 40"', async () => {
       await expect(page.locator('app-presentation-section .section').filter({ hasText: 'Ofertas' })).toContainText('39 de 40');
       await box(page, 'offers').check();
-      await page.getByRole('button', { name: 'Guardar secciones' }).click();
+      await page.getByRole('button', { name: 'Guardar secciones', exact: true }).click();
       await expect(page.locator('app-presentation-section .section').filter({ hasText: 'Ofertas' })).toContainText('40 de 40');
     });
 
     await test.step('3. con la sección completa, el 41 no se ofrece; por fuera, se rechaza y nadie sale', async () => {
       await page.goto(extra.url);
       await expect(box(page, 'offers')).toBeDisabled();
-      await expect(page.getByText('Ofertas está completa')).toBeVisible();
+      await expect(page.getByText(startsWith('Ofertas está completa'))).toBeVisible();
       const { body } = await call(await idTokenOf(OWNER), 'addToSection', { tenantId: 't1', section: 'offers', productIds: [extra.productId] });
       expect(body.result).toEqual(expect.objectContaining({ ok: false, code: 'section-full', details: { section: 'offers', remaining: 0, requested: 1 } }));
       const offers = (await sectionsNow()).offers;
@@ -118,8 +118,8 @@ test.describe('cómo se ofrece cada producto', () => {
 
     await test.step('3. el listado filtrado por Ofertas muestra el contador', async () => {
       await page.goto('/t/t1/catalog');
-      await page.getByLabel('Mostrar').selectOption('offers');
-      await expect(page.getByText('Ofertas: 40 de 40')).toBeVisible();
+      await page.getByLabel('Mostrar', { exact: true }).selectOption('offers');
+      await expect(page.getByText('Ofertas: 40 de 40', { exact: true })).toBeVisible();
     });
   });
 
@@ -134,11 +134,11 @@ test.describe('cómo se ofrece cada producto', () => {
 
     await page.goto('/t/t1/catalog');
     await signIn(page, OWNER);
-    for (const { name } of eight) await page.getByRole('checkbox', { name: `Seleccionar «${name}»` }).check();
-    await expect(page.getByText('8 seleccionados')).toBeVisible();
+    for (const { name } of eight) await page.getByRole('checkbox', { name: `Seleccionar «${name}»`, exact: true }).check();
+    await expect(page.getByText('8 seleccionados', { exact: true })).toBeVisible();
     await page.locator('[data-field="bulkSection"]').selectOption('featured');
-    await page.getByRole('button', { name: 'Agregar a la sección' }).click();
-    await expect(page.getByText('Destacados no tiene lugar para los 8: quedan 5 lugares. No se agregó ninguno.')).toBeVisible();
+    await page.getByRole('button', { name: 'Agregar a la sección', exact: true }).click();
+    await expect(page.getByText('Destacados no tiene lugar para los 8: quedan 5 lugares. No se agregó ninguno.', { exact: true })).toBeVisible();
     expect((await sectionsNow()).featured).toEqual(filled.map((p) => p.productId));
   });
 
@@ -150,10 +150,10 @@ test.describe('cómo se ofrece cada producto', () => {
 
     await page.goto(archived.url);
     await signIn(page, OWNER);
-    await page.getByRole('button', { name: 'Archivar producto' }).click();
+    await page.getByRole('button', { name: 'Archivar producto', exact: true }).click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toContainText('Sale de Destacados, y libera su lugar.');
-    await dialog.getByRole('button', { name: 'Archivar producto' }).click();
+    await dialog.getByRole('button', { name: 'Archivar producto', exact: true }).click();
     await expect(page).toHaveURL(/\/t\/t1\/catalog$/);
     await expect(page.locator('[data-field="attribute"] option[value="featured"]')).toHaveText('En Destacados (1 de 40)');
     expect((await sectionsNow()).featured).toEqual([kept.productId]);
@@ -170,16 +170,16 @@ test.describe('cómo se ofrece cada producto', () => {
     await signIn(page, OWNER);
 
     await test.step('6. el rechazo nombra los 3 digitales', async () => {
-      for (const { name } of twenty) await page.getByRole('checkbox', { name: `Seleccionar «${name}»` }).check();
-      await expect(page.getByText('20 seleccionados')).toBeVisible();
-      await page.getByRole('button', { name: 'Activar envío gratis' }).click();
+      for (const { name } of twenty) await page.getByRole('checkbox', { name: `Seleccionar «${name}»`, exact: true }).check();
+      await expect(page.getByText('20 seleccionados', { exact: true })).toBeVisible();
+      await page.getByRole('button', { name: 'Activar envío gratis', exact: true }).click();
       const failure = page.locator('app-bulk-actions [role="alert"]');
       for (const { name } of digital) await expect(failure).toContainText(`«${name}»`);
       await expect(failure).toContainText('son digitales');
     });
 
     await test.step('6. quitarlos de la selección y reintentar, desde la misma pantalla: 17 con envío gratis y 17 entradas', async () => {
-      await page.getByRole('button', { name: 'Quitar de la selección y reintentar' }).click();
+      await page.getByRole('button', { name: 'Quitar de la selección y reintentar', exact: true }).click();
       // La selección se vacía al terminar: la barra de acciones desaparece.
       await expect(page.locator('app-bulk-actions')).toHaveCount(0);
       const query = await fetch(`${documents}:runQuery`, {

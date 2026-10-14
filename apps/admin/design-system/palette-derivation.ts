@@ -1,6 +1,6 @@
 import { contrastRatio, parseColor, round2, type Rgba } from './color';
 import type { CompiledTokens, Scheme } from './compiled-tokens';
-import { MARGIN, THRESHOLD, type ContrastKind, type ContrastPair } from './contrast';
+import { layered, MARGIN, THRESHOLD, type ContrastKind, type ContrastPair } from './contrast';
 
 /**
  * Los colores semánticos de la paleta no se eligen y después se corrigen: se derivan de su objetivo de
@@ -48,12 +48,24 @@ export const DERIVED: readonly DerivedColor[] = [
   { variable: 'gray-550', scheme: 'dark', reference: '#80809a', role: 'Contorno de control en oscuro' },
 ];
 
+/** Un lado de un par: un valor fijo, o el color que se está derivando. */
+export type Side = string | 'self';
+
 export interface Requirement {
   readonly pair: string;
-  /** El valor del otro lado del par, en el esquema. */
-  readonly against: string;
+  readonly foreground: Side;
+  readonly background: Side;
+  /** Los velos del estado del par (contrast.ts, `layers`), que también pueden ser del color mismo. */
+  readonly layers: readonly { readonly color: Side; readonly opacity: number }[];
   readonly kind: ContrastKind;
   readonly target: number;
+}
+
+/** La razón de un requisito si el color derivado vale `hex`. */
+export function ratioOf(requirement: Requirement, hex: string): number {
+  const at = (side: Side) => (side === 'self' ? hex : side);
+  const background = requirement.layers.length ? layered(at(requirement.background), requirement.layers.map((layer) => ({ color: at(layer.color), opacity: layer.opacity }))) : at(requirement.background);
+  return contrastRatio(at(requirement.foreground), background);
 }
 
 export interface Derivation {
@@ -79,16 +91,21 @@ const same = (a: string, b: string) => {
   }
 };
 
-/** Lo que exige el color: cada par en el que un token del esquema resuelve a su valor, por cualquiera de los dos lados. */
+/**
+ * Lo que exige el color: cada par en el que un token del esquema resuelve a su valor, en cualquiera de
+ * los dos lados o en uno de sus velos de estado.
+ */
 export function requirementsOf(value: string, scheme: Scheme, tokens: CompiledTokens, pairs: readonly ContrastPair[]): Requirement[] {
   const requirements: Requirement[] = [];
   for (const pair of pairs) {
     // Un deshabilitado no se exige (WCAG lo exime), y el anillo de dos tonos no depende de la paleta semántica.
     if (pair.state === 'disabled' || pair.kind === 'two-tone' || pair.alternate) continue;
-    const foreground = tokens.value(pair.foreground, scheme);
-    const background = tokens.value(pair.background, scheme);
-    if (same(foreground, value)) requirements.push({ pair: pair.id, against: background, kind: pair.kind, target: TARGET[pair.kind] });
-    else if (same(background, value)) requirements.push({ pair: pair.id, against: foreground, kind: pair.kind, target: TARGET[pair.kind] });
+    const side = (token: string): Side => (same(tokens.value(token, scheme), value) ? 'self' : tokens.value(token, scheme));
+    const layers = (pair.layers ?? []).map((layer) => ({ color: side(layer.color), opacity: Number(tokens.value(layer.opacity, scheme)) }));
+    const [foreground, background] = [side(pair.foreground), side(pair.background)];
+    if (foreground === 'self' || background === 'self' || layers.some((layer) => layer.color === 'self')) {
+      requirements.push({ pair: pair.id, foreground, background, layers, kind: pair.kind, target: TARGET[pair.kind] });
+    }
   }
   return requirements;
 }
@@ -135,7 +152,7 @@ function atLightness(L: number, C: number, h: number): string {
 
 function lowest(hex: string, requirements: readonly Requirement[]) {
   return requirements
-    .map((requirement) => ({ pair: requirement.pair, ratio: round2(contrastRatio(hex, requirement.against)), target: requirement.target, slack: contrastRatio(hex, requirement.against) - requirement.target }))
+    .map((requirement) => ({ pair: requirement.pair, ratio: round2(ratioOf(requirement, hex)), target: requirement.target, slack: ratioOf(requirement, hex) - requirement.target }))
     .reduce((worst, next) => (next.slack < worst.slack ? next : worst));
 }
 
@@ -146,7 +163,7 @@ function lowest(hex: string, requirements: readonly Requirement[]) {
 export function derive(reference: string, requirements: readonly Requirement[]): Derivation {
   if (requirements.length === 0) throw new Error(`${reference} no aparece en ningún par: no hay contra qué derivarlo`);
   const [L, C, h] = toOklch(parseColor(reference));
-  const meets = (hex: string) => requirements.every((requirement) => contrastRatio(hex, requirement.against) >= requirement.target);
+  const meets = (hex: string) => requirements.every((requirement) => ratioOf(requirement, hex) >= requirement.target);
   for (let step = 0; step <= 2000; step++) {
     const delta = step * 0.0005;
     for (const candidate of [L - delta, L + delta]) {

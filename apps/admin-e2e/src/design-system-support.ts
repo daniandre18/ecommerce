@@ -1,4 +1,6 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { call, EMULATORS, idTokenOf, OWNER, PASSWORD } from './support';
 
 // T020 de la 003 — ayudas de design-system.spec.ts. Comparan lo que el navegador **computa**, no las
@@ -139,4 +141,174 @@ export async function readOnlyCollaborator(run: string): Promise<string> {
   const accepted = await call(await idTokenOf(email), 'acceptInvitation', { invitationToken: token });
   expect(accepted.body.result).toEqual(expect.objectContaining({ ok: true }));
   return email;
+}
+
+/**
+ * T058: con `button` presionado y la onda de Material en su pico, corre `measure`. Sin carrera: se parte de
+ * cero ondas, se presiona y se mantiene (mientras el puntero sigue abajo la onda no se apaga) y se espera a
+ * que termine de entrar. Se suelta fuera del botón: un clic es bajar y subir sobre el mismo elemento, así
+ * que medir no dispara la acción.
+ */
+export async function whilePressed<T>(page: Page, button: Locator, measure: () => Promise<T>): Promise<T> {
+  // Sin ondas en el botón medido (las de los radios de Material son permanentes y están en otro lado), y
+  // a la vista: si no, el puntero baja sobre otra cosa.
+  await expect(button.locator('.mat-ripple-element')).toHaveCount(0);
+  await button.scrollIntoViewIfNeeded();
+  const box = await button.boundingBox();
+  if (!box) throw new Error('El botón no está a la vista');
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  try {
+    await expect(button.locator('.mat-ripple-element')).toHaveCount(1);
+    await button.evaluate((element) => Promise.all(element.getAnimations({ subtree: true }).map((animation) => animation.finished.catch(() => undefined))));
+    return await measure();
+  } finally {
+    await page.mouse.move(0, 0);
+    await page.mouse.up();
+  }
+}
+
+/**
+ * El contraste del texto de un botón presionado (`whilePressed`). El fondo es el compuesto que ve la
+ * persona: el plano opaco de abajo, los fondos translúcidos, el del botón, su velo de estado y la onda.
+ */
+export async function pressedContrast(page: Page, button: Locator): Promise<number> {
+  return whilePressed(page, button, () =>
+    button.evaluate((element) => {
+      const parse = (value: string): [number, number, number, number] => {
+        const [r = 0, g = 0, b = 0, a = 1] = (value.match(/-?[\d.]+/g) ?? []).map(Number);
+        const scale = value.startsWith('color(srgb') ? 255 : 1;
+        return [r * scale, g * scale, b * scale, a];
+      };
+      const over = (bottom: [number, number, number], top: [number, number, number, number], opacity = 1): [number, number, number] => {
+        const a = top[3] * opacity;
+        return [top[0] * a + bottom[0] * (1 - a), top[1] * a + bottom[1] * (1 - a), top[2] * a + bottom[2] * (1 - a)];
+      };
+      // De abajo hacia arriba: el primer antepasado opaco, y sobre él cada fondo translúcido hasta el botón.
+      const chain: Element[] = [];
+      let node: Element | null = element;
+      while (node) {
+        chain.unshift(node);
+        if (parse(getComputedStyle(node).backgroundColor)[3] === 1) break;
+        node = node.parentElement;
+      }
+      const opaque = parse(getComputedStyle(chain[0] ?? element).backgroundColor);
+      let background: [number, number, number] = [opaque[0], opaque[1], opaque[2]];
+      for (const layer of chain.slice(1)) background = over(background, parse(getComputedStyle(layer).backgroundColor));
+      const state = element.querySelector('.mat-mdc-button-persistent-ripple');
+      if (state) {
+        const before = getComputedStyle(state, '::before');
+        background = over(background, parse(before.backgroundColor), Number(before.opacity));
+      }
+      for (const ripple of element.querySelectorAll<HTMLElement>('.mat-ripple-element')) {
+        background = over(background, parse(getComputedStyle(ripple).backgroundColor), Number(getComputedStyle(ripple).opacity));
+      }
+      const luminance = ([r, g, b]: [number, number, number]) => {
+        const channel = (c: number) => ((c /= 255) <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+        return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+      };
+      const label = element.querySelector('.mdc-button__label') ?? element;
+      const text = over(background, parse(getComputedStyle(label).color));
+      const [light, dark] = [luminance(text), luminance(background)].sort((x, y) => y - x) as [number, number];
+      return Math.round(((light + 0.05) / (dark + 0.05)) * 100) / 100;
+    }),
+  );
+}
+
+/**
+ * El inventario de pares, leído de apps/admin/design-system/contrast-pairs.ts como texto: la e2e no puede
+ * importar otro proyecto (frontera de Nx). Si el formato cambia y se leen menos pares que `id:` hay en el
+ * archivo, falla en vez de verificar contra un inventario a medias.
+ */
+function inventory(): { foreground: string; background: string; layered: boolean }[] {
+  const source = readFileSync(join(__dirname, '../../admin/design-system/contrast-pairs.ts'), 'utf8');
+  const pairs = [...source.matchAll(/foreground: '(--ds-[\w-]+)',\s*(?:alternate: '--ds-[\w-]+',\s*)?background: '(--ds-[\w-]+)',\s*(layers: \[)?/g)].map((match) => ({
+    foreground: match[1] as string,
+    background: match[2] as string,
+    layered: match[3] !== undefined,
+  }));
+  const declared = (source.match(/^\s+id: '/gm) ?? []).length;
+  if (pairs.length !== declared) throw new Error(`Se leyeron ${pairs.length} pares de contrast-pairs.ts y hay ${declared}: el formato cambió`);
+  return pairs;
+}
+const PAIRS = inventory();
+/** Los tokens de color que puede tener un texto o un fondo: los de los pares, de los dos lados. */
+const PAIR_TOKENS = [...new Set(PAIRS.flatMap((pair) => [pair.foreground, pair.background]))];
+/** Los pares en reposo del inventario, como "primer plano|fondo". Los de estado (`layers`) no se ven quietos. */
+const DECLARED = PAIRS.filter((pair) => !pair.layered).map((pair) => `${pair.foreground}|${pair.background}`);
+
+/**
+ * T059: el inventario de usos está completo. Todo texto visible y en reposo de la pantalla tiene que ser
+ * un par declarado en contrast-pairs.ts: su color y su fondo efectivo (el plano opaco de abajo, con lo
+ * translúcido encima) se traducen a tokens con sondas, y la combinación tiene que estar en el inventario.
+ * Si una vista estrena un emparejamiento, esto falla y obliga a declararlo, y con eso a re-derivar la
+ * paleta contra él. Un color que no es de ningún token también falla. Los deshabilitados se excluyen
+ * (WCAG los exime, y tienen sus propios pares de `kind: 'ui'`).
+ */
+export async function expectDeclaredPairs(page: Page, scope: Scope = 'view'): Promise<void> {
+  // En reposo: sin el puntero encima de nada, y con las transiciones de hover (`--ds-motion-short`) ya
+  // terminadas. Medir a mitad de una da un fondo intermedio, que no es de ningún token.
+  await page.mouse.move(0, 0);
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((animation) => animation.effect?.getComputedTiming().endTime !== Infinity)
+        .map((animation) => animation.finished.catch(() => undefined)),
+    ),
+  );
+  const problems = await page.evaluate(
+    ({ tokens, declared, scope }) => {
+      const probe = document.body.appendChild(document.createElement('div'));
+      const byValue = new Map<string, string[]>();
+      for (const token of tokens) {
+        probe.style.color = `var(${token})`;
+        const value = getComputedStyle(probe).color;
+        byValue.set(value, [...(byValue.get(value) ?? []), token]);
+      }
+      probe.remove();
+      const parse = (value: string): [number, number, number, number] => {
+        const [r = 0, g = 0, b = 0, a = 1] = (value.match(/-?[\d.]+/g) ?? []).map(Number);
+        const scale = value.startsWith('color(srgb') ? 255 : 1;
+        return [r * scale, g * scale, b * scale, a];
+      };
+      const rgb = ([r, g, b]: [number, number, number, ...number[]]) => `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+      const effectiveBackground = (element: Element) => {
+        const chain: Element[] = [];
+        let node: Element | null = element;
+        while (node) {
+          chain.unshift(node);
+          if (parse(getComputedStyle(node).backgroundColor)[3] === 1) break;
+          node = node.parentElement;
+        }
+        let [r, g, b] = parse(getComputedStyle(chain[0] ?? element).backgroundColor);
+        for (const layer of chain.slice(1)) {
+          const [lr, lg, lb, a] = parse(getComputedStyle(layer).backgroundColor);
+          [r, g, b] = [lr * a + r * (1 - a), lg * a + g * (1 - a), lb * a + b * (1 - a)];
+        }
+        return rgb([r, g, b]);
+      };
+      const root = scope === 'view' ? document.body : document.querySelector(scope === 'dialog' ? '.cdk-overlay-container [role="dialog"]' : scope.selector);
+      if (!root) throw new Error('No hay dónde buscar');
+      const found = new Set<string>();
+      for (const element of root.querySelectorAll<HTMLElement>('*')) {
+        const ownText = [...element.childNodes].some((child) => child.nodeType === Node.TEXT_NODE && child.textContent?.trim());
+        if (!ownText) continue;
+        const box = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        if (box.width === 0 || box.height === 0 || style.visibility === 'hidden' || element.closest('[aria-hidden="true"], .cdk-visually-hidden, [disabled], [aria-disabled="true"], .mat-mdc-button-disabled')) continue;
+        const foreground = rgb(parse(style.color));
+        const background = effectiveBackground(element);
+        const where = `${element.tagName.toLowerCase()}${element.classList.length ? '.' + [...element.classList].slice(0, 2).join('.') : ''} «${element.textContent?.trim().slice(0, 30)}»`;
+        const fg = byValue.get(foreground);
+        const bg = byValue.get(background);
+        if (!fg) found.add(`texto ${foreground} fuera del catálogo: ${where}`);
+        else if (!bg) found.add(`fondo ${background} fuera del catálogo: ${where}`);
+        else if (!fg.some((f) => bg.some((b) => declared.includes(`${f}|${b}`)))) found.add(`${fg.join(' o ')} sobre ${bg.join(' o ')} no está en el inventario: ${where}`);
+      }
+      return [...found].sort();
+    },
+    { tokens: PAIR_TOKENS, declared: DECLARED, scope },
+  );
+  expect(problems, 'emparejamientos color–superficie sin declarar en contrast-pairs.ts').toEqual([]);
 }

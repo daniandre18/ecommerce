@@ -65,6 +65,11 @@ html {
       // Bordes: el de los controles cumple 3:1 (WCAG 1.4.11); el sutil separa y decora.
       outline: var(--ds-border-control),
       outline-variant: var(--ds-border-subtle),
+      // Capas de estado (hover, foco y la onda del presionado): las del panel, más tenues que las de
+      // Material, para que un control presionado conserve el contraste de su texto (T058).
+      hover-state-layer-opacity: var(--ds-state-hover-opacity),
+      focus-state-layer-opacity: var(--ds-state-focus-opacity),
+      pressed-state-layer-opacity: var(--ds-state-pressed-opacity),
     )
   );
 }

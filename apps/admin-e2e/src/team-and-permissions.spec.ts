@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { call, CATALOG, EMULATORS, idTokenOf, MULTI, OWNER, productAsOwner, sessionOf, signIn, signUpFromLink } from './support';
+import { call, CATALOG, EMULATORS, idTokenOf, MULTI, OWNER, productAsOwner, sessionOf, signIn, signUpFromLink, startsWith } from './support';
 
 // Historia 2, paso 4 de quickstart.md (FR-015, FR-016): el rol de Catálogo predefinido.
 test('el rol de Catálogo ve los precios sin poder cambiarlos y no ve el costo', async ({ page, browser }) => {
@@ -24,7 +24,7 @@ test('el rol de Catálogo ve los precios sin poder cambiarlos y no ve el costo',
   await expect(row.getByLabel(/^Precio \(/)).toHaveValue('52.000');
   await expect(row.getByLabel(/^Precio \(/)).not.toBeEditable();
   await expect(row.getByLabel(/^Precio tachado/)).not.toBeEditable();
-  await expect(row.getByLabel('Existencias')).toBeEditable();
+  await expect(row.getByLabel('Existencias', { exact: true })).toBeEditable();
   await expect(row.getByLabel(/^Costo/)).toHaveCount(0);
   await other.close();
 });
@@ -63,9 +63,9 @@ test('invitar, aceptar, ajustar un rol y dar de baja, con efecto en la operació
   const link = await test.step('la Propietaria invita con el rol de Catálogo y obtiene el enlace', async () => {
     await page.goto('/t/t1/team');
     await signIn(page, OWNER);
-    await page.getByLabel('Correo de la persona').fill(email);
-    await page.getByRole('button', { name: 'Invitar' }).click();
-    const shared = page.getByLabel('Enlace de la invitación');
+    await page.getByLabel('Correo de la persona', { exact: true }).fill(email);
+    await page.getByRole('button', { name: 'Invitar', exact: true }).click();
+    const shared = page.getByLabel('Enlace de la invitación', { exact: true });
     await expect(shared).toHaveValue(/\/invitation\/t1\//);
     await expect(page.getByRole('group', { name: email })).toContainText('Catálogo');
     return shared.inputValue();
@@ -76,9 +76,9 @@ test('invitar, aceptar, ajustar un rol y dar de baja, con efecto en la operació
   await test.step('sin aceptar no accede a nada (FR-007); al aceptar, entra', async () => {
     await signUpFromLink(invited, link, email, name);
     await invited.goto('/t/t1/catalog');
-    await expect(invited.getByText('Puede que no exista o que no tengas acceso')).toBeVisible();
+    await expect(invited.getByText(startsWith('Puede que no exista o que no tengas acceso'))).toBeVisible();
     await invited.goto(link);
-    await invited.getByRole('button', { name: 'Aceptar invitación' }).click();
+    await invited.getByRole('button', { name: 'Aceptar invitación', exact: true }).click();
     await expect(invited).toHaveURL(/\/t\/t1\/catalog$/);
     await expect(page.getByRole('group', { name })).toContainText('Catálogo · Activa');
   });
@@ -89,16 +89,16 @@ test('invitar, aceptar, ajustar un rol y dar de baja, con efecto en la operació
   });
 
   await test.step('un rol propio nace de otro y suma precios, sin costo (FR-009, FR-015)', async () => {
-    await page.getByLabel('Nombre del rol nuevo').fill(`Precios ${run}`);
-    await page.getByLabel('Empezar con los permisos de').selectOption({ label: 'Catálogo' });
-    await page.getByRole('button', { name: 'Crear rol' }).click();
+    await page.getByLabel('Nombre del rol nuevo', { exact: true }).fill(`Precios ${run}`);
+    await page.getByLabel('Empezar con los permisos de', { exact: true }).selectOption({ label: 'Catálogo' });
+    await page.getByRole('button', { name: 'Crear rol', exact: true }).click();
     await expect(page.getByRole('heading', { level: 1, name: `Precios ${run}` })).toBeVisible();
     await expect(page.getByRole('checkbox', { name: /Editar el catálogo/ })).toBeChecked();
     await page.getByRole('checkbox', { name: /Cambiar precios/ }).check();
-    await page.getByRole('button', { name: 'Guardar rol' }).click();
-    await expect(page.getByRole('button', { name: 'Guardar rol' })).toHaveCount(0);
-    await page.getByRole('link', { name: '← Equipo' }).click();
-    await page.getByRole('group', { name }).getByLabel(`Rol de ${name}`).selectOption({ label: `Precios ${run}` });
+    await page.getByRole('button', { name: 'Guardar rol', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Guardar rol', exact: true })).toHaveCount(0);
+    await page.getByRole('link', { name: '← Equipo', exact: true }).click();
+    await page.getByRole('group', { name }).getByLabel(`Rol de ${name}`, { exact: true }).selectOption({ label: `Precios ${run}` });
     await expect(page.getByRole('group', { name })).toContainText(`Precios ${run} · Activa`);
   });
 
@@ -109,10 +109,10 @@ test('invitar, aceptar, ajustar un rol y dar de baja, con efecto en la operació
   });
 
   await test.step('dada de baja, pierde el acceso de inmediato (FR-008a)', async () => {
-    await page.getByRole('group', { name }).getByRole('button', { name: 'Dar de baja' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Dar de baja' }).click();
+    await page.getByRole('group', { name }).getByRole('button', { name: 'Dar de baja', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Dar de baja', exact: true }).click();
     await expect(page.getByRole('group', { name })).toContainText('De baja');
-    await expect(invited.getByText('Puede que no exista o que no tengas acceso')).toBeVisible();
+    await expect(invited.getByText(startsWith('Puede que no exista o que no tengas acceso'))).toBeVisible();
   });
   await other.close();
 });
@@ -126,12 +126,12 @@ test('una cuenta en dos comercios: cada membresía decide sola, y la baja en uno
     await page.goto('/login');
     await signIn(page, MULTI);
     await page.getByRole('link', { name: /Comercio Dos/ }).click();
-    await expect(page.getByRole('link', { name: 'Equipo' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Equipo', exact: true })).toBeVisible();
     await page.goto('/t/t1/catalog');
     await expect(page.locator('header')).toContainText('Comercio Uno');
-    await expect(page.getByRole('link', { name: 'Equipo' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Equipo', exact: true })).toHaveCount(0);
     await page.goto('/t/t1/team');
-    await expect(page.getByText('Solo el Propietario administra el equipo')).toBeVisible();
+    await expect(page.getByText('Solo el Propietario administra el equipo', { exact: true })).toBeVisible();
   });
 
   const invite = async (inviter: string, tenantId: string) => {
@@ -142,10 +142,10 @@ test('una cuenta en dos comercios: cada membresía decide sola, y la baja en uno
   const person = await other.newPage();
   await test.step('invitada por los dos comercios, la misma cuenta suma dos membresías', async () => {
     await signUpFromLink(person, await invite(OWNER, 't1'), email, `Doble ${run}`);
-    await person.getByRole('button', { name: 'Aceptar invitación' }).click();
+    await person.getByRole('button', { name: 'Aceptar invitación', exact: true }).click();
     await expect(person).toHaveURL(/\/t\/t1\/catalog$/);
     await person.goto(await invite(MULTI, 't2'));
-    await person.getByRole('button', { name: 'Aceptar invitación' }).click();
+    await person.getByRole('button', { name: 'Aceptar invitación', exact: true }).click();
     await expect(person).toHaveURL(/\/t\/t2\/catalog$/);
     await person.goto('/');
     await expect(person.getByRole('link', { name: /Comercio Uno/ })).toBeVisible();
@@ -156,10 +156,10 @@ test('una cuenta en dos comercios: cada membresía decide sola, y la baja en uno
     const { uid } = await sessionOf(email);
     await call(await idTokenOf(OWNER), 'setMembershipEnabled', { tenantId: 't1', uid, enabled: false });
     await person.goto('/t/t1/catalog');
-    await expect(person.getByText('Puede que no exista o que no tengas acceso')).toBeVisible();
+    await expect(person.getByText(startsWith('Puede que no exista o que no tengas acceso'))).toBeVisible();
     await person.goto('/t/t2/catalog');
     await expect(person.locator('header')).toContainText('Comercio Dos');
-    await expect(person.getByRole('heading', { name: 'Catálogo' })).toBeVisible();
+    await expect(person.getByRole('heading', { name: 'Catálogo', exact: true })).toBeVisible();
   });
   await other.close();
 });

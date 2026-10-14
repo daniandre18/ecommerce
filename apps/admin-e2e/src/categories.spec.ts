@@ -14,7 +14,7 @@ const row = (page: Page, name: string) =>
 const state = (page: Page, name: string) => row(page, name).locator('xpath=./app-category-row//span[contains(@class, "category-state")]');
 
 async function act(page: Page, name: string, action: string) {
-  await page.getByRole('button', { name: `Acciones de «${name}»` }).click();
+  await page.getByRole('button', { name: `Acciones de «${name}»`, exact: true }).click();
   await page.getByRole('menuitem', { name: action, exact: true }).click();
 }
 
@@ -46,7 +46,7 @@ test.describe('categorías', () => {
       await page.locator('[data-field="newParent"]').selectOption(parent === null ? { value: '' } : { label: parent });
       await expect(page.locator('.slug-preview')).toContainText('Su URL será');
       const preview = (await page.locator('.slug-preview').textContent()) ?? '';
-      await page.getByRole('button', { name: 'Crear categoría' }).click();
+      await page.getByRole('button', { name: 'Crear categoría', exact: true }).click();
       await expect(page.locator('[data-field="newName"]')).toHaveValue('');
       return preview;
     };
@@ -92,11 +92,11 @@ test.describe('categorías', () => {
       await page.goto(product.url);
       await page.locator('[data-field="addCategory"]').selectOption({ label: `${names.ropa} › ${names.hombre} › ${names.camisetas}` });
       await page.getByRole('button', { name: 'Agregar', exact: true }).click();
-      await page.getByRole('button', { name: 'Guardar categorías' }).click();
-      await expect(page.getByText('Categorías guardadas')).toBeVisible();
+      await page.getByRole('button', { name: 'Guardar categorías', exact: true }).click();
+      await expect(page.getByText('Categorías guardadas', { exact: true })).toBeVisible();
 
       await page.goto('/t/t1/catalog');
-      await page.getByLabel('Mostrar').selectOption('category');
+      await page.getByLabel('Mostrar', { exact: true }).selectOption('category');
       await page.locator('[data-field="category"]').selectOption({ label: names.ropa });
       await expect(page.getByRole('link', { name: new RegExp(`Remera ${run}`) })).toBeVisible();
     });
@@ -123,10 +123,10 @@ test.describe('categorías', () => {
     });
 
     await test.step('4. el árbol se filtra por visibilidad', async () => {
-      await page.getByLabel('Mostrar').selectOption('hidden');
+      await page.getByLabel('Mostrar', { exact: true }).selectOption('hidden');
       await expect(row(page, names.camisas)).toContainText(`${names.ropa} › ${names.hombre} › ${names.camisas}`);
       await expect(row(page, names.camisetas)).toHaveCount(0);
-      await page.getByLabel('Mostrar').selectOption('all');
+      await page.getByLabel('Mostrar', { exact: true }).selectOption('all');
     });
 
     await test.step('5. Camisetas, dentro de Mujer oculta: su URL y su visibilidad propia no cambian', async () => {
@@ -139,7 +139,7 @@ test.describe('categorías', () => {
       await expect(row(page, names.camisetas).locator('xpath=./app-category-row//span[contains(@class, "category-slug")]')).toHaveText(slug ?? '');
       // Oculta de hecho por la rama, pero la suya sigue visible: se ofrece ocultarla, no mostrarla.
       await expect(state(page, names.camisetas)).toHaveText(`Oculta por su categoría padre (${names.mujer})`);
-      await page.getByRole('button', { name: `Acciones de «${names.camisetas}»` }).click();
+      await page.getByRole('button', { name: `Acciones de «${names.camisetas}»`, exact: true }).click();
       await expect(page.getByRole('menuitem', { name: 'Ocultar', exact: true })).toBeVisible();
       await page.keyboard.press('Escape');
     });
@@ -157,11 +157,11 @@ test.describe('categorías', () => {
 
     await test.step('6. asignada a los dos desde el listado, en una acción', async () => {
       await page.goto('/t/t1/catalog');
-      for (const name of names) await page.getByRole('checkbox', { name: `Seleccionar «${name}»` }).check();
-      await expect(page.getByText('2 seleccionados')).toBeVisible();
+      for (const name of names) await page.getByRole('checkbox', { name: `Seleccionar «${name}»`, exact: true }).check();
+      await expect(page.getByText('2 seleccionados', { exact: true })).toBeVisible();
       await page.locator('[data-field="bulkCategory"]').selectOption({ label: temporada });
       await page.getByRole('button', { name: 'Asignar', exact: true }).click();
-      await expect(page.getByText('2 seleccionados')).toHaveCount(0);
+      await expect(page.getByText('2 seleccionados', { exact: true })).toHaveCount(0);
     });
 
     await test.step('6. eliminarla avisa antes cuántos productos la pierden', async () => {
@@ -187,15 +187,15 @@ test.describe('categorías', () => {
     await test.step('7. ve el árbol y su visibilidad, sin crear ni acciones', async () => {
       await expect(row(page, visible)).toBeVisible();
       await expect(state(page, `Oculta ${run}`)).toHaveText('Oculta');
-      await expect(page.getByRole('button', { name: 'Crear categoría' })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Crear categoría', exact: true })).toHaveCount(0);
       await expect(page.getByRole('button', { name: /^Acciones de/ })).toHaveCount(0);
     });
 
     await test.step('7. filtra el árbol y el catálogo por categoría, sin seleccionar productos', async () => {
-      await page.getByLabel('Mostrar').selectOption('hidden');
+      await page.getByLabel('Mostrar', { exact: true }).selectOption('hidden');
       await expect(row(page, `Oculta ${run}`)).toBeVisible();
       await page.goto('/t/t1/catalog');
-      await page.getByLabel('Mostrar').selectOption('category');
+      await page.getByLabel('Mostrar', { exact: true }).selectOption('category');
       await page.locator('[data-field="category"]').selectOption({ label: visible });
       await expect(page.getByRole('checkbox')).toHaveCount(0);
     });

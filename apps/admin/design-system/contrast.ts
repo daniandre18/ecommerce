@@ -1,4 +1,4 @@
-import { contrastRatio, round2 } from './color';
+import { composite, contrastRatio, parseColor, round2 } from './color';
 import type { CompiledTokens, Scheme } from './compiled-tokens';
 
 export type ContrastKind = 'text' | 'large-text' | 'ui' | 'two-tone';
@@ -16,11 +16,38 @@ export interface ContrastPair {
    */
   readonly alternate?: DsToken;
   readonly background: DsToken;
+  /**
+   * Velos que Material pinta sobre el fondo en un estado, en orden: hover o foco, y la onda al presionar
+   * (T058). Cada uno es un color a una opacidad, los dos como tokens. Sin esto, el par mide el reposo.
+   */
+  readonly layers?: readonly Layer[];
   readonly kind: ContrastKind;
   readonly state: ContrastState;
   readonly plane: ContrastPlane;
   /** La razón por esquema, con dos decimales. */
   readonly declared: { readonly light: number; readonly dark: number };
+}
+
+export interface Layer {
+  readonly color: DsToken;
+  readonly opacity: DsToken;
+}
+
+/** El fondo con sus velos compuestos encima, opaco, como `rgb(...)`. */
+export function layered(background: string, layers: readonly { readonly color: string; readonly opacity: number }[]): string {
+  let bottom = parseColor(background);
+  for (const layer of layers) {
+    const top = parseColor(layer.color);
+    bottom = composite({ ...top, a: top.a * layer.opacity }, bottom);
+  }
+  return `rgb(${bottom.r}, ${bottom.g}, ${bottom.b})`;
+}
+
+/** El fondo de un par en un esquema: el token, con los velos de su estado si los declara. */
+export function backgroundOf(tokens: CompiledTokens, pair: ContrastPair, scheme: Scheme): string {
+  const background = tokens.value(pair.background, scheme);
+  if (!pair.layers?.length) return background;
+  return layered(background, pair.layers.map((layer) => ({ color: tokens.value(layer.color, scheme), opacity: Number(tokens.value(layer.opacity, scheme)) })));
 }
 
 /**
@@ -53,7 +80,7 @@ export function checkPairs(tokens: CompiledTokens, pairs: readonly ContrastPair[
     for (const scheme of SCHEMES) {
       let ratio: number;
       try {
-        const background = tokens.value(pair.background, scheme);
+        const background = backgroundOf(tokens, pair, scheme);
         const tones = [pair.foreground, ...(pair.alternate ? [pair.alternate] : [])];
         ratio = round2(Math.max(...tones.map((tone) => contrastRatio(tokens.value(tone, scheme), background))));
       } catch (error) {

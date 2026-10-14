@@ -3,29 +3,29 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 const OWNER = { email: 'owner@t1.test', password: 'test-1234' };
 
 async function signIn(page: Page) {
-  await page.getByLabel('Correo').fill(OWNER.email);
-  await page.getByLabel('Contraseña').fill(OWNER.password);
-  await page.getByRole('button', { name: 'Entrar' }).click();
+  await page.getByLabel('Correo', { exact: true }).fill(OWNER.email);
+  await page.getByLabel('Contraseña', { exact: true }).fill(OWNER.password);
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
 }
 
 async function createProduct(page: Page, name: string) {
   await page.goto('/t/t1/catalog');
   await signIn(page);
-  await page.getByRole('button', { name: 'Nuevo producto' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Nuevo producto' });
-  await dialog.getByLabel('Nombre').fill(name);
-  await dialog.getByRole('button', { name: 'Crear' }).click();
+  await page.getByRole('button', { name: 'Nuevo producto', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Nuevo producto', exact: true });
+  await dialog.getByLabel('Nombre', { exact: true }).fill(name);
+  await dialog.getByRole('button', { name: 'Crear', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
 }
 
 /** Agrega una opción con sus valores, de a uno, como lo hace una persona. */
 async function addOption(page: Page, name: string, values: string[]) {
-  await page.getByRole('button', { name: 'Agregar opción' }).click();
-  const option = page.getByRole('group', { name: 'Opción nueva' });
+  await page.getByRole('button', { name: 'Agregar opción', exact: true }).click();
+  const option = page.getByRole('group', { name: 'Opción nueva', exact: true });
   await option.getByLabel('Nombre de la opción', { exact: true }).fill(name);
   const filled = page.getByRole('group', { name, exact: true });
   for (const [index, value] of values.entries()) {
-    if (index > 0) await filled.getByRole('button', { name: `Agregar valor a «${name}»` }).click();
+    if (index > 0) await filled.getByRole('button', { name: `Agregar valor a «${name}»`, exact: true }).click();
     await filled.getByLabel(`Valor ${index + 1}`, { exact: true }).fill(value);
   }
 }
@@ -45,15 +45,15 @@ test('las variantes se arman de a una opción y lo cargado no se pierde (FR-017,
   await createProduct(page, `Remera ${run}`);
 
   await test.step('2. sin opciones, una variante implícita', async () => {
-    await expect(page.getByRole('heading', { name: 'Variantes (1)' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Variantes (1)', exact: true })).toBeVisible();
     await expect(variant(page, 'Única')).toContainText('Falta el SKU');
   });
 
   await test.step('3. la opción color con Rojo y Amarillo da dos filas al instante', async () => {
     await addOption(page, 'Color', ['Rojo', 'Amarillo']);
-    await expect(page.getByText('2 combinaciones')).toBeVisible();
-    await page.getByRole('button', { name: 'Guardar opciones' }).click();
-    await expect(page.getByRole('heading', { name: 'Variantes (2)' })).toBeVisible();
+    await expect(page.getByText('2 combinaciones', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Guardar opciones', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Variantes (2)', exact: true })).toBeVisible();
   });
 
   await test.step('4. SKU, precio y existencias en ambas', async () => {
@@ -73,12 +73,12 @@ test('las variantes se arman de a una opción y lo cargado no se pierde (FR-017,
 
   await test.step('5. la talla S y M pide asignar las existentes, que conservan todo; las nuevas, sin definir', async () => {
     await addOption(page, 'Talla', ['S', 'M']);
-    await page.getByRole('button', { name: 'Guardar opciones' }).click();
-    const dialog = page.getByRole('dialog', { name: '¿Qué valor tiene cada variante?' });
-    await dialog.getByLabel('Talla: aplicar a todas').selectOption({ label: 'S' });
-    await dialog.getByRole('button', { name: 'Confirmar' }).click();
+    await page.getByRole('button', { name: 'Guardar opciones', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: '¿Qué valor tiene cada variante?', exact: true });
+    await dialog.getByLabel('Talla: aplicar a todas', { exact: true }).selectOption({ label: 'S' });
+    await dialog.getByRole('button', { name: 'Confirmar', exact: true }).click();
 
-    await expect(page.getByRole('heading', { name: 'Variantes (4)' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Variantes (4)', exact: true })).toBeVisible();
     const kept = variant(page, 'Rojo / S');
     await expect(kept.getByLabel(/^SKU/)).toHaveValue(`Rojo-${run}`);
     await expect(kept.getByLabel(/^Precio \(/)).toHaveValue('45.000');
@@ -91,23 +91,23 @@ test('las variantes se arman de a una opción y lo cargado no se pierde (FR-017,
   });
 
   await test.step('6. activar con variantes sin SKU se impide diciendo cuáles; completas, se activa', async () => {
-    const status = page.getByRole('radiogroup', { name: 'Estado' });
+    const status = page.getByRole('radiogroup', { name: 'Estado', exact: true });
     await status.getByRole('radio', { name: /^Activo/ }).check();
     const blocked = page.getByRole('alert').filter({ hasText: 'completá el SKU de' });
     await expect(blocked).toContainText('Rojo / M');
     await expect(blocked).toContainText('Amarillo / M');
-    await expect(page.getByRole('button', { name: 'Cambiar estado' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Cambiar estado', exact: true })).toBeDisabled();
 
     for (const label of ['Rojo / M', 'Amarillo / M']) {
       await enter(variant(page, label), /^SKU/, `${label.replace(' / ', '-')}-${run}`);
       await expect(variant(page, label)).not.toContainText('Falta el SKU');
     }
     await expect(blocked).toBeHidden();
-    await page.getByRole('button', { name: 'Cambiar estado' }).click();
+    await page.getByRole('button', { name: 'Cambiar estado', exact: true }).click();
     await expect(page.locator('app-product-editor p.status')).toHaveText('Activo');
 
     await status.getByRole('radio', { name: /^No listado/ }).check();
-    await page.getByRole('button', { name: 'Cambiar estado' }).click();
+    await page.getByRole('button', { name: 'Cambiar estado', exact: true }).click();
     await expect(page.locator('app-product-editor p.status')).toHaveText('No listado');
   });
 
@@ -118,12 +118,12 @@ test('las variantes se arman de a una opción y lo cargado no se pierde (FR-017,
   });
 
   await test.step('8. el mismo precio a todas en una acción, con una entrada de bitácora por variante', async () => {
-    await page.getByRole('checkbox', { name: 'Seleccionar todas las variantes' }).check();
+    await page.getByRole('checkbox', { name: 'Seleccionar todas las variantes', exact: true }).check();
     const bulk = page.locator('app-bulk-edit');
     await expect(bulk).toContainText('4 variantes seleccionadas');
-    await bulk.getByLabel('Campo').selectOption('price');
-    await bulk.getByLabel('Valor para todas').fill('60.000');
-    await bulk.getByRole('button', { name: 'Aplicar a 4 variantes' }).click();
+    await bulk.getByLabel('Campo', { exact: true }).selectOption('price');
+    await bulk.getByLabel('Valor para todas', { exact: true }).fill('60.000');
+    await bulk.getByRole('button', { name: 'Aplicar a 4 variantes', exact: true }).click();
 
     for (const label of ['Rojo / S', 'Rojo / M', 'Amarillo / S', 'Amarillo / M']) {
       await expect(variant(page, label).getByLabel(/^Precio \(/)).toHaveValue('60.000');
@@ -165,22 +165,22 @@ test('el producto y su variante implícita aceptan imágenes con texto alternati
   await test.step('una imagen del producto', async () => {
     await page.locator('app-product-editor > section app-image-upload input[type="file"]').setInputFiles({ name: 'taza.png', mimeType: 'image/png', buffer: PNG });
     const form = page.locator('app-product-editor > section app-image-upload form');
-    await form.getByRole('button', { name: 'Subir imagen' }).click();
-    await expect(form.getByText('Describí la imagen para quien no puede verla')).toBeVisible();
-    await form.getByLabel('Texto alternativo').fill('Taza blanca de frente');
-    await form.getByRole('button', { name: 'Subir imagen' }).click();
-    await expect(page.getByRole('img', { name: 'Taza blanca de frente' })).toBeVisible();
+    await form.getByRole('button', { name: 'Subir imagen', exact: true }).click();
+    await expect(form.getByText('Describí la imagen para quien no puede verla', { exact: true })).toBeVisible();
+    await form.getByLabel('Texto alternativo', { exact: true }).fill('Taza blanca de frente');
+    await form.getByRole('button', { name: 'Subir imagen', exact: true }).click();
+    await expect(page.getByRole('img', { name: 'Taza blanca de frente', exact: true })).toBeVisible();
   });
 
   await test.step('una imagen de la variante implícita', async () => {
-    await variant(page, 'Única').getByRole('button', { name: 'Imágenes de Única (0)' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Imágenes de Única' });
+    await variant(page, 'Única').getByRole('button', { name: 'Imágenes de Única (0)', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Imágenes de Única', exact: true });
     await dialog.locator('input[type="file"]').setInputFiles({ name: 'asa.png', mimeType: 'image/png', buffer: PNG });
-    await dialog.getByLabel('Texto alternativo').fill('Detalle del asa');
-    await dialog.getByRole('button', { name: 'Subir imagen' }).click();
-    await expect(dialog.getByRole('img', { name: 'Detalle del asa' })).toBeVisible();
-    await dialog.getByRole('button', { name: 'Listo' }).click();
-    await expect(variant(page, 'Única').getByRole('button', { name: 'Imágenes de Única (1)' })).toBeVisible();
+    await dialog.getByLabel('Texto alternativo', { exact: true }).fill('Detalle del asa');
+    await dialog.getByRole('button', { name: 'Subir imagen', exact: true }).click();
+    await expect(dialog.getByRole('img', { name: 'Detalle del asa', exact: true })).toBeVisible();
+    await dialog.getByRole('button', { name: 'Listo', exact: true }).click();
+    await expect(variant(page, 'Única').getByRole('button', { name: 'Imágenes de Única (1)', exact: true })).toBeVisible();
   });
 
   await test.step('un formato no admitido se avisa antes de subir', async () => {
@@ -196,11 +196,11 @@ test('topes: hasta 5 opciones y 100 combinaciones, sin crear nada', async ({ pag
 
   await addOption(page, 'A', values(11));
   await addOption(page, 'B', values(10));
-  await expect(page.getByText('110 combinaciones — supera el máximo')).toBeVisible();
-  await page.getByRole('button', { name: 'Guardar opciones' }).click();
+  await expect(page.getByText('110 combinaciones — supera el máximo', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Guardar opciones', exact: true }).click();
   await expect(page.getByRole('alert').filter({ hasText: 'producirían 110 combinaciones' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Variantes (1)' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Variantes (1)', exact: true })).toBeVisible();
 
   for (const name of ['C', 'D', 'E']) await addOption(page, name, ['x']);
-  await expect(page.getByRole('button', { name: 'Agregar opción' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Agregar opción', exact: true })).toBeDisabled();
 });

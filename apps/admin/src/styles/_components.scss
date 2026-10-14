@@ -71,7 +71,7 @@ html {
       filled-container-color: var(--ds-action-accent),
       filled-label-text-color: var(--ds-on-action-accent),
       filled-state-layer-color: var(--ds-on-action-accent),
-      filled-ripple-color: color-mix(in srgb, var(--ds-on-action-accent) 12%, transparent),
+      filled-ripple-color: color-mix(in srgb, var(--ds-on-action-accent) calc(var(--ds-state-pressed-opacity) * 100%), transparent),
     )
   );
 }
@@ -83,9 +83,17 @@ html {
       filled-container-color: var(--ds-action-destructive),
       filled-label-text-color: var(--ds-on-action-destructive),
       filled-state-layer-color: var(--ds-on-action-destructive),
-      filled-ripple-color: color-mix(in srgb, var(--ds-on-action-destructive) 12%, transparent),
+      filled-ripple-color: color-mix(in srgb, var(--ds-on-action-destructive) calc(var(--ds-state-pressed-opacity) * 100%), transparent),
     )
   );
+}
+
+// Un enlace de texto toma el color de enlace del sistema. Sin esto, los que no tenían color propio
+// ("Creá una", "← Equipo", los de la bitácora) usaban el azul del navegador, fuera del catálogo y sin par de
+// contraste (lo encontró la compuerta de inventario, T059). Un enlace que es un botón de Material, o una
+// fila con `color: inherit`, conserva el suyo.
+a {
+  color: var(--ds-text-link);
 }
 
 // ── Marcado propio del panel (T023) ─────────────────────────────────────────────────────────────────
@@ -132,6 +140,21 @@ html {
 }
 
 // Un aviso en bloque: falla de navegación, error de carga, aviso de bloqueo. El ícono es T037.
+// Un botón dentro del aviso ("Reintentar") va en el color propio del aviso, con borde o como texto: un
+// botón en primario sobre una superficie de error es un emparejamiento malo por su cuenta, y ataba el
+// primario de toda la paleta a ese único uso (T059).
+@mixin notice-buttons($color) {
+  @include mat.button-overrides(
+    (
+      outlined-label-text-color: $color,
+      outlined-outline-color: $color,
+      outlined-state-layer-color: $color,
+      text-label-text-color: $color,
+      text-state-layer-color: $color,
+    )
+  );
+}
+
 .ds-notice {
   padding: var(--ds-space-3) var(--ds-space-4);
   border-radius: var(--ds-radius-md);
@@ -139,11 +162,13 @@ html {
   &--error {
     background: var(--ds-status-error-container);
     color: var(--ds-on-status-error-container);
+    @include notice-buttons(var(--ds-on-status-error-container));
   }
 
   &--warning {
     background: var(--ds-status-warning-container);
     color: var(--ds-on-status-warning-container);
+    @include notice-buttons(var(--ds-on-status-warning-container));
   }
 }
 

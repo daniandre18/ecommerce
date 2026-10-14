@@ -65,7 +65,7 @@ test.describe('estados de carga', () => {
   });
 
   test('catálogo', async ({ page }) => {
-    const shift = await loadSlowly(page, '/t/t1/catalog', (p) => expect(p.getByRole('heading', { name: 'Catálogo' })).toBeVisible());
+    const shift = await loadSlowly(page, '/t/t1/catalog', (p) => expect(p.getByRole('heading', { name: 'Catálogo', exact: true })).toBeVisible());
     expect(shift).toBeLessThan(IMPERCEPTIBLE);
   });
 
@@ -76,7 +76,7 @@ test.describe('estados de carga', () => {
   });
 
   test('equipo', async ({ page }) => {
-    const shift = await loadSlowly(page, '/t/t1/team', (p) => expect(p.getByRole('heading', { name: 'Roles' })).toBeVisible());
+    const shift = await loadSlowly(page, '/t/t1/team', (p) => expect(p.getByRole('heading', { name: 'Roles', exact: true })).toBeVisible());
     expect(shift).toBeLessThan(IMPERCEPTIBLE);
   });
 
@@ -86,7 +86,7 @@ test.describe('estados de carga', () => {
   });
 
   test('bitácora', async ({ page }) => {
-    const shift = await loadSlowly(page, '/t/t1/audit', (p) => expect(p.getByLabel('Tipo de evento')).toBeVisible());
+    const shift = await loadSlowly(page, '/t/t1/audit', (p) => expect(p.getByLabel('Tipo de evento', { exact: true })).toBeVisible());
     expect(shift).toBeLessThan(IMPERCEPTIBLE);
   });
 
@@ -94,7 +94,7 @@ test.describe('estados de carga', () => {
   test('árbol de categorías', async ({ page }) => {
     const name = `Carga ${Date.now()}`;
     await rootCategory(name);
-    const shift = await loadSlowly(page, '/t/t1/categories', (p) => expect(p.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible());
+    const shift = await loadSlowly(page, '/t/t1/categories', (p) => expect(p.getByRole('button', { name: `Acciones de «${name}»`, exact: true })).toBeVisible());
     expect(shift).toBeLessThan(IMPERCEPTIBLE);
   });
 });
@@ -105,8 +105,8 @@ test.describe('vacío y error', () => {
     await page.goto('/login');
     await signIn(page, MULTI);
     await page.getByRole('link', { name: /Comercio Dos/ }).click();
-    await expect(page.getByText('Todavía no hay productos')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Crear producto' })).toBeVisible();
+    await expect(page.getByText('Todavía no hay productos', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Crear producto', exact: true })).toBeVisible();
   });
 
   // 002, Polish (T097): el editor del árbol.
@@ -114,8 +114,8 @@ test.describe('vacío y error', () => {
     await page.goto('/login');
     await signIn(page, MULTI);
     await page.goto('/t/t2/categories');
-    await expect(page.getByText('Todavía no hay categorías')).toBeVisible();
-    await expect(page.getByText('Creá la primera para empezar a organizar tu catálogo.')).toBeVisible();
+    await expect(page.getByText('Todavía no hay categorías', { exact: true })).toBeVisible();
+    await expect(page.getByText('Creá la primera para empezar a organizar tu catálogo.', { exact: true })).toBeVisible();
   });
 
   /** Abre Categorías sin red, con la vista ya descargada: lo que falta son los datos, no el código. */
@@ -126,14 +126,14 @@ test.describe('vacío y error', () => {
     await signIn(page, OWNER);
     const link = page.getByRole('link', { name: 'Categorías', exact: true });
     await link.click();
-    await expect(page.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible();
+    await expect(page.getByRole('button', { name: `Acciones de «${name}»`, exact: true })).toBeVisible();
     await page.getByRole('link', { name: 'Catálogo', exact: true }).click();
     await expect(page).toHaveURL(/\/t\/t1\/catalog$/);
 
     await context.setOffline(true);
     await link.click();
-    await expect(page.getByText('No pudimos cargar las categorías')).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText('Todavía no hay categorías')).toHaveCount(0);
+    await expect(page.getByText('No pudimos cargar las categorías', { exact: true })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Todavía no hay categorías', { exact: true })).toHaveCount(0);
     return name;
   }
 
@@ -149,8 +149,8 @@ test.describe('vacío y error', () => {
   test('el árbol que no llega del servidor da error con reintento, no un árbol vacío', async ({ page, context }) => {
     const name = await treeWithoutNetwork(page, context);
 
-    await page.getByRole('button', { name: 'Reintentar' }).click();
-    const retrying = page.getByRole('button', { name: 'Reintentando…' });
+    await page.getByRole('button', { name: 'Reintentar', exact: true }).click();
+    const retrying = page.getByRole('button', { name: 'Reintentando…', exact: true });
     await expect(retrying).toBeVisible();
     await expect(retrying).toHaveAttribute('aria-disabled', 'true');
     await expect(retrying).toBeFocused();
@@ -158,15 +158,15 @@ test.describe('vacío y error', () => {
     await expect(page.locator('.cdk-live-announcer-element')).toHaveText('Reintentando…');
 
     await context.setOffline(false);
-    await expect(page.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('button', { name: `Acciones de «${name}»`, exact: true })).toBeVisible({ timeout: 15_000 });
   });
 
   test('al volver la red, el árbol se recupera solo, sin reintentar', async ({ page, context }) => {
     const name = await treeWithoutNetwork(page, context);
 
     await context.setOffline(false);
-    await expect(page.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText('No pudimos cargar las categorías')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: `Acciones de «${name}»`, exact: true })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('No pudimos cargar las categorías', { exact: true })).toHaveCount(0);
   });
 
   test('un comercio sin acceso lo dice y ofrece reintentar', async ({ page }) => {
@@ -174,7 +174,7 @@ test.describe('vacío y error', () => {
     await signIn(page, OWNER);
     await expect(page).toHaveURL(/\/t\/t1\/catalog$/);
     await page.goto('/t/t2/catalog');
-    await expect(page.getByText('No pudimos abrir este comercio')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Reintentar' })).toBeVisible();
+    await expect(page.getByText('No pudimos abrir este comercio', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Reintentar', exact: true })).toBeVisible();
   });
 });

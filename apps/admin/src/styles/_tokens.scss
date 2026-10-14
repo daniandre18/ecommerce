@@ -20,9 +20,11 @@
   --ds-surface-overlay: light-dark(#{p.$white}, #{p.$ink-750}); // propio: diálogos y menús
   --ds-surface-hover: light-dark(#{p.$hover-light}, #{p.$hover-dark}); // referencia: hover tenue de la tabla
   // La selección no tiene color propio: es el primario con opacidad baja sobre la tarjeta, así sigue a la
-  // paleta derivada. Compuesto en la compilación, opaco, para que la compuerta lo mida. Nunca es el único
+  // paleta derivada (8 % en claro, 12 % en oscuro: con más, en oscuro, aclarar el primario aclaraba la
+  // selección, y la selección pedía un primario más claro). Compuesto en la compilación, opaco, para que la
+  // compuerta lo mida. Nunca es el único
   // indicador: la casilla y el contador ("N seleccionados") lo dicen sin color (WCAG 1.4.1, T059).
-  --ds-surface-selected: light-dark(#{opaque-mix(p.$blue-500, p.$white, 8%)}, #{opaque-mix(p.$blue-300, p.$ink-800, 20%)});
+  --ds-surface-selected: light-dark(#{opaque-mix(p.$blue-500, p.$white, 8%)}, #{opaque-mix(p.$blue-300, p.$ink-800, 12%)});
 
   // ── Texto ─────────────────────────────────────────────────────────────────────────────────────────
   --ds-text-primary: light-dark(#{p.$gray-700}, #{p.$gray-100}); // referencia: $dark-grey
@@ -130,4 +132,13 @@
   --ds-touch-target: 48px; // alto mínimo de botones y enlaces de acción (el umbral es 44 px)
   --ds-row-height: 72px; // fila del listado y de su esqueleto
   --ds-motion-short: 150ms; // cambio de estado de un control
+
+  // ── Capas de estado (FR-022, FR-026, T058) ───────────────────────────────────────────────────────
+  // El velo que Material pinta sobre un control en hover, con foco y al presionar. Al presionar pinta dos
+  // capas con la opacidad de presionado (el velo de `:active` y la onda), y es el peor caso: el texto del
+  // control sigue en su objetivo de contraste, como miden los pares con `layers` de contrast-pairs.ts. El foco lo indica el anillo de dos tonos
+  // (FR-023), no el velo; y el hover nunca agrega información (FR-026).
+  --ds-state-hover-opacity: 0.04;
+  --ds-state-focus-opacity: 0.04;
+  --ds-state-pressed-opacity: 0.06;
 }

@@ -29,8 +29,8 @@ describe('la estructura de arranque', () => {
   });
 
   it('falla si el oscuro no redefine un color que cambia con el esquema', () => {
-    const withoutDark = html.replace(/\.boot \{\s*color: #b6b6b6;\s*\}/, '');
-    expect(checkBoot(withoutDark, tokens)).toEqual(['[dark] .boot { color: #666666 } no es --ds-text-secondary (#b6b6b6)']);
+    const withoutDark = html.replace(/\.boot \{\s*color: #a7a7a7;\s*\}/, '');
+    expect(checkBoot(withoutDark, tokens)).toEqual(['[dark] .boot { color: #666666 } no es --ds-text-secondary (#a7a7a7)']);
   });
 
   it('falla con un valor de color, tipografía, espaciado, radio o borde que no dice qué token copia', () => {

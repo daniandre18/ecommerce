@@ -54,7 +54,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'page',
-    declared: { light: 5.38, dark: 9.12 },
+    declared: { light: 5.38, dark: 7.69 },
   },
   {
     id: 'text-secondary/surface-card',
@@ -63,7 +63,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'card',
-    declared: { light: 5.74, dark: 7.67 },
+    declared: { light: 5.74, dark: 6.47 },
   },
   {
     id: 'text-secondary/surface-bar',
@@ -72,7 +72,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'bar',
-    declared: { light: 5.07, dark: 8.43 },
+    declared: { light: 5.07, dark: 7.1 },
   },
   {
     id: 'text-secondary/surface-overlay',
@@ -81,7 +81,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'overlay',
-    declared: { light: 5.74, dark: 6.99 },
+    declared: { light: 5.74, dark: 5.89 },
   },
   {
     id: 'text-link/surface-page',
@@ -90,7 +90,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'page',
-    declared: { light: 5.45, dark: 9.06 },
+    declared: { light: 6.31, dark: 9.73 },
   },
   {
     id: 'text-link/surface-card',
@@ -99,7 +99,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'card',
-    declared: { light: 5.82, dark: 7.62 },
+    declared: { light: 6.73, dark: 8.18 },
   },
   {
     id: 'text-link/surface-bar',
@@ -108,7 +108,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'bar',
-    declared: { light: 5.14, dark: 8.37 },
+    declared: { light: 5.95, dark: 8.99 },
   },
   {
     id: 'text-link/surface-overlay',
@@ -117,7 +117,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'overlay',
-    declared: { light: 5.82, dark: 6.94 },
+    declared: { light: 6.73, dark: 7.46 },
   },
   // Deshabilitado: WCAG lo exime; se declara para que se vea y no se confunda con el error (FR-025).
   {
@@ -155,7 +155,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'control',
-    declared: { light: 7.89, dark: 8.67 },
+    declared: { light: 7.82, dark: 10.29 },
   },
   {
     id: 'text-secondary/surface-selected',
@@ -164,7 +164,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'control',
-    declared: { light: 5.11, dark: 5.03 },
+    declared: { light: 5.07, dark: 5.04 },
   },
   {
     id: 'primary/surface-selected',
@@ -173,7 +173,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'control',
-    declared: { light: 5.19, dark: 5 },
+    declared: { light: 5.94, dark: 6.37 },
   },
   {
     id: 'status-error/surface-selected',
@@ -182,7 +182,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'control',
-    declared: { light: 5.06, dark: 5 },
+    declared: { light: 5.02, dark: 5.01 },
   },
   // Texto sobre su contenedor: botones, chips y avisos.
   {
@@ -192,7 +192,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'control',
-    declared: { light: 5.82, dark: 8.46 },
+    declared: { light: 6.73, dark: 9.08 },
   },
   {
     id: 'on-primary-container/primary-container',
@@ -219,7 +219,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'rest',
     plane: 'control',
-    declared: { light: 5.69, dark: 9.3 },
+    declared: { light: 5.69, dark: 7.85 },
   },
   // Estados con significado (FR-009): el color sobre cada plano, y el texto sobre su contenedor.
   {
@@ -229,7 +229,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'error',
     plane: 'page',
-    declared: { light: 5.32, dark: 9.06 },
+    declared: { light: 5.32, dark: 7.64 },
   },
   {
     id: 'status-error/surface-card',
@@ -238,7 +238,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'error',
     plane: 'card',
-    declared: { light: 5.69, dark: 7.62 },
+    declared: { light: 5.69, dark: 6.43 },
   },
   {
     id: 'status-error/surface-bar',
@@ -247,7 +247,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'text',
     state: 'error',
     plane: 'bar',
-    declared: { light: 5.02, dark: 8.37 },
+    declared: { light: 5.02, dark: 7.06 },
   },
   {
     id: 'on-status-error-container/status-error-container',
@@ -257,25 +257,6 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     state: 'error',
     plane: 'control',
     declared: { light: 8.5, dark: 12.26 },
-  },
-  // "Reintentar" del estado de error (T024): botón `outlined` sobre el aviso de error.
-  {
-    id: 'primary/status-error-container',
-    foreground: '--ds-primary',
-    background: '--ds-status-error-container',
-    kind: 'text',
-    state: 'error',
-    plane: 'control',
-    declared: { light: 5, dark: 7.74 },
-  },
-  {
-    id: 'border-control/status-error-container',
-    foreground: '--ds-border-control',
-    background: '--ds-status-error-container',
-    kind: 'ui',
-    state: 'error',
-    plane: 'control',
-    declared: { light: 3.53, dark: 4.12 },
   },
   {
     id: 'status-warning/surface-page',
@@ -393,7 +374,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'ui',
     state: 'rest',
     plane: 'page',
-    declared: { light: 3.85, dark: 4.82 },
+    declared: { light: 3.74, dark: 4.82 },
   },
   {
     id: 'border-control/surface-card',
@@ -402,7 +383,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'ui',
     state: 'rest',
     plane: 'card',
-    declared: { light: 4.11, dark: 4.05 },
+    declared: { light: 4, dark: 4.05 },
   },
   {
     id: 'border-control/surface-bar',
@@ -411,7 +392,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'ui',
     state: 'rest',
     plane: 'bar',
-    declared: { light: 3.63, dark: 4.45 },
+    declared: { light: 3.53, dark: 4.45 },
   },
   // Anillo de foco (FR-023): sus dos tonos entre sí (C40), y el margen contra cada fondo del sistema.
   {
@@ -481,7 +462,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'ui',
     state: 'focus',
     plane: 'control',
-    declared: { light: 5.69, dark: 8.46 },
+    declared: { light: 5.69, dark: 7.14 },
   },
   {
     id: 'focus-ring/primary',
@@ -491,6 +472,151 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'ui',
     state: 'focus',
     plane: 'control',
-    declared: { light: 5.82, dark: 8.46 },
+    declared: { light: 6.73, dark: 9.08 },
+  },
+  // El enlace para saltar al contenido, en colores invertidos (T026): el par de texto sobre tarjeta, con los
+  // papeles cambiados. Se ve al recibir el foco.
+  {
+    id: 'surface-card/text-primary',
+    foreground: '--ds-surface-card',
+    background: '--ds-text-primary',
+    kind: 'text',
+    state: 'focus',
+    plane: 'control',
+    declared: { light: 8.86, dark: 13.21 },
+  },
+  // Presionado (T058): el peor estado de un botón. Mientras se presiona, Material pinta dos capas del color
+  // de su texto: el velo de `:active` y la onda, las dos con `--ds-state-pressed-opacity` (medido en el
+  // navegador: no es el velo de hover). Sin estos pares, el estado presionado no lo medía nadie, y la onda
+  // bajaba el primario sobre la selección a 4,39, bajo el mínimo liso de WCAG.
+  {
+    id: 'primary/surface-page/presionado',
+    foreground: '--ds-primary',
+    background: '--ds-surface-page',
+    layers: [
+      { color: '--ds-primary', opacity: '--ds-state-pressed-opacity' },
+      { color: '--ds-primary', opacity: '--ds-state-pressed-opacity' },
+    ],
+    kind: 'text',
+    state: 'active',
+    plane: 'page',
+    declared: { light: 5.3, dark: 7.84 },
+  },
+  {
+    id: 'primary/surface-card/presionado',
+    foreground: '--ds-primary',
+    background: '--ds-surface-card',
+    layers: [
+      { color: '--ds-primary', opacity: '--ds-state-pressed-opacity' },
+      { color: '--ds-primary', opacity: '--ds-state-pressed-opacity' },
+    ],
+    kind: 'text',
+    state: 'active',
+    plane: 'card',
+    declared: { light: 5.63, dark: 6.41 },
+  },
+  {
+    id: 'primary/surface-bar/presionado',
+    foreground: '--ds-primary',
+    background: '--ds-surface-bar',
+    layers: [
+      { color: '--ds-primary', opacity: '--ds-state-pressed-opacity' },
+      { color: '--ds-primary', opacity: '--ds-state-pressed-opacity' },
+    ],
+    kind: 'text',
+    state: 'active',
+    plane: 'bar',
+    declared: { light: 5.01, dark: 7.11 },
+  },
+  {
+    id: 'primary/surface-overlay/presionado',
+    foreground: '--ds-primary',
+    background: '--ds-surface-overlay',
+    layers: [
+      { color: '--ds-primary', opacity: '--ds-state-pressed-opacity' },
+      { color: '--ds-primary', opacity: '--ds-state-pressed-opacity' },
+    ],
+    kind: 'text',
+    state: 'active',
+    plane: 'overlay',
+    declared: { light: 5.63, dark: 5.83 },
+  },
+  {
+    id: 'primary/surface-selected/presionado',
+    foreground: '--ds-primary',
+    background: '--ds-surface-selected',
+    layers: [
+      { color: '--ds-primary', opacity: '--ds-state-pressed-opacity' },
+      { color: '--ds-primary', opacity: '--ds-state-pressed-opacity' },
+    ],
+    kind: 'text',
+    state: 'active',
+    plane: 'control',
+    declared: { light: 5.01, dark: 5.01 },
+  },
+  {
+    id: 'on-primary/primary/presionado',
+    foreground: '--ds-on-primary',
+    background: '--ds-primary',
+    layers: [
+      { color: '--ds-on-primary', opacity: '--ds-state-pressed-opacity' },
+      { color: '--ds-on-primary', opacity: '--ds-state-pressed-opacity' },
+    ],
+    kind: 'text',
+    state: 'active',
+    plane: 'control',
+    declared: { light: 5.27, dark: 7.35 },
+  },
+  {
+    id: 'on-action-destructive/action-destructive/presionado',
+    foreground: '--ds-on-action-destructive',
+    background: '--ds-action-destructive',
+    layers: [
+      { color: '--ds-on-action-destructive', opacity: '--ds-state-pressed-opacity' },
+      { color: '--ds-on-action-destructive', opacity: '--ds-state-pressed-opacity' },
+    ],
+    kind: 'text',
+    state: 'active',
+    plane: 'control',
+    declared: { light: 5.09, dark: 6.34 },
+  },
+  {
+    id: 'on-action-accent/action-accent/presionado',
+    foreground: '--ds-on-action-accent',
+    background: '--ds-action-accent',
+    layers: [
+      { color: '--ds-on-action-accent', opacity: '--ds-state-pressed-opacity' },
+      { color: '--ds-on-action-accent', opacity: '--ds-state-pressed-opacity' },
+    ],
+    kind: 'text',
+    state: 'active',
+    plane: 'control',
+    declared: { light: 8.32, dark: 8.32 },
+  },
+  {
+    id: 'on-status-error-container/status-error-container/presionado',
+    foreground: '--ds-on-status-error-container',
+    background: '--ds-status-error-container',
+    layers: [
+      { color: '--ds-on-status-error-container', opacity: '--ds-state-pressed-opacity' },
+      { color: '--ds-on-status-error-container', opacity: '--ds-state-pressed-opacity' },
+    ],
+    kind: 'text',
+    state: 'active',
+    plane: 'control',
+    declared: { light: 6.82, dark: 9.58 },
+  },
+  {
+    id: 'text-primary/surface-overlay/presionado',
+    foreground: '--ds-text-primary',
+    background: '--ds-surface-overlay',
+    layers: [
+      { color: '--ds-text-primary', opacity: '--ds-state-pressed-opacity' },
+      { color: '--ds-text-primary', opacity: '--ds-state-pressed-opacity' },
+    ],
+    kind: 'text',
+    state: 'active',
+    plane: 'overlay',
+    declared: { light: 7.36, dark: 8.62 },
   },
 ];

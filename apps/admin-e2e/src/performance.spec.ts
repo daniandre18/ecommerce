@@ -262,7 +262,7 @@ test.describe('catálogo de cara a la tienda en un teléfono', () => {
     expect(branchOf(catalog.tree, 'r00')).toHaveLength(49);
     expect(filters.map((f) => f.value)).toContain('r00');
 
-    const show = page.getByLabel('Mostrar');
+    const show = page.getByLabel('Mostrar', { exact: true });
     const times: number[] = [];
     const byKind: Record<string, string[]> = { category: [], tag: [], brand: [] };
     await onAPhone(page, 'keep', async () => {

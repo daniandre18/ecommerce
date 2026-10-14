@@ -541,6 +541,11 @@ del paso de pruebas (`nx run admin-e2e:e2e`), sacadas de las marcas de tiempo de
   la e2e, sin cambios, según la red de npm, y `rules` e `integration` lo bajaban con `npx`. Ahora se
   instala en `~/.firebase-tools`, cacheado por versión, desde `setup-emulators`. Con caché: de 2,3 a
   4,4 s en los cuatro trabajos (corrida 38481450673).
+- **El tope no se sube** (anotado el 2026-10-14, con margen de sobra): la suite pasó de unos 453 a unos
+  633 s de pruebas entre `7a714b2` y `ac97aa4` (T033 a T035 costaron unos 180 s), y la mitad más lenta
+  queda a 281 s del tope. Si una mitad se acerca a los 10 minutos, la respuesta es una **tercera
+  mitad** (`E2E_SHARD=3`, con `balance-shards.ts` repartiendo en tres), no un tope mayor: el tope
+  protege de un cuelgue, y uno más alto solo tarda más en avisar.
 - **Cuándo revisarlo**: si la mitad más lenta pasa de 7 minutos (70 % del tope), se reparte en tres o
   se revisa qué prueba creció, antes de tocar el tope. Subirlo no es la salida: el tope protege de un
   cuelgue, y uno más alto solo tarda más en avisar.

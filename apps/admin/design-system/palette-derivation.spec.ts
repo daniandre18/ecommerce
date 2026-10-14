@@ -1,11 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { contrastRatio } from './color';
 import { compileTokens } from './compiled-tokens';
 import type { ContrastPair } from './contrast';
 import { CONTRAST_PAIRS } from './contrast-pairs';
-import { DERIVED, derive, paletteColors, requirementsOf, TARGET } from './palette-derivation';
+import { DERIVED, derive, paletteColors, ratioOf, requirementsOf, TARGET } from './palette-derivation';
 
 // T059 — la paleta semántica se deriva de su objetivo de contraste. Cada color de DERIVED tiene que ser,
 // exactamente, lo que da la derivación contra los pares en los que se usa.
@@ -31,7 +30,7 @@ describe('la paleta derivada', () => {
     for (const color of DERIVED) {
       const { value, derivation } = derived(color.variable);
       for (const requirement of derivation.requirements) {
-        if (contrastRatio(value, requirement.against) < requirement.target) short.push(`${color.variable} en ${requirement.pair}`);
+        if (ratioOf(requirement, value) < requirement.target) short.push(`${color.variable} en ${requirement.pair}`);
       }
     }
     expect(short).toEqual([]);

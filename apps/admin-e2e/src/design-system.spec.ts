@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { expectAccent, expectBackground, expectDestructive, expectPlanes, expectTypeHierarchy, readOnlyCollaborator } from './design-system-support';
+import { expectAccent, expectBackground, expectDeclaredPairs, expectDestructive, expectPlanes, expectTypeHierarchy, pressedContrast, readOnlyCollaborator } from './design-system-support';
 import { call, idTokenOf, MULTI, OWNER, productAsOwner, signIn, signUpFromLink } from './support';
 
 // 003 — el sistema de diseño, medido en lo que el navegador computa. Corre en los tres proyectos,
@@ -30,6 +30,7 @@ test.describe('estados compartidos', () => {
     // El aviso no invita ni destruye: "Reintentar" es secundario. La acción principal de la vista
     // ("Nuevo producto") queda fuera del aviso, y su caso es el de "pantalla: catálogo" (T029).
     await expectAccent(page, null, { selector: 'ui-error-state' });
+    await expectDeclaredPairs(page, { selector: 'ui-error-state' });
     await expectDestructive(page, [], { selector: 'ui-error-state' });
   });
 });
@@ -41,11 +42,12 @@ test('pantalla: diálogo: confirmación', async ({ page }) => {
   await page.goto(url);
   await signIn(page, OWNER);
   await page.getByLabel('Nombre', { exact: true }).fill('Nombre a medio escribir');
-  await page.getByRole('link', { name: '← Catálogo' }).click();
-  await expect(page.getByRole('dialog', { name: 'Hay cambios sin guardar' })).toBeVisible();
+  await page.getByRole('link', { name: '← Catálogo', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Hay cambios sin guardar', exact: true })).toBeVisible();
 
   // Destructiva sin acento (contracts/primary-actions.md, caso 3): el fondo de error, y nada más con él.
   await expectAccent(page, null, 'dialog');
+  await expectDeclaredPairs(page, 'dialog');
   await expectDestructive(page, ['Salir sin guardar'], 'dialog');
 });
 
@@ -77,6 +79,7 @@ test('pantalla: iniciar sesión', async ({ page }) => {
   await page.goto('/login');
   await expect(page.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeVisible();
   await expectAccent(page, 'Entrar');
+  await expectDeclaredPairs(page);
   await expectDestructive(page, []);
   await expectPlanes(page, 'page-card');
   await expectTypeHierarchy(page);
@@ -86,6 +89,7 @@ test('pantalla: crear cuenta', async ({ page }) => {
   await page.goto('/signup');
   await expect(page.getByRole('heading', { level: 1, name: 'Crear cuenta' })).toBeVisible();
   await expectAccent(page, 'Crear cuenta');
+  await expectDeclaredPairs(page);
   await expectDestructive(page, []);
   await expectPlanes(page, 'page-card');
   await expectTypeHierarchy(page);
@@ -98,6 +102,7 @@ test('pantalla: tus comercios', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: 'Tus comercios' })).toBeVisible();
   await expect(page.getByRole('link', { name: /Comercio Dos/ })).toBeVisible();
   await expectAccent(page, null);
+  await expectDeclaredPairs(page);
   await expectDestructive(page, []);
   await expectPlanes(page, 'page-card');
   await expectTypeHierarchy(page);
@@ -114,6 +119,7 @@ test.describe('pantalla: invitación', () => {
     const email = `invitada-${Date.now()}@t1.test`;
     await signUpFromLink(page, await invitation(email), email, 'Invitada');
     await expectAccent(page, 'Aceptar invitación');
+    await expectDeclaredPairs(page);
     await expectDestructive(page, []);
     await expectPlanes(page, 'page-card');
     await expectTypeHierarchy(page);
@@ -124,12 +130,13 @@ test.describe('pantalla: invitación', () => {
     const email = `doble-${Date.now()}@t1.test`;
     const [first, second] = [await invitation(email), await invitation(email)];
     await signUpFromLink(page, first, email, 'Doble');
-    await page.getByRole('button', { name: 'Aceptar invitación' }).click();
+    await page.getByRole('button', { name: 'Aceptar invitación', exact: true }).click();
     await expect(page).toHaveURL(/\/t\/t1\/catalog$/);
     await page.goto(second);
-    await page.getByRole('button', { name: 'Aceptar invitación' }).click();
-    await expect(page.getByRole('link', { name: 'Entrar al comercio' })).toBeVisible();
+    await page.getByRole('button', { name: 'Aceptar invitación', exact: true }).click();
+    await expect(page.getByRole('link', { name: 'Entrar al comercio', exact: true })).toBeVisible();
     await expectAccent(page, 'Entrar al comercio');
+    await expectDeclaredPairs(page);
   });
 
   // Con otra cuenta, lo único que queda es "Cerrar sesión", que es secundaria: ningún acento.
@@ -139,9 +146,10 @@ test.describe('pantalla: invitación', () => {
     await signIn(page, OWNER);
     await expect(page).toHaveURL(/\/t\/t1\/catalog$/);
     await page.goto(link);
-    await page.getByRole('button', { name: 'Aceptar invitación' }).click();
-    await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible();
+    await page.getByRole('button', { name: 'Aceptar invitación', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Cerrar sesión', exact: true })).toBeVisible();
     await expectAccent(page, null);
+    await expectDeclaredPairs(page);
     await expectDestructive(page, []);
   });
 });
@@ -156,22 +164,25 @@ test.describe('pantalla: catálogo', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Catálogo' })).toBeVisible();
     await expect(page.locator('ui-skeleton')).toHaveCount(0);
     await expectAccent(page, 'Nuevo producto');
+    await expectDeclaredPairs(page);
     await expectDestructive(page, []);
     await expectPlanes(page, 'page-card-bar');
     await expectTypeHierarchy(page);
 
     // "Asignar" y "Agregar a la sección" son confirmaciones de sección: no suman acento.
     await page.getByRole('checkbox', { name: /^Seleccionar «/ }).first().check();
-    await expect(page.getByRole('group', { name: 'Acción sobre los seleccionados' })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Acción sobre los seleccionados', exact: true })).toBeVisible();
     await expectAccent(page, 'Nuevo producto');
+    await expectDeclaredPairs(page);
   });
 
   test('vacío: el acento sigue en "Nuevo producto", no en "Crear producto"', async ({ page }) => {
     await page.goto('/login');
     await signIn(page, MULTI);
     await page.getByRole('link', { name: /Comercio Dos/ }).click();
-    await expect(page.getByText('Todavía no hay productos')).toBeVisible();
+    await expect(page.getByText('Todavía no hay productos', { exact: true })).toBeVisible();
     await expectAccent(page, 'Nuevo producto');
+    await expectDeclaredPairs(page);
     await expectPlanes(page, 'page-card-bar');
   });
 
@@ -185,6 +196,7 @@ test.describe('pantalla: catálogo', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Catálogo' })).toBeVisible();
     await expect(page.locator('main ul li').first()).toBeVisible();
     await expectAccent(page, null);
+    await expectDeclaredPairs(page);
     await expectDestructive(page, []);
   });
 });
@@ -192,9 +204,10 @@ test.describe('pantalla: catálogo', () => {
 test('pantalla: diálogo: nuevo producto', async ({ page }) => {
   await page.goto('/login');
   await signIn(page, OWNER);
-  await page.getByRole('button', { name: 'Nuevo producto' }).click();
-  await expect(page.getByRole('dialog', { name: 'Nuevo producto' })).toBeVisible();
+  await page.getByRole('button', { name: 'Nuevo producto', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Nuevo producto', exact: true })).toBeVisible();
   await expectAccent(page, 'Crear', 'dialog');
+  await expectDeclaredPairs(page, 'dialog');
   await expectDestructive(page, [], 'dialog');
 });
 
@@ -207,6 +220,7 @@ test('pantalla: producto', async ({ page }) => {
   await expect(page.getByRole('group', { name: /^Única/ })).toBeVisible();
   await expect(page.locator('ui-skeleton')).toHaveCount(0);
   await expectAccent(page, null);
+  await expectDeclaredPairs(page);
   await expectDestructive(page, ['Archivar producto']);
   await expectPlanes(page, 'page-card-bar');
   // T032: con las imágenes migradas, el `h3` del editor (`image-upload`) ya está en su nivel.
@@ -234,6 +248,7 @@ test('pantalla: producto', async ({ page }) => {
   expect(fills.saves.length, 'hacen falta dos secciones con cambios para comparar').toBeGreaterThanOrEqual(2);
   for (const save of fills.saves) expect(save.background, save.name).toBe(fills.primary);
   await expectAccent(page, null);
+  await expectDeclaredPairs(page);
 });
 
 // T032: los diálogos de las variantes. "Confirmar" es la tarea del primero; el de imágenes no tiene
@@ -247,14 +262,15 @@ test('pantalla: diálogo: qué valor tiene cada variante', async ({ page }) => {
   await sku.fill(`SKU-${Date.now()}`);
   await sku.press('Tab');
   await expect(only).not.toContainText('Falta el SKU');
-  await page.getByRole('button', { name: 'Agregar opción' }).click();
-  const option = page.getByRole('group', { name: 'Opción nueva' });
+  await page.getByRole('button', { name: 'Agregar opción', exact: true }).click();
+  const option = page.getByRole('group', { name: 'Opción nueva', exact: true });
   await option.getByLabel('Nombre de la opción', { exact: true }).fill('Color');
   const color = page.getByRole('group', { name: 'Color', exact: true });
   await color.getByLabel('Valor 1', { exact: true }).fill('Rojo');
-  await page.getByRole('button', { name: 'Guardar opciones' }).click();
-  await expect(page.getByRole('dialog', { name: '¿Qué valor tiene cada variante?' })).toBeVisible();
+  await page.getByRole('button', { name: 'Guardar opciones', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: '¿Qué valor tiene cada variante?', exact: true })).toBeVisible();
   await expectAccent(page, 'Confirmar', 'dialog');
+  await expectDeclaredPairs(page, 'dialog');
   await expectDestructive(page, [], 'dialog');
 });
 
@@ -262,9 +278,10 @@ test('pantalla: diálogo: imágenes de una variante', async ({ page }) => {
   const { url } = await productAsOwner(`DS-Imágenes ${Date.now()}`);
   await page.goto(url);
   await signIn(page, OWNER);
-  await page.getByRole('group', { name: /^Única/ }).getByRole('button', { name: 'Imágenes de Única (0)' }).click();
-  await expect(page.getByRole('dialog', { name: 'Imágenes de Única' })).toBeVisible();
+  await page.getByRole('group', { name: /^Única/ }).getByRole('button', { name: 'Imágenes de Única (0)', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Imágenes de Única', exact: true })).toBeVisible();
   await expectAccent(page, null, 'dialog');
+  await expectDeclaredPairs(page, 'dialog');
   await expectDestructive(page, [], 'dialog');
 });
 
@@ -277,17 +294,18 @@ test.describe('pantalla: categorías', () => {
     await page.goto('/login');
     await signIn(page, OWNER);
     await page.goto('/t/t1/categories');
-    await expect(page.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible();
+    await expect(page.getByRole('button', { name: `Acciones de «${name}»`, exact: true })).toBeVisible();
     // "Crear categoría" está deshabilitado hasta que hay un nombre, y deshabilitado no lleva el acento
     // (FR-025): el acento se mide con la acción disponible.
     await page.locator('[data-field="newName"]').fill(`Nueva ${Date.now()}`);
-    await expect(page.getByRole('button', { name: 'Crear categoría' })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Crear categoría', exact: true })).toBeEnabled();
     return name;
   }
 
   test('el único acento es "Crear categoría", con planos y jerarquía', async ({ page }) => {
     await withCategory(page);
     await expectAccent(page, 'Crear categoría');
+    await expectDeclaredPairs(page);
     await expectDestructive(page, []);
     await expectPlanes(page, 'page-card-bar');
     await expectTypeHierarchy(page);
@@ -295,17 +313,19 @@ test.describe('pantalla: categorías', () => {
 
   test('una fila en edición no agrega acento, y al eliminar el destructivo es solo "Eliminar"', async ({ page }) => {
     const name = await withCategory(page);
-    const row = page.locator('li', { has: page.getByRole('button', { name: `Acciones de «${name}»` }) }).first();
-    await page.getByRole('button', { name: `Acciones de «${name}»` }).click();
-    await page.getByRole('menuitem', { name: 'Renombrar' }).click();
-    await expect(row.getByRole('button', { name: 'Guardar' })).toBeVisible();
+    const row = page.locator('li', { has: page.getByRole('button', { name: `Acciones de «${name}»`, exact: true }) }).first();
+    await page.getByRole('button', { name: `Acciones de «${name}»`, exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Renombrar', exact: true }).click();
+    await expect(row.getByRole('button', { name: 'Guardar', exact: true })).toBeVisible();
     await expectAccent(page, 'Crear categoría');
-    await row.getByRole('button', { name: 'Cancelar' }).click();
+    await expectDeclaredPairs(page);
+    await row.getByRole('button', { name: 'Cancelar', exact: true }).click();
 
-    await page.getByRole('button', { name: `Acciones de «${name}»` }).click();
-    await page.getByRole('menuitem', { name: 'Eliminar' }).click();
-    await expect(row.getByRole('button', { name: 'Eliminar' })).toBeEnabled();
+    await page.getByRole('button', { name: `Acciones de «${name}»`, exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Eliminar', exact: true }).click();
+    await expect(row.getByRole('button', { name: 'Eliminar', exact: true })).toBeEnabled();
     await expectAccent(page, 'Crear categoría');
+    await expectDeclaredPairs(page);
     await expectDestructive(page, ['Eliminar']);
   });
 });
@@ -317,6 +337,7 @@ test('pantalla: equipo', async ({ page }) => {
   await page.goto('/t/t1/team');
   await expect(page.getByRole('heading', { level: 2, name: 'Roles' })).toBeVisible();
   await expectAccent(page, 'Invitar');
+  await expectDeclaredPairs(page);
   await expectDestructive(page, []);
   await expectPlanes(page, 'page-card-bar');
   await expectTypeHierarchy(page);
@@ -327,12 +348,13 @@ test('pantalla: diálogo: traspaso de propiedad', async ({ page }) => {
   await page.goto('/login');
   await signIn(page, OWNER);
   await page.goto('/t/t1/team');
-  await page.getByRole('button', { name: 'Hacer Propietario' }).first().click();
+  await page.getByRole('button', { name: 'Hacer Propietario', exact: true }).first().click();
   const dialog = page.getByRole('dialog', { name: /^¿Hacer Propietario a / });
   await expect(dialog).toBeVisible();
   await expectAccent(page, null, 'dialog');
+  await expectDeclaredPairs(page, 'dialog');
   await expectDestructive(page, ['Traspasar la propiedad'], 'dialog');
-  await dialog.getByRole('button', { name: 'Cancelar' }).click();
+  await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click();
   await expect(dialog).toHaveCount(0);
 });
 
@@ -343,11 +365,12 @@ test('pantalla: rol', async ({ page }) => {
   await page.goto('/login');
   await signIn(page, OWNER);
   await page.goto(`/t/t1/team/roles/${roleId}`);
-  await expect(page.getByRole('button', { name: 'Eliminar rol' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Eliminar rol', exact: true })).toBeEnabled();
   // "Guardar rol" aparece con cambios: el acento se mide con la acción a la vista.
   await page.getByRole('checkbox').first().click();
-  await expect(page.getByRole('button', { name: 'Guardar rol' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Guardar rol', exact: true })).toBeVisible();
   await expectAccent(page, 'Guardar rol');
+  await expectDeclaredPairs(page);
   await expectDestructive(page, ['Eliminar rol']);
   await expectPlanes(page, 'page-card-bar');
   await expectTypeHierarchy(page);
@@ -361,11 +384,64 @@ test('pantalla: bitácora', async ({ page }) => {
   await page.goto('/login');
   await signIn(page, OWNER);
   await page.goto('/t/t1/audit');
-  const entries = page.getByRole('list', { name: 'Entradas de la bitácora' });
+  const entries = page.getByRole('list', { name: 'Entradas de la bitácora', exact: true });
   await expect(entries.getByRole('listitem').first()).toBeVisible();
   await expectAccent(page, null);
+  await expectDeclaredPairs(page);
   await expectDestructive(page, []);
   await expectPlanes(page, 'page-card-bar');
   await expectTypeHierarchy(page);
   expect(await entries.getByRole('listitem').evaluateAll((rows) => rows.filter((row) => !row.classList.contains('ds-table-row')).length)).toBe(0);
+});
+
+// T058: el estado presionado, con la onda en su pico, medido sin carrera. Cada botón tiene que conservar
+// el objetivo de diseño (5,0, WCAG + 0,5) sobre el plano en que se usa. El valor queda en el reporte.
+test.describe('estado presionado', () => {
+  const PRESSED_TARGET = 5;
+  const measure = async (page: Page, name: string, button: ReturnType<Page['locator']>) => {
+    const ratio = await pressedContrast(page, button);
+    test.info().annotations.push({ type: 'presionado', description: `${name}: ${ratio}` });
+    console.log(`presionado ${name} [${test.info().project.name}]: ${ratio}`);
+    expect(ratio, `${name} presionado`).toBeGreaterThanOrEqual(PRESSED_TARGET);
+  };
+
+  test('catálogo: el acento, un enlace de la barra y un botón de texto sobre la selección', async ({ page }) => {
+    await productAsOwner(`DS-Presionado ${Date.now()}`);
+    await page.goto('/login');
+    await signIn(page, OWNER);
+    await expect(page.locator('ui-skeleton')).toHaveCount(0);
+    await measure(page, 'Nuevo producto (acento)', page.getByRole('button', { name: 'Nuevo producto', exact: true }));
+    await measure(page, 'Categorías (texto sobre la barra)', page.getByRole('link', { name: 'Categorías', exact: true }));
+    await page.getByRole('checkbox', { name: /^Seleccionar «/ }).first().check();
+    await measure(page, 'Mostrar el precio (texto sobre la selección)', page.getByRole('button', { name: 'Mostrar el precio', exact: true }));
+  });
+
+  test('editor y diálogo: destructivo, confirmación de sección, texto sobre la tarjeta y sobre el diálogo', async ({ page }) => {
+    const { url } = await productAsOwner(`DS-Presionado ${Date.now()}`);
+    await page.goto(url);
+    await signIn(page, OWNER);
+    await expect(page.getByRole('group', { name: /^Única/ })).toBeVisible();
+    await measure(page, 'Archivar producto (destructivo)', page.getByRole('button', { name: 'Archivar producto', exact: true }));
+    await page.getByLabel('Nombre', { exact: true }).fill(`Editado ${Date.now()}`);
+    await measure(page, 'Guardar datos (primario)', page.getByRole('button', { name: 'Guardar datos', exact: true }));
+    await measure(page, 'Descartar cambios (texto sobre la tarjeta)', page.getByRole('button', { name: 'Descartar cambios', exact: true }).first());
+    await page.goto('/t/t1/catalog');
+    await page.getByRole('button', { name: 'Nuevo producto', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Nuevo producto', exact: true });
+    await expect(dialog).toBeVisible();
+    await measure(page, 'Cancelar (texto sobre el diálogo)', dialog.getByRole('button', { name: 'Cancelar', exact: true }));
+  });
+
+  test('aviso de error: "Reintentar" en el color del aviso', async ({ page, context }) => {
+    await page.goto('/login');
+    await signIn(page, OWNER);
+    await expect(page.getByRole('heading', { level: 1, name: 'Catálogo', exact: true })).toBeVisible();
+    await page.getByRole('link', { name: 'Categorías', exact: true }).click();
+    await expect(page).toHaveURL(/\/t\/t1\/categories$/);
+    await context.setOffline(true);
+    await page.getByRole('link', { name: 'Catálogo', exact: true }).click();
+    const failure = page.getByRole('alert').filter({ hasText: 'No pudimos cargar el catálogo' });
+    await expect(failure).toBeVisible({ timeout: 15_000 });
+    await measure(page, 'Reintentar (en el aviso de error)', failure.getByRole('button', { name: 'Reintentar', exact: true }));
+  });
 });

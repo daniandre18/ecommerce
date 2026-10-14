@@ -3,9 +3,9 @@ import { expect, test, type Page } from '@playwright/test';
 const OWNER = { email: 'owner@t1.test', password: 'test-1234' };
 
 async function signIn(page: Page, account: { email: string; password: string }) {
-  await page.getByLabel('Correo').fill(account.email);
-  await page.getByLabel('Contraseña').fill(account.password);
-  await page.getByRole('button', { name: 'Entrar' }).click();
+  await page.getByLabel('Correo', { exact: true }).fill(account.email);
+  await page.getByLabel('Contraseña', { exact: true }).fill(account.password);
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
 }
 
 // Recorrido de la Historia 1 contra los emuladores (quickstart.md). Crece con cada entrega de la
@@ -17,7 +17,7 @@ test.describe('catálogo', () => {
 
     await signIn(page, OWNER);
     await expect(page).toHaveURL(/\/t\/t1\/catalog$/);
-    await expect(page.getByRole('heading', { name: 'Catálogo' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Catálogo', exact: true })).toBeVisible();
     await expect(page.locator('header')).toContainText('Comercio Uno');
   });
 
@@ -34,22 +34,22 @@ test.describe('catálogo', () => {
     await signIn(page, OWNER);
 
     const name = `Camiseta ${test.info().project.name} ${Date.now()}`;
-    await page.getByRole('button', { name: 'Nuevo producto' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Nuevo producto' });
-    await dialog.getByLabel('Nombre').fill(name);
-    await dialog.getByRole('button', { name: 'Crear' }).click();
+    await page.getByRole('button', { name: 'Nuevo producto', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Nuevo producto', exact: true });
+    await dialog.getByLabel('Nombre', { exact: true }).fill(name);
+    await dialog.getByRole('button', { name: 'Crear', exact: true }).click();
     await expect(dialog).toBeHidden();
 
     // Lo siguiente con un producto nuevo es armar sus variantes: se abre su editor.
     await expect(page).toHaveURL(/\/t\/t1\/catalog\/[^/]+$/);
     await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
-    await page.getByRole('link', { name: '← Catálogo' }).click();
+    await page.getByRole('link', { name: '← Catálogo', exact: true }).click();
 
     const row = page.getByRole('listitem').filter({ hasText: name });
     await expect(row).toContainText('Borrador · 1 variante');
     await expect(row).toContainText('Variantes sin SKU');
 
-    await page.getByLabel('Buscar por nombre').fill(name.toLowerCase());
+    await page.getByLabel('Buscar por nombre', { exact: true }).fill(name.toLowerCase());
     await expect(page.getByRole('listitem')).toHaveCount(1);
   });
 
@@ -64,7 +64,7 @@ test.describe('catálogo', () => {
   test('a 360 px no hay desplazamiento horizontal en el catálogo (FR-038)', async ({ page }) => {
     await page.goto('/t/t1/catalog');
     await signIn(page, OWNER);
-    await expect(page.getByRole('heading', { name: 'Catálogo' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Catálogo', exact: true })).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBe(0);
   });
