@@ -393,16 +393,23 @@ revisión manual de T049.
 **Depende solo de la Fase 1** (T001 y T003): no usa tokens, y puede avanzar en paralelo con las
 fases 2 a 4. Comparte archivos con las tareas de vista de la US1 (ver "Archivos compartidos").
 
-- [ ] T041 [P] [US3] Pruebas de lenguaje en `apps/admin/design-system/language.spec.ts`, con `apps/admin/design-system/fixtures/language/` (`research.md` §7):
+- [X] T041 [P] [US3] Pruebas de lenguaje en `apps/admin/design-system/language.spec.ts`, con `apps/admin/design-system/fixtures/language/` (`research.md` §7):
   - **Voseo detectado**: formas conocidas (`tenés`, `querés`, `podés`, `sabés`, `sos`); candidatos morfológicos (`revisá`, `elegí`, `escribí`); enclíticos sin tilde (`revisalos`, `movelas`, `asegurate`).
   - **Léxico**: las palabras del léxico (`está`, `será`, `menú`) pasan, y una palabra candidata que no está en el léxico falla como "revisar".
   - **Usted**: la lista cerrada de FR-039, **textual**: revise, cree, ingrese, agregue, edite, guarde, elimine, defina, elija, seleccione, busque, confirme y cancele, como palabra completa y sin importar mayúsculas. Una excepción por texto exacto habilita **solo** ese texto.
   - **Excepciones muertas**: una entrada de léxico o una excepción que no aparece en ningún texto falla.
   - **Fuera de alcance**: los comentarios de TypeScript, los `<!-- -->` y los `*.spec.ts` no se recorren.
-- [ ] T042 [US3] `apps/admin/design-system/language.ts` y `apps/admin/design-system/language-exceptions.ts`, hasta que T041 pase.
+  - **Hecho**: 13 casos en `language.spec.ts` sobre `fixtures/language/` (formas conocidas, candidatos, enclíticos sin tilde y su forma de tú que pasa, léxico y candidata sin clasificar, usted como palabra completa y en mayúsculas, excepción de usted acotada a su texto, excepciones muertas, comentarios de TS y de plantilla, `.html`, mensajes del servidor y archivos de pruebas), más dos que aparecieron al correr sobre el panel: el hiato ("creá" es de dos sílabas) y lo que se lee de una plantilla. Fallaron primero por no existir `language.ts`.
+- [X] T042 [US3] `apps/admin/design-system/language.ts` y `apps/admin/design-system/language-exceptions.ts`, hasta que T041 pase.
   - **Recorrido**: cadenas, plantillas y `.html` de `apps/admin/src/app` y `libs/ui/src`, y los mensajes de `BusinessRuleError` y `HttpsError` de `libs/application/src` y `apps/functions/src` (`research.md` §12).
   - **Léxico**: se arma clasificando la primera corrida, palabra por palabra, cada una con su razón (`data-model.md`: `{ word, reason }`).
   - **Cierre**: la compuerta falla con los textos con voseo que corrigen T043 a T046, y el número de hallazgos queda anotado aquí.
+  - **Hecho**:
+    - **Qué se lee de una plantilla**: el texto entre etiquetas, los atributos visibles (`aria-label`, `placeholder`, `title`, `alt` y las entradas `heading` y `message`) y las cadenas entre comillas de las expresiones e interpolaciones. Nombres de atributo, enlaces de datos y bloques de control son código; una cadena que es un identificador (minúsculas ASCII sin espacios, o camelCase) se salta. Sin eso, la primera corrida dio 333 hallazgos, la mayoría código (`autocomplete`, `canWrite`, `'rename'`).
+    - **Tres huecos corregidos al correr sobre el panel**, cada uno con su caso: una etiqueta con `>` dentro de un atributo se cortaba antes de tiempo; en el servidor, un mensaje que llega por una constante (`throw new HttpsError(code, DENIED)`, el de `guard.ts`) no se leía; y "creá" contaba como una sílaba, porque el hiato se tomaba por diptongo.
+    - **Las listas exactas antes que las reglas por forma**: "revise" es usted, aunque calce como imperativo de vos con "se".
+    - **Léxico**: 18 palabras, cada una con su razón: 12 que terminan como un imperativo o un presente de vos y no lo son (futuros, `está`, `esté`, `más`, `después`, `así`) y 6 que calzan con la regla del pronombre sin tilde (`admite`, `repite`, `necesite`, `invite`, `digitales`, `decimales`). Ninguna excepción de usted: la primera corrida no encontró ningún usted de la lista.
+    - **Cierre**: la compuerta falla sobre el panel con **119 hallazgos**: voseo en 43 archivos del panel y 4 mensajes del servidor, y 3 "acá", que no es voseo pero tampoco neutro, y pasa a "aquí".
 - [ ] T043 [P] [US3] Tuteo en autenticación, marco y errores:
   - **Archivos**: `apps/admin/src/app/app.ts` ("No pudimos abrir esa vista. Revisa tu conexión."), `auth/login/login.ts`, `auth/sign-up/sign-up.ts` y su `sign-up.spec.ts`, `tenant/tenant-shell/tenant-shell.ts`, `team/accept-invitation/accept-invitation.ts` y `shared/command-errors.ts` (todas sus entradas con voseo; entre ellas: "Recarga para ver los cambios", "Revísalos y reintenta", "Revisa los dígitos", "muévelas o elimínalas primero", "Reintenta", "No tienes permiso…", "Vuelve a iniciar sesión", "Recarga la página", "Revisa tu red y reintenta").
   - **Escenarios**: 1 a 3 de la historia 3.

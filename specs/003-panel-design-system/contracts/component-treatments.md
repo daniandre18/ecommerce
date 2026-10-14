@@ -6,6 +6,17 @@ Para cada componente, qué token usa en cada estado. "—" significa que el esta
 Todos los valores son `--ds-*` ([tokens.md](./tokens.md)). Material se ajusta **solo** con
 `mat.<componente>-overrides()`, nunca con selectores de sus clases internas (FR-006).
 
+**Excepciones declaradas a FR-006** (aceptadas el 2026-10-14), las dos porque Material no ofrece un
+`*-overrides()` para lo que hace falta:
+
+- `html .mat-mdc-button-base:focus-visible` y `html .mat-mdc-menu-item:focus-visible` (`styles.scss`,
+  T036): Material les quita el `outline` a sus botones y opciones de menú, y en colores forzados les pone
+  uno de 1 px tenga o no foco. Sin esta regla, su foco era solo el velo.
+- `.mat-mdc-form-field-error::before` (`_components.scss`, T037): el ícono del error de un campo, que la
+  tarea prescribe sobre esa clase.
+
+Cualquier otra regla sobre una clase de Material es una excepción nueva, y entra aquí con su razón.
+
 **Estados comunes**, que no se repiten por fila:
 
 - **Foco**: anillo de dos tonos (técnica C40 de WCAG), en todo elemento con `:focus-visible` (FR-023).
