@@ -40,7 +40,7 @@ const WATCH: Record<VideoProvider, (id: string) => string> = {
         <mat-form-field>
           <mat-label>{{ product().video ? 'Reemplazar por otro enlace' : 'Enlace de YouTube o Vimeo' }}</mat-label>
           <input matInput data-field="videoUrl" type="url" autocomplete="off" [value]="url()" (input)="url.set($any($event.target).value)" />
-          <mat-hint>Pegá el enlace del video; se muestra junto a las imágenes.</mat-hint>
+          <mat-hint>Pega el enlace del video; se muestra junto a las imágenes.</mat-hint>
         </mat-form-field>
         <label class="position">
           Ubicación

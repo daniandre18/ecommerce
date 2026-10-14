@@ -65,7 +65,7 @@ type Membership = Record<SectionId, boolean>;
           <span class="count">{{ sections()[section].length }} de {{ max }}</span>
         </div>
         @if (isFull(section) && canWrite()) {
-          <p class="note">{{ labels[section] }} está completa: quitá un producto de la sección para agregar este.</p>
+          <p class="note">{{ labels[section] }} está completa: quita un producto de la sección para agregar este.</p>
         }
         @if (membership()[section] && unseen(); as reason) {
           <p class="note">La tienda no lo muestra en {{ labels[section] }} mientras esté {{ reason }}.</p>

@@ -114,7 +114,7 @@ export class DetailsSection {
       } else {
         this.failure.set(
           result.code === 'version-conflict'
-            ? 'Alguien más editó el producto mientras lo tenías abierto. Descartá tus cambios para ver los actuales.'
+            ? 'Alguien más editó el producto mientras lo tenías abierto. Descarta tus cambios para ver los actuales.'
             : commandErrorMessage(result.code),
         );
       }

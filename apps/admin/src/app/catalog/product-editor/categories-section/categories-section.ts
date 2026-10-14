@@ -48,13 +48,13 @@ import { inTreeOrder, pathLabel } from '../../categories/category-messages';
     }
     @if (canWrite()) {
       @if (shown().length >= max) {
-        <p class="note">Llegaste al tope de {{ max }} categorías: quitá una para agregar otra.</p>
+        <p class="note">Llegaste al tope de {{ max }} categorías: quita una para agregar otra.</p>
       } @else {
         <div class="add">
           <div class="select">
             <label for="add-category">Agregar categoría</label>
             <select id="add-category" data-field="addCategory" [disabled]="!tree()" [value]="choice()" (change)="choice.set($any($event.target).value)">
-              <option value="">{{ tree() ? 'Elegí una' : 'Cargando las categorías…' }}</option>
+              <option value="">{{ tree() ? 'Elige una' : 'Cargando las categorías…' }}</option>
               @for (option of available(); track option.value) {
                 <option [value]="option.value">{{ option.label }}</option>
               }

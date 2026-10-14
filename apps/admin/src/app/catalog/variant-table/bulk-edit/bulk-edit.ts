@@ -118,7 +118,7 @@ export class BulkEdit {
       }
       const parsed = parseMoneyInput(value(), this.currency());
       if (!parsed.ok) return { kind: 'format', message: parsed.message };
-      return field === 'price' && parsed.value === null ? { kind: 'required', message: 'Escribí el precio: no se puede quitar' } : undefined;
+      return field === 'price' && parsed.value === null ? { kind: 'required', message: 'Escribe el precio: no se puede quitar' } : undefined;
     });
   });
   protected readonly failure = signal('');
@@ -145,7 +145,7 @@ export class BulkEdit {
       } else {
         this.failure.set(
           result.code === 'version-conflict'
-            ? 'Alguna variante cambió mientras tanto. No se aplicó a ninguna: revisá los valores y volvé a aplicar.'
+            ? 'Alguna variante cambió mientras tanto. No se aplicó a ninguna: revisa los valores y vuelve a aplicar.'
             : commandErrorMessage(result.code),
         );
       }

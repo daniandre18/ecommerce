@@ -39,7 +39,7 @@ describe('importes escritos por una persona', () => {
   });
 
   it('en una moneda con decimales, el punto sigue siendo decimal: "1.500" son 1,50', () => {
-    expect(parseMoneyInput('1.500', USD)).toEqual({ ok: false, message: 'Usá hasta 2 decimales' });
+    expect(parseMoneyInput('1.500', USD)).toEqual({ ok: false, message: 'Usa hasta 2 decimales' });
     expect(parseMoneyInput('1.50', USD)).toEqual({ ok: true, value: money(150, 'USD') });
   });
 

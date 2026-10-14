@@ -158,7 +158,7 @@ describe('VariantTable', () => {
     const { row } = await render([variantOf('v1', 'rojo')]);
     await row('Rojo').edit('Precio', '12,345');
     expect(commands.setVariantPrice).not.toHaveBeenCalled();
-    expect(row('Rojo').group.textContent).toContain('Usá hasta 2 decimales');
+    expect(row('Rojo').group.textContent).toContain('Usa hasta 2 decimales');
   });
 
   // FR-038a: con Enter el campo no pierde el foco; el error igual se muestra y se anuncia.
@@ -406,14 +406,14 @@ describe('VariantTable', () => {
 
     // FR-030: la válvula de escape, en el momento en que hace falta. Las archivadas no se ven en la
     // tabla: si el código lo tiene una, se le puede quitar desde el rechazo mismo.
-    it('si lo tiene una variante archivada, se le quita desde la misma fila y se usa acá (escenario 8)', async () => {
+    it('si lo tiene una variante archivada, se le quita desde la misma fila y se usa aquí (escenario 8)', async () => {
       commands.setVariantGtin
         .mockResolvedValueOnce({ ok: false, code: 'gtin-conflict', message: 'x', details: { productId: 'p2', productName: 'Taza', variantId: 'x', version: 5, archived: true } })
         .mockResolvedValueOnce({ ok: true, data: { version: 6 } })
         .mockResolvedValueOnce({ ok: true, data: { version: 4 } });
       const { row } = await opened([variantOf('v1', 'rojo')]);
       await row('Rojo').edit('GTIN', '4006381333931');
-      const release = [...row('Rojo').group.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Quitárselo a la archivada y usarlo acá');
+      const release = [...row('Rojo').group.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Quitárselo a la archivada y usarlo aquí');
       release?.click();
       await settle();
       expect(commands.setVariantGtin.mock.calls.slice(1)).toEqual([
@@ -466,7 +466,7 @@ describe('VariantTable', () => {
       const { row } = await opened([variantOf('v1', 'rojo')], shipped);
       await row('Rojo').edit('Dimensiones', '60 x 40');
       expect(commands.setVariantShipping).not.toHaveBeenCalled();
-      expect(row('Rojo').group.textContent).toContain('Escribí largo × ancho × alto');
+      expect(row('Rojo').group.textContent).toContain('Escribe largo × ancho × alto');
     });
 
     it('un producto digital no ofrece peso ni dimensiones por variante (escenario 6)', async () => {

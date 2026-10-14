@@ -11,7 +11,7 @@
   </mat-form-field>
   <p id="slug-status" class="slug-status" aria-live="polite">{{ slugStatus()?.text }}</p>
   @if (product().slugNeedsReplacement) {
-    <p role="note" class="replace ds-notice ds-notice--warning">Reemplazá esta URL por una que describa el producto: se generó porque el nombre no tiene letras ni números.</p>
+    <p role="note" class="replace ds-notice ds-notice--warning">Reemplaza esta URL por una que describa el producto: se generó porque el nombre no tiene letras ni números.</p>
   }
   <div role="alert" class="failure">{{ slugFailure() }}</div>
   @if (canWrite() && slugStatus()) {
@@ -76,7 +76,7 @@
           (keydown.enter)="$event.preventDefault(); addTag(tagInput())"
           aria-describedby="tag-help"
         />
-        <mat-hint id="tag-help">Escribila y apretá Enter.</mat-hint>
+        <mat-hint id="tag-help">Escríbela y presiona Enter.</mat-hint>
       </mat-form-field>
       @if (tagSuggestions().length > 0) {
         <div class="suggestions tag-suggestions" role="group" aria-label="Etiquetas que ya usa el comercio">

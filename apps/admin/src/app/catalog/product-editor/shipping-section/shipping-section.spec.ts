@@ -81,7 +81,7 @@ describe('ShippingSection', () => {
       await type('length', '30');
       await click('Guardar envío');
       expect(commands.setProductShipping).not.toHaveBeenCalled();
-      expect(text()).toContain('Completá largo, ancho y alto');
+      expect(text()).toContain('Completa largo, ancho y alto');
     });
 
     it('un peso de cero no se guarda', async () => {

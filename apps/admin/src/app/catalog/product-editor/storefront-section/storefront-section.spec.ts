@@ -111,7 +111,7 @@ describe('StorefrontSection', () => {
 
     it('la de respaldo pide que se la reemplace (FR-006)', async () => {
       const { text } = await render({ slug: toSlug('producto-qm9c8zk1'), slugNeedsReplacement: true });
-      expect(text('[role="note"]')).toContain('Reemplazá esta URL por una que describa el producto');
+      expect(text('[role="note"]')).toContain('Reemplaza esta URL por una que describa el producto');
     });
 
     // Defensa ante una migración interrumpida (T042): sin aviso ni estado propio, y sin romperse.

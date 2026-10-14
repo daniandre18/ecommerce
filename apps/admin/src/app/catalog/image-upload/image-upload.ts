@@ -14,15 +14,15 @@ import { injectCan } from '../../tenant/current-access';
 import { StorageImage } from './storage-image';
 
 const UPLOAD_FAILURES: Record<UploadFailure, string> = {
-  'not-allowed': 'El servidor no aceptó la imagen: revisá el formato y el peso, o tus permisos.',
-  interrupted: 'La subida se interrumpió. Lo elegido sigue acá: reintentá.',
-  unavailable: 'No hay conexión con el servidor. Revisá tu red y reintentá.',
+  'not-allowed': 'El servidor no aceptó la imagen: revisa el formato y el peso, o tus permisos.',
+  interrupted: 'La subida se interrumpió. Lo elegido sigue aquí: reintenta.',
+  unavailable: 'No hay conexión con el servidor. Revisa tu red y reintenta.',
 };
 
 /** El problema de un archivo antes de subirlo, con las mismas reglas que aplica `storage.rules`. */
 function fileProblem(file: File): string | undefined {
-  if (!(IMAGE_CONTENT_TYPES as readonly string[]).includes(file.type)) return 'Ese formato no se admite. Usá JPG, PNG, WebP, AVIF o GIF.';
-  if (file.size > MAX_IMAGE_BYTES) return 'La imagen pesa más de 5 MB. Achicala y volvé a elegirla.';
+  if (!(IMAGE_CONTENT_TYPES as readonly string[]).includes(file.type)) return 'Ese formato no se admite. Usa JPG, PNG, WebP, AVIF o GIF.';
+  if (file.size > MAX_IMAGE_BYTES) return 'La imagen pesa más de 5 MB. Redúcela y vuelve a elegirla.';
   return undefined;
 }
 
@@ -60,7 +60,7 @@ export class ImageUpload {
   protected readonly chosen = signal<{ file: File; preview: string } | undefined>(undefined);
   protected readonly draft = signal({ alt: '' });
   protected readonly altForm = form(this.draft, (path) => {
-    required(path.alt, { message: 'Describí la imagen para quien no puede verla' });
+    required(path.alt, { message: 'Describe la imagen para quien no puede verla' });
   });
   protected readonly progress = signal<number | undefined>(undefined);
   /** Subida y todavía sin referencia guardada: el reintento solo guarda. */

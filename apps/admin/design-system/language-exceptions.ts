@@ -12,6 +12,7 @@ export const LEXICON: readonly ReviewedWord[] = [
   { word: 'esté', reason: 'subjuntivo de estar' },
   { word: 'después', reason: 'adverbio de tiempo' },
   { word: 'así', reason: 'adverbio de modo' },
+  { word: 'aquí', reason: 'adverbio de lugar; reemplaza al "acá" de la primera versión, que no es neutro' },
   { word: 'será', reason: 'futuro de ser' },
   { word: 'tendrá', reason: 'futuro de tener' },
   { word: 'quedará', reason: 'futuro de quedar' },

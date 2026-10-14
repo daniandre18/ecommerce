@@ -134,7 +134,7 @@ describe('edición masiva', () => {
     await toggle('Seleccionar Rojo');
     await apply('price', '');
     expect(commands.setVariantPrice).not.toHaveBeenCalled();
-    expect(root.textContent).toContain('Escribí el precio');
+    expect(root.textContent).toContain('Escribe el precio');
   });
 
   // FR-030: el lote se aplica entero o no se aplica.

@@ -58,7 +58,7 @@ const FIELD_NAMES: Record<Field, string> = {
 const GTIN_PROBLEMS: Record<InvalidGtinError['reason'], string> = {
   length: 'Un GTIN tiene 8, 12, 13 o 14 dígitos.',
   digits: 'Un GTIN lleva solo dígitos.',
-  'check-digit': 'El dígito de control no corresponde: revisá el código.',
+  'check-digit': 'El dígito de control no corresponde: revisa el código.',
 };
 
 /** El GTIN escrito, validado con la misma factoría del servidor; vacío, sin problema (lo quita). */
@@ -213,7 +213,7 @@ export class VariantRow {
   /** El rechazo del servidor vale para el valor que lo provocó: al cambiarlo, desaparece. */
   private readonly rejections = signal<Partial<Record<Field, Rejection>>>({});
   /**
-   * La variante archivada que tiene el GTIN rechazado: se le puede quitar desde acá, que es la
+   * La variante archivada que tiene el GTIN rechazado: se le puede quitar desde aquí, que es la
    * única forma de liberar el código (FR-030). Solo mientras el GTIN escrito sea el rechazado.
    */
   private readonly archivedHolder = signal<{ productId: ProductId; variantId: VariantId; version: number; gtin: string } | null>(null);
@@ -240,7 +240,7 @@ export class VariantRow {
     );
     validate(path.dimensions, ({ value }) =>
       parseDimensions(value()) === 'invalid'
-        ? { kind: 'format', message: 'Escribí largo × ancho × alto en centímetros, por ejemplo 30 × 20 × 2.' }
+        ? { kind: 'format', message: 'Escribe largo × ancho × alto en centímetros, por ejemplo 30 × 20 × 2.' }
         : this.rejection('dimensions', value()),
     );
     validate(path.sku, ({ value }) =>
@@ -386,7 +386,7 @@ export class VariantRow {
     }
     if (failure.code === 'version-conflict') {
       const current = this.stored()[field] || 'sin definir';
-      return `Cambió mientras la editabas: ahora es «${current}». Si querés tu valor, volvé a guardarlo.`;
+      return `Cambió mientras la editabas: ahora es «${current}». Si quieres tu valor, vuelve a guardarlo.`;
     }
     return commandErrorMessage(failure.code);
   }

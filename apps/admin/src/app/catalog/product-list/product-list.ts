@@ -103,7 +103,7 @@ const NO_FILTERS: Filters = { search: '', status: 'all', attribute: 'none', attr
           <mat-label>Categoría</mat-label>
           <!-- Incluye sus subcategorías (FR-023). -->
           <select matNativeControl data-field="category" [formField]="filterForm.category">
-            <option value="">Elegí una</option>
+            <option value="">Elige una</option>
             @for (option of categoryOptions(); track option.value) {
               <option [value]="option.value">{{ option.label }}</option>
             }
@@ -118,7 +118,7 @@ const NO_FILTERS: Filters = { search: '', status: 'all', attribute: 'none', attr
       }
     </div>
     @if (searching() && filters().attribute !== 'none') {
-      <p class="hint">La búsqueda por nombre no se combina con este filtro: se aplica cuando borrás la búsqueda.</p>
+      <p class="hint">La búsqueda por nombre no se combina con este filtro: se aplica cuando borras la búsqueda.</p>
     }
     @if (section(); as current) {
       <!-- El contador, también en el listado filtrado por la sección (FR-027a). -->
@@ -135,7 +135,7 @@ const NO_FILTERS: Filters = { search: '', status: 'all', attribute: 'none', attr
             <button matButton type="button" (click)="clearFilters()">Quitar filtros</button>
           </ui-empty-state>
         } @else {
-          <ui-empty-state class="ds-card" heading="Todavía no hay productos" [message]="canWrite() ? 'Creá el primero para empezar a armar tu catálogo.' : ''">
+          <ui-empty-state class="ds-card" heading="Todavía no hay productos" [message]="canWrite() ? 'Crea el primero para empezar a armar tu catálogo.' : ''">
             <button *appHasPermission="'catalog.write'" matButton="filled" type="button" (click)="create()">Crear producto</button>
           </ui-empty-state>
         }

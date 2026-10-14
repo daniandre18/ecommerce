@@ -126,7 +126,7 @@ describe('ProductList', () => {
     queries.productList.emit([]);
     await settle();
     expect(root.querySelector('ui-empty-state')?.textContent).toContain('Todavía no hay productos');
-    expect(root.querySelector('ui-empty-state')?.textContent).not.toContain('Creá el primero');
+    expect(root.querySelector('ui-empty-state')?.textContent).not.toContain('Crea el primero');
     expect(button('Crear producto')).toBeUndefined();
     expect(button('Nuevo producto')).toBeUndefined();
   });
@@ -302,7 +302,7 @@ describe('ProductList', () => {
       const { root } = await listed();
       await select(root, 'attribute', 'category');
       const options = [...(root.querySelector<HTMLSelectElement>('[data-field="category"]')?.options ?? [])].map((o) => o.textContent?.trim());
-      expect(options).toEqual(['Elegí una', 'Ropa', 'Ropa › Hombre', 'Ropa › Hombre › Camisetas', 'Ropa › Mujer', 'Calzado']);
+      expect(options).toEqual(['Elige una', 'Ropa', 'Ropa › Hombre', 'Ropa › Hombre › Camisetas', 'Ropa › Mujer', 'Calzado']);
       await select(root, 'category', 'ropa');
       const { query } = queries.productList.params;
       expect(query.limit).toBe(PAGE_SIZE);

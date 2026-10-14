@@ -91,7 +91,7 @@ export class CreateProductDialog {
 
   protected readonly draft = signal({ name: '', description: '' });
   protected readonly productForm = form(this.draft, (path) => {
-    required(path.name, { message: 'Ingresá un nombre' });
+    required(path.name, { message: 'Ingresa un nombre' });
   });
   protected readonly failure = signal('');
 

@@ -42,7 +42,7 @@ const SALE_DONE: Record<string, string> = {
     <div class="bulk" role="group" aria-label="Acción sobre los seleccionados">
       <p class="bulk-count">{{ products().length }} seleccionados</p>
       @if (tooMany()) {
-        <p class="bulk-note">Una acción admite hasta {{ maxBulk }} productos: deseleccioná algunos.</p>
+        <p class="bulk-note">Una acción admite hasta {{ maxBulk }} productos: deselecciona algunos.</p>
       }
       @if (canWrite()) {
         <fieldset>
@@ -50,7 +50,7 @@ const SALE_DONE: Record<string, string> = {
           <div class="bulk-select">
             <label for="bulk-category">Categoría</label>
             <select id="bulk-category" data-field="bulkCategory" [value]="bulkCategory()" (change)="bulkCategory.set($any($event.target).value)">
-              <option value="">Elegí una</option>
+              <option value="">Elige una</option>
               @for (option of categoryOptions(); track option.value) {
                 <option [value]="option.value">{{ option.label }}</option>
               }
@@ -66,7 +66,7 @@ const SALE_DONE: Record<string, string> = {
           <div class="bulk-select">
             <label for="bulk-section">Sección</label>
             <select id="bulk-section" data-field="bulkSection" [value]="bulkSection()" (change)="bulkSection.set($any($event.target).value)">
-              <option value="">Elegí una</option>
+              <option value="">Elige una</option>
               @for (section of sectionIds; track section) {
                 <option [value]="section">{{ labels[section] }} ({{ sections()[section].length }} de {{ maxSection }})</option>
               }

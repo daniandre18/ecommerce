@@ -120,7 +120,7 @@ describe('PresentationSection', () => {
     it('con la sección completa no se ofrece agregarlo, y lo dice', async () => {
       const { box, text } = await render({}, { featured: [], offers: occupied(40) });
       expect(box('offers')?.disabled).toBe(true);
-      expect(text()).toContain('Ofertas está completa: quitá un producto de la sección para agregar este');
+      expect(text()).toContain('Ofertas está completa: quita un producto de la sección para agregar este');
     });
 
     it('si se completó mientras tanto, el rechazo dice cuántos lugares quedan y conserva lo elegido (FR-027b)', async () => {

@@ -229,7 +229,7 @@ export class StorefrontSection {
   }
 }
 
-const CONFLICT = 'Alguien más editó el producto mientras lo tenías abierto. Descartá tus cambios para ver los actuales.';
+const CONFLICT = 'Alguien más editó el producto mientras lo tenías abierto. Descarta tus cambios para ver los actuales.';
 
 function tooLong(value: string, max: number) {
   return value.trim().length > max ? { kind: 'maxLength', message: `Admite hasta ${max} caracteres.` } : undefined;

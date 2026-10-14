@@ -31,7 +31,7 @@ interface Row {
     <form novalidate (submit)="$event.preventDefault(); confirm()">
       <mat-dialog-content>
         <p>
-          Estas variantes ya tienen datos cargados. Elegí su valor en la opción nueva y conservan su SKU, sus importes, sus
+          Estas variantes ya tienen datos cargados. Elige su valor en la opción nueva y conservan su SKU, sus importes, sus
           existencias y sus imágenes.
         </p>
 
@@ -39,7 +39,7 @@ interface Row {
           <mat-form-field class="all">
             <mat-label>{{ option.name }}: aplicar a todas</mat-label>
             <select #all matNativeControl (change)="applyToAll(option.id, all.value)">
-              <option value="">Elegí…</option>
+              <option value="">Elige…</option>
               @for (value of option.values; track value.id) {
                 <option [value]="value.id">{{ value.label }}</option>
               }
@@ -54,7 +54,7 @@ interface Row {
               <mat-form-field>
                 <mat-label>{{ data.options[choiceIndex]?.name }}</mat-label>
                 <select matNativeControl [formField]="choice.valueId">
-                  <option value="">Elegí…</option>
+                  <option value="">Elige…</option>
                   @for (value of data.options[choiceIndex]?.values; track value.id) {
                     <option [value]="value.id">{{ value.label }}</option>
                   }
@@ -104,7 +104,7 @@ export class AssignOptionDialog {
   protected readonly assignForm = form(this.model, (path) => {
     applyEach(path.rows, (row) => {
       applyEach(row.choices, (choice) => {
-        required(choice.valueId, { message: 'Elegí un valor' });
+        required(choice.valueId, { message: 'Elige un valor' });
       });
     });
   });
