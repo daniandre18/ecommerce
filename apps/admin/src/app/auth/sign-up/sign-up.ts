@@ -9,11 +9,11 @@ import { SESSION } from '../../core/client';
 import { safeReturnUrl } from '../login/login';
 
 const SIGN_UP_FAILURES: Record<SignUpFailure, string> = {
-  'email-in-use': 'Ya hay una cuenta con ese correo. Iniciá sesión con ella.',
+  'email-in-use': 'Ya hay una cuenta con ese correo. Inicia sesión con ella.',
   'invalid-email': 'Ese correo no parece válido.',
-  'weak-password': 'Esa contraseña es muy fácil de adivinar. Probá con otra más larga.',
-  'too-many-attempts': 'Hubo demasiados intentos. Esperá unos minutos y volvé a probar.',
-  unavailable: 'No pudimos conectarnos. Revisá tu red y reintentá.',
+  'weak-password': 'Esa contraseña es muy fácil de adivinar. Prueba con otra más larga.',
+  'too-many-attempts': 'Hubo demasiados intentos. Espera unos minutos y vuelve a probar.',
+  unavailable: 'No pudimos conectarnos. Revisa tu red y reintenta.',
 };
 
 /**
@@ -56,7 +56,7 @@ const SIGN_UP_FAILURES: Record<SignUpFailure, string> = {
 
       <button matButton="filled" class="ds-primary-action" type="submit" [disabled]="signUpForm().submitting()">Crear cuenta</button>
     </form>
-    <p class="other">¿Ya tenés cuenta? <a routerLink="/login" [queryParams]="{ returnUrl: returnUrl() }">Iniciá sesión</a></p>
+    <p class="other">¿Ya tienes cuenta? <a routerLink="/login" [queryParams]="{ returnUrl: returnUrl() }">Inicia sesión</a></p>
   `,
   styles: `
     :host {
@@ -102,11 +102,11 @@ export class SignUp {
 
   protected readonly account = signal({ displayName: '', email: '', password: '' });
   protected readonly signUpForm = form(this.account, (path) => {
-    required(path.displayName, { message: 'Escribí tu nombre' });
-    required(path.email, { message: 'Ingresá tu correo' });
+    required(path.displayName, { message: 'Escribe tu nombre' });
+    required(path.email, { message: 'Ingresa tu correo' });
     email(path.email, { message: 'Ese correo no parece válido' });
-    required(path.password, { message: 'Elegí una contraseña' });
-    minLength(path.password, 6, { message: 'Usá al menos 6 caracteres' });
+    required(path.password, { message: 'Elige una contraseña' });
+    minLength(path.password, 6, { message: 'Usa al menos 6 caracteres' });
   });
   protected readonly failure = signal('');
 

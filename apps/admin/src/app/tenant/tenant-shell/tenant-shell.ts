@@ -46,17 +46,17 @@ import { MyTenants } from '../my-tenants';
     </header>
 
     @if (offline()) {
-      <!-- Sin red no se sabe si hay acceso: decir "no tenés acceso" sería presentar un error como un hecho (FR-037). -->
+      <!-- Sin red no se sabe si hay acceso: decir "no tienes acceso" sería presentar un error como un hecho (FR-037). -->
       <ui-error-state
         heading="No pudimos conectarnos"
-        message="Revisá tu conexión. Cuando vuelva, el comercio se abre solo."
+        message="Revisa tu conexión. Cuando vuelva, el comercio se abre solo."
         [retrying]="tenant.status() === 'reloading' || memberAccess.status() === 'reloading'"
         (retry)="tenant.reload(); memberAccess.reload()"
       />
     } @else if (noAccess()) {
       <ui-error-state
         heading="No pudimos abrir este comercio"
-        message="Puede que no exista o que no tengas acceso. Revisá el código o pedile acceso a su Propietario."
+        message="Puede que no exista o que no tengas acceso. Revisa el código o pídele acceso a su Propietario."
         [retrying]="tenant.status() === 'reloading' || memberAccess.status() === 'reloading'"
         (retry)="tenant.reload(); memberAccess.reload()"
       />
@@ -129,7 +129,7 @@ export class TenantShell {
   protected readonly canSwitch = computed(() => (this.myTenants.hasValue() ? this.myTenants.value().length : 0) > 1);
   /** El comercio, para las vistas hijas (`CURRENT_TENANT`). */
   readonly current = computed(() => (this.tenant.hasValue() ? (this.tenant.value() ?? undefined) : undefined));
-  /** Qué puede hacer la cuenta acá, para las vistas hijas (`CURRENT_ACCESS`); `undefined` mientras carga. */
+  /** Qué puede hacer la cuenta aquí, para las vistas hijas (`CURRENT_ACCESS`); `undefined` mientras carga. */
   readonly access = computed(() => (this.memberAccess.hasValue() ? this.memberAccess.value() : undefined));
   /** Mientras carga, el nombre queda vacío y no empuja nada: el encabezado ya tiene su alto. */
   protected readonly name = computed(() => this.current()?.name ?? '');

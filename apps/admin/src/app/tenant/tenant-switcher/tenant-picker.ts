@@ -21,7 +21,7 @@ import { MyTenants } from '../my-tenants';
         <ui-empty-state
           class="ds-card"
           heading="Tu cuenta no tiene comercios activos"
-          message="Si te invitaron, aceptá la invitación desde el correo que recibiste."
+          message="Si te invitaron, acepta la invitación desde el correo que recibiste."
         >
           <button matButton type="button" (click)="signOut.run()">Cerrar sesión</button>
         </ui-empty-state>

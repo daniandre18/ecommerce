@@ -43,8 +43,8 @@ describe('Login', () => {
     const { root, submit } = await render();
     await submit();
     expect(session.signIns).toEqual([]);
-    expect(root.textContent).toContain('Ingresá tu correo');
-    expect(root.textContent).toContain('Ingresá tu contraseña');
+    expect(root.textContent).toContain('Ingresa tu correo');
+    expect(root.textContent).toContain('Ingresa tu contraseña');
   });
 
   it('con credenciales inválidas avisa sin decir cuál de las dos falló', async () => {

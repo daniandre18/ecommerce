@@ -27,7 +27,7 @@ import { NavigationFailure } from './shared/navigation-failure';
     <main id="contenido" tabindex="-1">
       @if (navigation.failedUrl(); as url) {
         <div role="alert" class="navigation-failure">
-          No pudimos abrir esa vista. Revisá tu conexión.
+          No pudimos abrir esa vista. Revisa tu conexión.
           <button type="button" (click)="navigation.retry(url)">Reintentar</button>
         </div>
       }

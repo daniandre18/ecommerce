@@ -86,7 +86,7 @@ describe('MembersSection', () => {
     await settle();
     expect(commands.assignRole).toHaveBeenCalledWith(T1, { uid: 'ana', roleId: 'precios' });
     expect(select.value).toBe('catalog');
-    expect((fixture.nativeElement as HTMLElement).querySelector('[role="alert"]')?.textContent).toContain('No tenés permiso');
+    expect((fixture.nativeElement as HTMLElement).querySelector('[role="alert"]')?.textContent).toContain('No tienes permiso');
 
     commands.assignRole.mockResolvedValue({ ok: true, data: {} });
     select.value = 'precios';

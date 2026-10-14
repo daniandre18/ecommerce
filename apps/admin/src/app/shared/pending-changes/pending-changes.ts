@@ -50,7 +50,7 @@ export const confirmUnsaved: CanDeactivateFn<unknown> = async () => {
   const [{ MatDialog }, { ConfirmDialog }] = await Promise.all([import('@angular/material/dialog'), import('../confirm-dialog')]);
   const data: ConfirmData = {
     title: 'Hay cambios sin guardar',
-    message: 'Si salís ahora, lo que escribiste y no se guardó se pierde.',
+    message: 'Si sales ahora, lo que escribiste y no se guardó se pierde.',
     confirm: 'Salir sin guardar',
   };
   const ref = injector.get(MatDialog).open<InstanceType<typeof ConfirmDialog>, ConfirmData, boolean>(ConfirmDialog, { data });
