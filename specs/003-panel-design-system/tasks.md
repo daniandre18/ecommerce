@@ -459,11 +459,17 @@ que T036 los reemplaza. `styles.scss` no pertenece a ninguna tarea de vista.
   - **`adoption.ts`**: lee los imports con la API de TypeScript (estáticos, `export … from` e `import()`), así que un import comentado no cuenta; de `_components.scss` toma los `@include` sin comentarios, así que un mixin solo definido, o incluido dentro de un comentario, no cuenta. Recorre los `.ts` de `apps/admin/src` y `libs/ui/src` que no son pruebas. El mensaje es el de `contracts/gates.md`.
   - **Pruebas**: con `fixtures/adoption/`, falla con el mixin definido pero sin incluir (y con su `@include` comentado), y pasa al incluirlo; sobre el panel, 0 hallazgos. Corre en `admin:design-check`, del que depende `admin:lint`.
   - **Mutación**: sin quitar los comentarios de la hoja, el caso que debe fallar pasa; leyendo los imports con una expresión regular sobre el texto, el import comentado de `tabs` aparece como hallazgo. Las dos mutaciones hacen fallar la prueba.
-- [ ] T052 [P] [US4] Aislamiento de la paleta (historia 4, escenario 3) en `apps/admin/design-system/palette-isolation.spec.ts`:
+- [X] T052 [P] [US4] Aislamiento de la paleta (historia 4, escenario 3) en `apps/admin/design-system/palette-isolation.spec.ts`:
   - **Uso de la paleta**: solo `_tokens.scss` y `_theme.scss` hacen `@use` de `_palette.scss`.
   - **Propagación**: compilar con otro azul primario (`@use … with`) cambia `--ds-primary`, y la prueba de contraste reevalúa los pares que lo usan.
 
   Junto con T050, garantiza que cambiar un valor de la paleta llega a todas las vistas sin tocar ningún componente.
+
+  Hecho:
+  - **Uso**: `palette-isolation.ts` busca `@use`, `@forward` e `@import` de la paleta en las hojas de `apps/admin/src` y `libs/ui/src` sin sus comentarios, y también en las cadenas de los `.ts`, porque los estilos en línea se compilan como SCSS (`inlineStyleLanguage`). En el panel, solo la usa `_tokens.scss`.
+  - **Propagación**: la paleta lleva `!default` en cada valor para poder compilarla con `@use … with`; el CSS compilado queda idéntico byte a byte (24.173 B). Con el azul de la referencia (`#536dfe`), `--ds-primary` cambia en claro y no en oscuro, y la prueba de contraste reporta exactamente los 23 pares cuyo color cambió (enlaces, primario en reposo, presionado y con foco, la selección, el anillo sobre el primario), todos en claro, y ninguno más.
+  - **Mutación**: sin quitar comentarios, sin mirar los `.ts`, con `--ds-primary` escrito a mano en `_tokens.scss`, con el contraste solo en oscuro, y con un `@use` de la paleta en `categories-page.scss`: cada una hace fallar su caso.
+  - De paso, dos comentarios de `_palette.scss` decían "4,7+ (0,2 de margen)"; desde T059 el margen es 0,5.
 
 **Checkpoint**: escenarios 1 a 3 de la historia 4, verificados con `quickstart.md`.
 

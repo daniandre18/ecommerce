@@ -1,0 +1,6 @@
+// Fixture de palette-isolation.spec.ts: la paleta solo en comentarios, que no cuentan.
+// @use 'styles/palette' as p;
+/* @forward 'palette'; */
+.price {
+  color: var(--ds-primary);
+}

@@ -225,14 +225,14 @@ export function checkLanguage(input: LanguageInput): LanguageFinding[] {
   return findings;
 }
 
-/** Los `.ts` (sin pruebas) y `.html` de una carpeta, con rutas desde la raíz del repositorio. */
-export function filesIn(root: string, dir: string): string[] {
+/** Los archivos de una carpeta con esas extensiones (por omisión `.ts` y `.html`), sin pruebas, con rutas desde la raíz del repositorio. */
+export function filesIn(root: string, dir: string, extensions: readonly string[] = ['.html', '.ts']): string[] {
   const files: string[] = [];
   const walk = (current: string) => {
     for (const entry of readdirSync(join(root, current))) {
       const path = `${current}/${entry}`;
       if (statSync(join(root, path)).isDirectory()) walk(path);
-      else if (entry.endsWith('.html') || (entry.endsWith('.ts') && !entry.endsWith('.spec.ts'))) files.push(path);
+      else if (extensions.some((extension) => entry.endsWith(extension)) && !entry.endsWith('.spec.ts')) files.push(path);
     }
   };
   if (existsSync(join(root, dir))) walk(dir);

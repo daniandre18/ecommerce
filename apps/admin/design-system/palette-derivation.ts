@@ -75,10 +75,10 @@ export interface Derivation {
   readonly binding: { readonly pair: string; readonly ratio: number; readonly target: number };
 }
 
-/** Las variables de color de `_palette.scss` (`$nombre: #hex;`). */
+/** Las variables de color de `_palette.scss` (`$nombre: #hex !default;`). */
 export function paletteColors(scss: string): Map<string, string> {
   const colors = new Map<string, string>();
-  for (const match of scss.matchAll(/^\$([\w-]+):\s*(#[0-9a-f]{6})\s*;/gim)) colors.set(match[1] as string, (match[2] as string).toLowerCase());
+  for (const match of scss.matchAll(/^\$([\w-]+):\s*(#[0-9a-f]{6})\s*(?:!default\s*)?;/gim)) colors.set(match[1] as string, (match[2] as string).toLowerCase());
   return colors;
 }
 
