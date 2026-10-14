@@ -78,7 +78,7 @@ function morphological(word: string): boolean {
   return (syllables > 1 && /[áéí]$/.test(word)) || /(?:ás|és|ís)$/.test(word);
 }
 
-interface Text {
+export interface Text {
   readonly file: string;
   readonly line: number;
   readonly text: string;
@@ -179,8 +179,8 @@ function htmlTexts(file: string, content: string): Text[] {
     .filter((entry) => entry.text.trim());
 }
 
-/** Revisa los textos y devuelve los hallazgos, ordenados por archivo y línea. */
-export function checkLanguage(input: LanguageInput): LanguageFinding[] {
+/** Los textos que recorre la compuerta: lo que se ve o se anuncia. También sirve para la revisión manual (T049). */
+export function languageTexts(input: Pick<LanguageInput, 'root' | 'files' | 'serverFiles'>): Text[] {
   const texts: Text[] = [];
   for (const [files, onlyErrors] of [[input.files, false], [input.serverFiles, true]] as const) {
     for (const file of files) {
@@ -188,6 +188,12 @@ export function checkLanguage(input: LanguageInput): LanguageFinding[] {
       texts.push(...(file.endsWith('.html') ? htmlTexts(file, content) : typescriptTexts(file, content, onlyErrors)));
     }
   }
+  return texts;
+}
+
+/** Revisa los textos y devuelve los hallazgos, ordenados por archivo y línea. */
+export function checkLanguage(input: LanguageInput): LanguageFinding[] {
+  const texts = languageTexts(input);
 
   const lexicon = new Set(input.lexicon.map((entry) => entry.word.toLowerCase()));
   const findings: LanguageFinding[] = [];
