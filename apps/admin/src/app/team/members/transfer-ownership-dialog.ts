@@ -33,7 +33,7 @@ export interface TransferOwnershipData {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button matButton type="button" [mat-dialog-close]="undefined">Cancelar</button>
-      <button matButton="filled" type="button" [mat-dialog-close]="roleId()">Traspasar la propiedad</button>
+      <button matButton="filled" class="ds-destructive" type="button" [mat-dialog-close]="roleId()">Traspasar la propiedad</button>
     </mat-dialog-actions>
   `,
   styles: `

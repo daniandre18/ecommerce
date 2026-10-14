@@ -55,7 +55,7 @@ interface Draft {
       @if (!current.editable) {
         <p class="note">El rol Propietario puede todo en el comercio y no se edita. Para cambiar quién es Propietario, traspasá la propiedad desde Equipo.</p>
       } @else {
-        <form novalidate (submit)="$event.preventDefault(); save()">
+        <form class="ds-card" novalidate (submit)="$event.preventDefault(); save()">
           <mat-form-field>
             <mat-label>Nombre</mat-label>
             <input matInput autocomplete="off" [formField]="roleForm.name" />
@@ -80,12 +80,12 @@ interface Draft {
           @if (dirty()) {
             <div class="actions">
               <button matButton type="button" (click)="discard()">Descartar cambios</button>
-              <button matButton="filled" type="submit" [disabled]="roleForm().submitting()">Guardar rol</button>
+              <button matButton="filled" class="ds-primary-action" type="submit" [disabled]="roleForm().submitting()">Guardar rol</button>
             </div>
           }
         </form>
 
-        <section aria-labelledby="eliminar">
+        <section class="ds-card" aria-labelledby="eliminar">
           <h2 id="eliminar">Eliminar el rol</h2>
           @if (current.memberCount > 0) {
             <p class="note">
@@ -93,7 +93,7 @@ interface Draft {
               eliminarlo.
             </p>
           }
-          <button matButton="outlined" type="button" [disabled]="current.memberCount > 0" (click)="remove(current)">Eliminar rol</button>
+          <button matButton="filled" class="ds-destructive" type="button" [disabled]="current.memberCount > 0" (click)="remove(current)">Eliminar rol</button>
         </section>
       }
     } @else {
@@ -105,17 +105,23 @@ interface Draft {
     .back {
       display: inline-flex;
       align-items: center;
-      min-height: 48px;
+      min-height: var(--ds-touch-target);
     }
 
     h1 {
-      margin: 0 0 16px;
-      font: var(--mat-sys-headline-small);
+      margin: 0 0 var(--ds-space-4);
+      font: var(--ds-type-page-title);
+      letter-spacing: var(--ds-type-page-title-tracking);
+    }
+
+    /* El formulario y "Eliminar el rol" son tarjetas (\`.ds-card\`), separadas por \`--ds-space-8\`. */
+    form + section {
+      margin-top: var(--ds-space-8);
     }
 
     h2 {
-      margin: 24px 0 8px;
-      font: var(--mat-sys-title-medium);
+      margin: 0 0 var(--ds-space-2);
+      font: var(--ds-type-section-title);
     }
 
     mat-form-field {
@@ -123,14 +129,14 @@ interface Draft {
     }
 
     fieldset {
-      margin: 0 0 16px;
+      margin: 0 0 var(--ds-space-4);
       padding: 0;
       border: 0;
     }
 
     legend {
-      margin-bottom: 4px;
-      font: var(--mat-sys-title-small);
+      margin-bottom: var(--ds-space-1);
+      font: var(--ds-type-label);
     }
 
     mat-checkbox {
@@ -143,18 +149,18 @@ interface Draft {
 
     .hint,
     .note {
-      color: var(--mat-sys-on-surface-variant);
-      font: var(--mat-sys-body-medium);
+      color: var(--ds-text-secondary);
+      font: var(--ds-type-body);
     }
 
     .actions {
       display: flex;
       justify-content: flex-end;
-      gap: 8px;
+      gap: var(--ds-space-2);
     }
 
     .failure {
-      color: var(--mat-sys-error);
+      color: var(--ds-status-error);
     }
 
     .failure:empty {

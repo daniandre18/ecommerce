@@ -25,11 +25,11 @@ const pending = (read: { hasValue(): boolean; error(): unknown }) => !read.hasVa
       una lista de personas más larga que su esqueleto empujaría las de abajo (SC-009).
     -->
     @if (access() === undefined || loading()) {
-      <ui-skeleton rows="6" rowHeight="64px" label="Cargando el equipo…" />
+      <ui-skeleton class="ds-card" rows="6" rowHeight="64px" label="Cargando el equipo…" />
     } @else if (!isOwner()) {
-      <ui-empty-state heading="Solo el Propietario administra el equipo" message="Si necesitás un cambio, pedíselo a quien es Propietario del comercio." />
+      <ui-empty-state class="ds-card" heading="Solo el Propietario administra el equipo" message="Si necesitás un cambio, pedíselo a quien es Propietario del comercio." />
     } @else {
-      <section aria-labelledby="personas">
+      <section class="ds-card" aria-labelledby="personas">
         <h2 id="personas">Personas</h2>
         @if (members.error() || roles.error()) {
           <ui-error-state heading="No pudimos cargar el equipo" [retrying]="members.status() === 'reloading' || roles.status() === 'reloading'" (retry)="members.reload(); roles.reload()" />
@@ -38,7 +38,7 @@ const pending = (read: { hasValue(): boolean; error(): unknown }) => !read.hasVa
         }
       </section>
 
-      <section aria-labelledby="invitaciones">
+      <section class="ds-card" aria-labelledby="invitaciones">
         <h2 id="invitaciones">Invitar</h2>
         @if (invitations.error() || roles.error()) {
           <ui-error-state heading="No pudimos cargar las invitaciones" [retrying]="invitations.status() === 'reloading' || roles.status() === 'reloading'" (retry)="invitations.reload(); roles.reload()" />
@@ -47,7 +47,7 @@ const pending = (read: { hasValue(): boolean; error(): unknown }) => !read.hasVa
         }
       </section>
 
-      <section aria-labelledby="roles">
+      <section class="ds-card" aria-labelledby="roles">
         <h2 id="roles">Roles</h2>
         @if (roles.error()) {
           <ui-error-state heading="No pudimos cargar los roles" [retrying]="roles.status() === 'reloading'" (retry)="roles.reload()" />
@@ -59,13 +59,19 @@ const pending = (read: { hasValue(): boolean; error(): unknown }) => !read.hasVa
   `,
   styles: `
     h1 {
-      margin: 0 0 8px;
-      font: var(--mat-sys-headline-small);
+      margin: 0 0 var(--ds-space-4);
+      font: var(--ds-type-page-title);
+      letter-spacing: var(--ds-type-page-title-tracking);
+    }
+
+    /* Cada sección es una tarjeta (\`.ds-card\`); entre tarjetas, \`--ds-space-8\` (FR-019). */
+    section + section {
+      margin-top: var(--ds-space-8);
     }
 
     h2 {
-      margin: 24px 0 8px;
-      font: var(--mat-sys-title-large);
+      margin: 0 0 var(--ds-space-2);
+      font: var(--ds-type-section-title);
     }
   `,
 })

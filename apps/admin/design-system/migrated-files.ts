@@ -65,4 +65,11 @@ export const MIGRATED_FILES: readonly string[] = [
   'apps/admin/src/app/catalog/categories/categories-page.scss',
   'apps/admin/src/app/catalog/categories/categories-page.ts',
   'apps/admin/src/app/catalog/categories/category-row.ts',
+  // T034: equipo y rol.
+  'apps/admin/src/app/team/team-page.ts',
+  'apps/admin/src/app/team/members/members-section.ts',
+  'apps/admin/src/app/team/members/invitations-section.ts',
+  'apps/admin/src/app/team/members/transfer-ownership-dialog.ts',
+  'apps/admin/src/app/team/roles/roles-section.ts',
+  'apps/admin/src/app/team/role-editor/role-editor.ts',
 ];

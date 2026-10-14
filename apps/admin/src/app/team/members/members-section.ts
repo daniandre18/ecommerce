@@ -70,9 +70,9 @@ import { TransferOwnershipDialog, type TransferOwnershipData } from './transfer-
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--mat-sys-outline-variant);
+      gap: var(--ds-space-2);
+      padding: var(--ds-space-3) 0;
+      border-bottom: var(--ds-border-width) solid var(--ds-border-subtle);
     }
 
     .who {
@@ -82,14 +82,14 @@ import { TransferOwnershipDialog, type TransferOwnershipData } from './transfer-
     }
 
     .name {
-      font: var(--mat-sys-title-small);
+      font: var(--ds-type-label);
     }
 
     .email,
     .meta,
     .hint {
-      color: var(--mat-sys-on-surface-variant);
-      font: var(--mat-sys-body-medium);
+      color: var(--ds-text-secondary);
+      font: var(--ds-type-body);
       overflow-wrap: anywhere;
     }
 
@@ -97,11 +97,11 @@ import { TransferOwnershipDialog, type TransferOwnershipData } from './transfer-
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 8px;
+      gap: var(--ds-space-2);
     }
 
     .failure {
-      color: var(--mat-sys-error);
+      color: var(--ds-status-error);
     }
 
     .failure:empty {

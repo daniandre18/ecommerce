@@ -43,7 +43,7 @@ function defaultRole(roles: readonly Role[]): RoleId | '' {
           }
         </select>
       </mat-form-field>
-      <button matButton="filled" type="submit" [disabled]="inviteForm().submitting()">Invitar</button>
+      <button matButton="filled" class="ds-primary-action" type="submit" [disabled]="inviteForm().submitting()">Invitar</button>
     </form>
     <div role="alert" class="failure">{{ failure() }}</div>
 
@@ -82,7 +82,7 @@ function defaultRole(roles: readonly Role[]): RoleId | '' {
       display: flex;
       flex-wrap: wrap;
       align-items: flex-start;
-      gap: 8px;
+      gap: var(--ds-space-2);
     }
 
     form mat-form-field {
@@ -90,18 +90,18 @@ function defaultRole(roles: readonly Role[]): RoleId | '' {
     }
 
     form button {
-      margin-top: 8px;
+      margin-top: var(--ds-space-2);
     }
 
     .link {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 8px;
-      margin: 12px 0;
-      padding: 12px;
-      border-radius: 12px;
-      background: var(--mat-sys-surface-container);
+      gap: var(--ds-space-2);
+      margin: var(--ds-space-3) 0;
+      padding: var(--ds-space-3);
+      border: var(--ds-border-width) solid var(--ds-border-subtle);
+      border-radius: var(--ds-radius-lg);
     }
 
     .link p {
@@ -112,12 +112,13 @@ function defaultRole(roles: readonly Role[]): RoleId | '' {
     .link input {
       flex: 1 1 240px;
       min-width: 0;
-      font: var(--mat-sys-body-medium);
+      font: var(--ds-type-body);
     }
 
     h3 {
-      margin: 16px 0 4px;
-      font: var(--mat-sys-title-medium);
+      margin: var(--ds-space-4) 0 var(--ds-space-1);
+      font: var(--ds-type-subtitle);
+      color: var(--ds-text-secondary);
     }
 
     ul {
@@ -131,9 +132,9 @@ function defaultRole(roles: readonly Role[]): RoleId | '' {
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--mat-sys-outline-variant);
+      gap: var(--ds-space-2);
+      padding: var(--ds-space-2) 0;
+      border-bottom: var(--ds-border-width) solid var(--ds-border-subtle);
     }
 
     .who {
@@ -148,12 +149,12 @@ function defaultRole(roles: readonly Role[]): RoleId | '' {
 
     .meta,
     .hint {
-      color: var(--mat-sys-on-surface-variant);
-      font: var(--mat-sys-body-medium);
+      color: var(--ds-text-secondary);
+      font: var(--ds-type-body);
     }
 
     .failure {
-      color: var(--mat-sys-error);
+      color: var(--ds-status-error);
     }
 
     .failure:empty {

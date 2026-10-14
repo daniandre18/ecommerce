@@ -305,3 +305,46 @@ test.describe('pantalla: categorías', () => {
     await expectDestructive(page, ['Eliminar']);
   });
 });
+
+// T034: equipo y rol. "Invitar" es la tarea del equipo; "Crear rol" es confirmación de sección.
+test('pantalla: equipo', async ({ page }) => {
+  await page.goto('/login');
+  await signIn(page, OWNER);
+  await page.goto('/t/t1/team');
+  await expect(page.getByRole('heading', { level: 2, name: 'Roles' })).toBeVisible();
+  await expectAccent(page, 'Invitar');
+  await expectDestructive(page, []);
+  await expectPlanes(page, 'page-card-bar');
+  await expectTypeHierarchy(page);
+});
+
+// Se abre y se cancela: traspasar de verdad cambiaría la siembra que comparten todas las pruebas.
+test('pantalla: diálogo: traspaso de propiedad', async ({ page }) => {
+  await page.goto('/login');
+  await signIn(page, OWNER);
+  await page.goto('/t/t1/team');
+  await page.getByRole('button', { name: 'Hacer Propietario' }).first().click();
+  const dialog = page.getByRole('dialog', { name: /^¿Hacer Propietario a / });
+  await expect(dialog).toBeVisible();
+  await expectAccent(page, null, 'dialog');
+  await expectDestructive(page, ['Traspasar la propiedad'], 'dialog');
+  await dialog.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(dialog).toHaveCount(0);
+});
+
+test('pantalla: rol', async ({ page }) => {
+  // Un rol propio y sin personas: el predefinido no se edita, y con personas "Eliminar rol" se deshabilita.
+  const { body } = await call(await idTokenOf(OWNER), 'createRole', { tenantId: 't1', name: `Diseño ${Date.now()}` });
+  const { roleId } = (body.result as { data: { roleId: string } }).data;
+  await page.goto('/login');
+  await signIn(page, OWNER);
+  await page.goto(`/t/t1/team/roles/${roleId}`);
+  await expect(page.getByRole('button', { name: 'Eliminar rol' })).toBeEnabled();
+  // "Guardar rol" aparece con cambios: el acento se mide con la acción a la vista.
+  await page.getByRole('checkbox').first().click();
+  await expect(page.getByRole('button', { name: 'Guardar rol' })).toBeVisible();
+  await expectAccent(page, 'Guardar rol');
+  await expectDestructive(page, ['Eliminar rol']);
+  await expectPlanes(page, 'page-card-bar');
+  await expectTypeHierarchy(page);
+});
