@@ -77,7 +77,7 @@ export class DeleteRole {
     const role = await loadRole(tx, input.roleId);
     if (!role.editable) throw new BusinessRuleError('invalid-argument', 'El rol Propietario no se elimina');
     if (!canDeleteRole(role)) {
-      throw new BusinessRuleError('invalid-argument', `Reasigná antes a sus ${role.memberCount} colaboradores`, { memberCount: role.memberCount });
+      throw new BusinessRuleError('invalid-argument', `Reasigna antes a sus ${role.memberCount} colaboradores`, { memberCount: role.memberCount });
     }
     await tx.roles.delete(role.id);
     await recordTeamChange(tx, ctx, this.deps, { change: 'role.deleted', entity: { kind: 'role', id: role.id }, before: roleSnapshot(role), after: null });

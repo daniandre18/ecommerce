@@ -27,8 +27,8 @@ export interface GuardDependencies {
   readonly clock: Clock;
 }
 
-/** Mismo mensaje para "no sos miembro" y "no tenés el permiso": no revela si el comercio existe. */
-const DENIED = 'No tenés permiso para realizar esta operación';
+/** Mismo mensaje para "no eres miembro" y "no tienes el permiso": no revela si el comercio existe. */
+const DENIED = 'No tienes permiso para realizar esta operación';
 
 /**
  * La única puerta de entrada de toda mutación. Verifica, en el orden del contrato:
