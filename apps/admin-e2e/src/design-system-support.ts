@@ -312,3 +312,24 @@ export async function expectDeclaredPairs(page: Page, scope: Scope = 'view'): Pr
   );
   expect(problems, 'emparejamientos color–superficie sin declarar en contrast-pairs.ts').toEqual([]);
 }
+
+/**
+ * T037 (FR-024): el error no depende solo del color. `::before` dibuja un ícono con `mask` sobre un SVG en
+ * línea, en el color del texto: tiene que tener máscara, tamaño y el mismo color que el mensaje.
+ */
+export async function expectErrorIcon(target: Locator): Promise<void> {
+  const icon = await target.evaluate((element) => {
+    const before = getComputedStyle(element, '::before');
+    return {
+      mask: before.maskImage || before.getPropertyValue('-webkit-mask-image'),
+      width: Number.parseFloat(before.width),
+      height: Number.parseFloat(before.height),
+      background: before.backgroundColor,
+      text: getComputedStyle(element).color,
+    };
+  });
+  expect(icon.mask, 'el ícono de error tiene máscara').toMatch(/^url\(/);
+  expect(icon.width, 'el ícono tiene ancho').toBeGreaterThan(0);
+  expect(icon.height, 'el ícono tiene alto').toBeGreaterThan(0);
+  expect(icon.background, 'el ícono va en el color del mensaje').toBe(icon.text);
+}

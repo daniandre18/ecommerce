@@ -143,6 +143,26 @@ a {
 // Un botón dentro del aviso ("Reintentar") va en el color propio del aviso, con borde o como texto: un
 // botón en primario sobre una superficie de error es un emparejamiento malo por su cuenta, y ataba el
 // primario de toda la paleta a ese único uso (T059).
+// El ícono de error (FR-024): el error no depende solo del color. Un SVG en línea como máscara, pintado con el
+// color del texto: sin fuente de íconos (FR-017 no admite descargas) y sin tocar ninguna plantilla.
+$error-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 5h2v7h-2V7Zm0 9h2v2h-2v-2Z'/%3E%3C/svg%3E");
+
+@mixin error-icon {
+  content: '';
+  background: currentColor;
+  mask: $error-icon center / contain no-repeat;
+}
+
+// El error de un campo, en línea delante del mensaje.
+.mat-mdc-form-field-error::before {
+  @include error-icon;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-inline-end: var(--ds-space-1);
+  vertical-align: -0.125em;
+}
+
 @mixin notice-buttons($color) {
   @include mat.button-overrides(
     (
@@ -159,10 +179,23 @@ a {
   padding: var(--ds-space-3) var(--ds-space-4);
   border-radius: var(--ds-radius-md);
 
+  // El ícono a la izquierda del primer renglón, en el lugar que le abre el relleno: así queda igual en un aviso
+  // en fila (la falla de navegación) y en uno en columna (el estado de error).
   &--error {
+    position: relative;
+    padding-inline-start: calc(var(--ds-space-4) + var(--ds-space-6) + var(--ds-space-2));
     background: var(--ds-status-error-container);
     color: var(--ds-on-status-error-container);
     @include notice-buttons(var(--ds-on-status-error-container));
+
+    &::before {
+      @include error-icon;
+      position: absolute;
+      inset-block-start: var(--ds-space-3);
+      inset-inline-start: var(--ds-space-4);
+      width: var(--ds-space-6);
+      height: var(--ds-space-6);
+    }
   }
 
   &--warning {

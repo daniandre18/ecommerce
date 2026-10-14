@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { expectAccent, expectBackground, expectDeclaredPairs, expectDestructive, expectPlanes, expectTypeHierarchy, pressedContrast, readOnlyCollaborator } from './design-system-support';
+import { expectAccent, expectBackground, expectDeclaredPairs, expectDestructive, expectErrorIcon, expectPlanes, expectTypeHierarchy, pressedContrast, readOnlyCollaborator } from './design-system-support';
 import { call, idTokenOf, MULTI, OWNER, productAsOwner, signIn, signUpFromLink } from './support';
 
 // 003 — el sistema de diseño, medido en lo que el navegador computa. Corre en los tres proyectos,
@@ -27,6 +27,8 @@ test.describe('estados compartidos', () => {
     await expect(failure).toBeVisible({ timeout: 15_000 });
 
     await expectBackground(page, 'ui-error-state', '--ds-status-error-container');
+    // T037: el aviso de error lleva su ícono, no solo el color.
+    await expectErrorIcon(page.locator('ui-error-state'));
     // El aviso no invita ni destruye: "Reintentar" es secundario. La acción principal de la vista
     // ("Nuevo producto") queda fuera del aviso, y su caso es el de "pantalla: catálogo" (T029).
     await expectAccent(page, null, { selector: 'ui-error-state' });
@@ -521,4 +523,21 @@ test.describe('foco', () => {
     expect(style).toBe('solid');
     expect(width).toBe(found.expected.outline.split(' ')[1]);
   });
+});
+
+// T037 (FR-024): el error de un campo se ve con texto, color e ícono.
+test('error con ícono: un SKU que no se puede quitar', async ({ page }) => {
+  const { url } = await productAsOwner(`DS-Error ${Date.now()}`);
+  await page.goto(url);
+  await signIn(page, OWNER);
+  const row = page.getByRole('group', { name: /^Única/ });
+  const sku = row.getByLabel('SKU', { exact: true });
+  await sku.fill(`SKU-${Date.now()}`);
+  await sku.press('Enter');
+  await expect(row).not.toContainText('Falta el SKU');
+  await sku.fill('');
+  await sku.press('Enter');
+  const error = row.locator('mat-error');
+  await expect(error).toHaveText('El SKU no se puede quitar');
+  await expectErrorIcon(error);
 });

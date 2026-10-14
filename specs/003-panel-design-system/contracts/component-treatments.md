@@ -28,7 +28,7 @@ Todos los valores son `--ds-*` ([tokens.md](./tokens.md)). Material se ajusta **
 | Botón: confirmación de sección | fondo `primary`, texto `on-primary` | ídem | — | ídem | `matButton="filled"` |
 | Botón: destructivo | fondo `action-destructive`, texto `on-action-destructive` | ídem | — | ídem | Clase `ds-destructive` |
 | Botón: secundario | texto `primary`; contorno `border-control` si es `outlined` | — | — | — | |
-| Campo de formulario | contorno `border-control`, etiqueta `text-secondary` | contorno `primary` de ancho `border-width-strong` | contorno y texto `status-error`, más **ícono** de error y `mat-error` (FR-024) | — | El ícono se agrega con `matSuffix` en el mismo campo: no cambia la estructura |
+| Campo de formulario | contorno `border-control`, etiqueta `text-secondary` | contorno `primary` de ancho `border-width-strong` | contorno y texto `status-error`, más **ícono** de error y `mat-error` (FR-024) | — | El ícono lo dibuja `.mat-mdc-form-field-error::before`: una máscara (`mask`) sobre un SVG en línea (`data:`), pintada con `currentColor`. Es global, no cambia la estructura y no requiere tocar cada campo (con `matSuffix` había que agregarlo campo por campo, y FR-017 no admite una fuente de íconos). El aviso en bloque (`.ds-notice--error`) usa el mismo ícono, a la izquierda de su primer renglón (T037) |
 | Checkbox, radio | contorno `border-control` | relleno `primary` | — | — | |
 | Chip | fondo `primary-container`, texto `on-primary-container` | — | — | — | La cruz conserva su zona táctil de 48 px (`.chip-touch-target`) |
 | Diálogo | fondo `surface-overlay`, radio `radius-lg`, elevación `overlay` | — | — | — | Título en `section-title` |
