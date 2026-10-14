@@ -72,4 +72,7 @@ export const MIGRATED_FILES: readonly string[] = [
   'apps/admin/src/app/team/members/transfer-ownership-dialog.ts',
   'apps/admin/src/app/team/roles/roles-section.ts',
   'apps/admin/src/app/team/role-editor/role-editor.ts',
+  // T035: bitácora.
+  'apps/admin/src/app/audit/audit-log/audit-log.ts',
+  'apps/admin/src/app/audit/entry-detail/entry-detail.ts',
 ];

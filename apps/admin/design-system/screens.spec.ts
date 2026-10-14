@@ -9,6 +9,12 @@ import { FRAMES, openedDialogs, routedViews } from './screens';
 // El inventario sale del código: cada ruta con loadComponent es una vista, y cada componente que se abre
 // con MatDialog.open es un diálogo. Una pantalla nueva sin declarar hace fallar la prueba.
 const APP = fileURLToPath(new URL('../src/app/', import.meta.url));
+const DESIGN_E2E = fileURLToPath(new URL('../../admin-e2e/src/design-system.spec.ts', import.meta.url));
+
+/** Los títulos `pantalla: <screen>` de las pruebas y grupos de un archivo de Playwright. */
+export function screenCases(source: string): string[] {
+  return [...source.matchAll(/(?:test|test\.describe)\(\s*(['"`])pantalla: (.+?)\1/g)].map((match) => match[2] as string);
+}
 
 function sources(dir: string): string[] {
   return readdirSync(dir).flatMap((entry) => {
@@ -40,5 +46,18 @@ describe('las acciones principales declaradas', () => {
 
   it('una acción principal nunca es también destructiva', () => {
     for (const entry of PRIMARY_ACTIONS) if (entry.action) expect(entry.destructive).not.toContain(entry.action);
+  });
+});
+
+// T035 (G1 del análisis): el "100 % de las pantallas" de SC-004 lo hace cumplir una compuerta, no la
+// disciplina. Cada pantalla declarada tiene su caso en design-system.spec.ts, titulado con su nombre.
+describe('los casos del sistema de diseño', () => {
+  it('lee los títulos de las pruebas y de los grupos', () => {
+    expect(screenCases(`test('pantalla: rol', () => {}); test.describe('pantalla: catálogo', () => {}); test('otra cosa', () => {})`)).toEqual(['rol', 'catálogo']);
+  });
+
+  it('cada pantalla de primary-actions.ts tiene su caso «pantalla: <screen>»', () => {
+    const cases = new Set(screenCases(readFileSync(DESIGN_E2E, 'utf8')));
+    expect(PRIMARY_ACTIONS.map((entry) => entry.screen).filter((screen) => !cases.has(screen))).toEqual([]);
   });
 });

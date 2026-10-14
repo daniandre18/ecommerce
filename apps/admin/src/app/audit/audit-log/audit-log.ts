@@ -58,9 +58,9 @@ const nextDay = (day: Date) => new Date(day.getFullYear(), day.getMonth(), day.g
   template: `
     <h1>Bitácora</h1>
     @if (access() === undefined) {
-      <ui-skeleton rows="4" label="Cargando la bitácora…" />
+      <ui-skeleton class="ds-card" rows="4" label="Cargando la bitácora…" />
     } @else if (!isOwner()) {
-      <ui-empty-state heading="Solo el Propietario consulta la bitácora" message="Registra costos, que tu rol no puede ver." />
+      <ui-empty-state class="ds-card" heading="Solo el Propietario consulta la bitácora" message="Registra costos, que tu rol no puede ver." />
     } @else {
       <form class="filters" aria-label="Filtros" (submit)="$event.preventDefault()">
         <mat-form-field subscriptSizing="dynamic">
@@ -103,19 +103,19 @@ const nextDay = (day: Date) => new Date(day.getFullYear(), day.getMonth(), day.g
       } @else if (firstPage.error()) {
         <ui-error-state heading="No pudimos cargar la bitácora" [retrying]="firstPage.status() === 'reloading'" (retry)="firstPage.reload()" />
       } @else if (!firstPageNamed()) {
-        <ui-skeleton rows="5" rowHeight="72px" label="Cargando la bitácora…" />
+        <ui-skeleton class="ds-card" rows="5" label="Cargando la bitácora…" />
       } @else if (entries().length === 0) {
         @if (filtered()) {
-          <ui-empty-state heading="Ninguna entrada coincide con los filtros">
+          <ui-empty-state class="ds-card" heading="Ninguna entrada coincide con los filtros">
             <button matButton type="button" (click)="clearFilters()">Quitar filtros</button>
           </ui-empty-state>
         } @else {
-          <ui-empty-state heading="Todavía no hay cambios registrados" message="Los cambios de precio, de existencias y del equipo van a aparecer acá." />
+          <ui-empty-state class="ds-card" heading="Todavía no hay cambios registrados" message="Los cambios de precio, de existencias y del equipo van a aparecer acá." />
         }
       } @else {
-        <ul aria-label="Entradas de la bitácora">
+        <ul class="ds-card" aria-label="Entradas de la bitácora">
           @for (entry of entries(); track entry.id) {
-            <li><app-entry-detail [tenantId]="id()" [entry]="entry" [names]="names()" /></li>
+            <li class="ds-table-row"><app-entry-detail [tenantId]="id()" [entry]="entry" [names]="names()" /></li>
           }
         </ul>
         <div role="alert" class="failure">{{ moreFailure() }}</div>
@@ -127,15 +127,16 @@ const nextDay = (day: Date) => new Date(day.getFullYear(), day.getMonth(), day.g
   `,
   styles: `
     h1 {
-      margin: 0 0 8px;
-      font: var(--mat-sys-headline-small);
+      margin: 0 0 var(--ds-space-4);
+      font: var(--ds-type-page-title);
+      letter-spacing: var(--ds-type-page-title-tracking);
     }
 
     .filters {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 8px;
+      gap: var(--ds-space-2);
+      margin-bottom: var(--ds-space-2);
     }
 
     .filters mat-form-field {
@@ -146,22 +147,22 @@ const nextDay = (day: Date) => new Date(day.getFullYear(), day.getMonth(), day.g
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 4px 8px;
-      margin: 0 0 8px;
+      gap: var(--ds-space-1) var(--ds-space-2);
+      margin: 0 0 var(--ds-space-2);
     }
 
+    /* Las entradas son la tarjeta, y cada una una fila del sistema (\`.ds-table-row\`). */
     ul {
       margin: 0;
-      padding: 0;
       list-style: none;
     }
 
     .more {
-      margin-top: 8px;
+      margin-top: var(--ds-space-2);
     }
 
     .failure {
-      color: var(--mat-sys-error);
+      color: var(--ds-status-error);
     }
 
     .failure:empty {

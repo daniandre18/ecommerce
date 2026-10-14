@@ -348,3 +348,20 @@ test('pantalla: rol', async ({ page }) => {
   await expectPlanes(page, 'page-card-bar');
   await expectTypeHierarchy(page);
 });
+
+// T035: la bitácora, de solo lectura: sin acción principal ni destructivas. Es la vista más densa en
+// texto, así que su caso mira también que cada entrada sea una fila del sistema.
+test('pantalla: bitácora', async ({ page }) => {
+  const { productId, variantId } = await productAsOwner(`Bitácora ${Date.now()}`);
+  await call(await idTokenOf(OWNER), 'setVariantPrice', { tenantId: 't1', productId, changes: [{ variantId, version: 1, price: { amount: 52000, currency: 'COP' } }] });
+  await page.goto('/login');
+  await signIn(page, OWNER);
+  await page.goto('/t/t1/audit');
+  const entries = page.getByRole('list', { name: 'Entradas de la bitácora' });
+  await expect(entries.getByRole('listitem').first()).toBeVisible();
+  await expectAccent(page, null);
+  await expectDestructive(page, []);
+  await expectPlanes(page, 'page-card-bar');
+  await expectTypeHierarchy(page);
+  expect(await entries.getByRole('listitem').evaluateAll((rows) => rows.filter((row) => !row.classList.contains('ds-table-row')).length)).toBe(0);
+});
