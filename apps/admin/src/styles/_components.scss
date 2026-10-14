@@ -17,6 +17,12 @@ html {
       outlined-label-text-transform: none,
       text-label-text-transform: none,
       outlined-outline-color: var(--ds-border-control),
+      // Deshabilitado (FR-025, T038): el texto de deshabilitado, sin el tono ni el borde de error.
+      filled-disabled-container-color: var(--ds-surface-hover),
+      filled-disabled-label-text-color: var(--ds-text-disabled),
+      outlined-disabled-label-text-color: var(--ds-text-disabled),
+      outlined-disabled-outline-color: var(--ds-border-subtle),
+      text-disabled-label-text-color: var(--ds-text-disabled),
     )
   );
 
@@ -27,6 +33,9 @@ html {
       filled-active-indicator-color: var(--ds-border-control),
       filled-hover-active-indicator-color: var(--ds-text-primary),
       filled-focus-active-indicator-color: var(--ds-primary),
+      filled-disabled-input-text-color: var(--ds-text-disabled),
+      filled-disabled-label-text-color: var(--ds-text-disabled),
+      filled-disabled-active-indicator-color: var(--ds-border-subtle),
     )
   );
 
@@ -143,6 +152,15 @@ a {
 // Un botón dentro del aviso ("Reintentar") va en el color propio del aviso, con borde o como texto: un
 // botón en primario sobre una superficie de error es un emparejamiento malo por su cuenta, y ataba el
 // primario de toda la paleta a ese único uso (T059).
+// Deshabilitado (FR-025): se distingue por más que el color, con el cursor. Material le quita los eventos de
+// puntero a un botón deshabilitado, y así el cursor no se vería. Un `<button>` deshabilitado no recibe el
+// clic de todos modos; un enlace sí, así que la regla es solo de botones. `:root` le gana a la de Material
+// (`.mat-mdc-unelevated-button.mat-mdc-button-disabled`) sin nombrar sus clases internas (FR-006).
+:root button:disabled {
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
 // El ícono de error (FR-024): el error no depende solo del color. Un SVG en línea como máscara, pintado con el
 // color del texto: sin fuente de íconos (FR-017 no admite descargas) y sin tocar ninguna plantilla.
 $error-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 5h2v7h-2V7Zm0 9h2v2h-2v-2Z'/%3E%3C/svg%3E");

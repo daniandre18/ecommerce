@@ -541,3 +541,43 @@ test('error con ícono: un SKU que no se puede quitar', async ({ page }) => {
   await expect(error).toHaveText('El SKU no se puede quitar');
   await expectErrorIcon(error);
 });
+
+// T038 (FR-025): deshabilitado se distingue por más que el color, no recibe foco y no hace nada. Nunca
+// usa el tono de error ni su borde.
+test('deshabilitado: "Cambiar estado" junto a "Archivar producto"', async ({ page }) => {
+  const { url } = await productAsOwner(`DS-Deshabilitado ${Date.now()}`);
+  await page.goto(url);
+  await signIn(page, OWNER);
+  const change = page.getByRole('button', { name: 'Cambiar estado', exact: true });
+  const archive = page.getByRole('button', { name: 'Archivar producto', exact: true });
+  await expect(change).toBeDisabled();
+  await expect(archive).toBeEnabled();
+
+  const look = (target: typeof change) =>
+    target.evaluate((element) => {
+      const probe = document.body.appendChild(document.createElement('div'));
+      probe.style.color = 'var(--ds-text-disabled)';
+      probe.style.backgroundColor = 'var(--ds-status-error)';
+      probe.style.borderColor = 'var(--ds-action-destructive)';
+      const [disabledText, error, destructive] = [getComputedStyle(probe).color, getComputedStyle(probe).backgroundColor, getComputedStyle(probe).borderColor];
+      probe.remove();
+      const style = getComputedStyle(element);
+      const label = getComputedStyle(element.querySelector('.mdc-button__label') ?? element);
+      return { cursor: style.cursor, opacity: style.opacity, label: label.color, background: style.backgroundColor, border: style.borderTopColor, disabledText, error, destructive };
+    });
+  const [disabled, enabled] = [await look(change), await look(archive)];
+  expect(disabled.cursor, 'el cursor dice que no se puede').toBe('not-allowed');
+  expect(disabled.cursor).not.toBe(enabled.cursor);
+  expect(disabled.label, 'el texto en el color de deshabilitado').toBe(disabled.disabledText);
+  expect([disabled.label, disabled.background, disabled.border]).not.toContain(disabled.error);
+  expect([disabled.label, disabled.background, disabled.border]).not.toContain(disabled.destructive);
+
+  // Sin foco: desde "Archivar producto", Shift+Tab no se detiene en "Cambiar estado".
+  await archive.focus();
+  await page.keyboard.press('Shift+Tab');
+  await expect(change).not.toBeFocused();
+  // Y un clic no hace nada: el estado del producto sigue igual.
+  await change.click({ force: true });
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.locator('.status')).toContainText('Borrador');
+});
