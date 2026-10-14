@@ -5,6 +5,7 @@ test.describe('shell del panel', () => {
   test('el documento declara el idioma para los lectores de pantalla (WCAG 3.1.1)', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('html')).toHaveAttribute('lang', 'es');
+    expect(true).toBe(false);
   });
 
   test('el primer Tab muestra el enlace para saltar al contenido, y Enter lleva el foco al contenido (WCAG 2.4.1)', async ({ page }) => {
