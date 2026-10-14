@@ -93,7 +93,7 @@ test('las variantes se arman de a una opción y lo cargado no se pierde (FR-017,
   await test.step('6. activar con variantes sin SKU se impide diciendo cuáles; completas, se activa', async () => {
     const status = page.getByRole('radiogroup', { name: 'Estado', exact: true });
     await status.getByRole('radio', { name: /^Activo/ }).check();
-    const blocked = page.getByRole('alert').filter({ hasText: 'completá el SKU de' });
+    const blocked = page.getByRole('alert').filter({ hasText: 'completa el SKU de' });
     await expect(blocked).toContainText('Rojo / M');
     await expect(blocked).toContainText('Amarillo / M');
     await expect(page.getByRole('button', { name: 'Cambiar estado', exact: true })).toBeDisabled();
@@ -166,7 +166,7 @@ test('el producto y su variante implícita aceptan imágenes con texto alternati
     await page.locator('app-product-editor > section app-image-upload input[type="file"]').setInputFiles({ name: 'taza.png', mimeType: 'image/png', buffer: PNG });
     const form = page.locator('app-product-editor > section app-image-upload form');
     await form.getByRole('button', { name: 'Subir imagen', exact: true }).click();
-    await expect(form.getByText('Describí la imagen para quien no puede verla', { exact: true })).toBeVisible();
+    await expect(form.getByText('Describe la imagen para quien no puede verla', { exact: true })).toBeVisible();
     await form.getByLabel('Texto alternativo', { exact: true }).fill('Taza blanca de frente');
     await form.getByRole('button', { name: 'Subir imagen', exact: true }).click();
     await expect(page.getByRole('img', { name: 'Taza blanca de frente', exact: true })).toBeVisible();

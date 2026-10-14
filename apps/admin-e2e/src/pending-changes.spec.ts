@@ -12,7 +12,7 @@ test.describe('trabajo en curso', () => {
     await page.route(/\/setVariantPrice$/, (route) => route.abort('internetdisconnected'));
     await price.fill('38000');
     await price.press('Enter');
-    await expect(page.getByRole('group', { name: /^Única/ })).toContainText('Reintentá');
+    await expect(page.getByRole('group', { name: /^Única/ })).toContainText('Reintenta');
     await expect(price).toHaveValue('38000');
 
     await page.unroute(/\/setVariantPrice$/);

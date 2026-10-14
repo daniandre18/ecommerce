@@ -115,7 +115,7 @@ test.describe('vacío y error', () => {
     await signIn(page, MULTI);
     await page.goto('/t/t2/categories');
     await expect(page.getByText('Todavía no hay categorías', { exact: true })).toBeVisible();
-    await expect(page.getByText('Creá la primera para empezar a organizar tu catálogo.', { exact: true })).toBeVisible();
+    await expect(page.getByText('Crea la primera para empezar a organizar tu catálogo.', { exact: true })).toBeVisible();
   });
 
   /** Abre Categorías sin red, con la vista ya descargada: lo que falta son los datos, no el código. */

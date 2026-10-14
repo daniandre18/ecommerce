@@ -79,7 +79,7 @@ test.describe('datos por variante y catálogos externos', () => {
 
     await test.step('2. quitárselo a la archivada lo libera, y queda en esta variante', async () => {
       const other = page.getByRole('group', { name: /^Azul \/ M/ });
-      await other.getByRole('button', { name: 'Quitárselo a la archivada y usarlo acá', exact: true }).click();
+      await other.getByRole('button', { name: 'Quitárselo a la archivada y usarlo aquí', exact: true }).click();
       await expect(other).not.toContainText('Ese GTIN ya lo usa');
       const mine = (await variantsOf(productIdOf(url))).find((v) => v.label === 'azul/m');
       await expect.poll(() => gtinHolder(code)).toBe(mine?.id);

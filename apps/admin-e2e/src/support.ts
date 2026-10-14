@@ -37,7 +37,7 @@ export const idTokenOf = async (email: string) => (await sessionOf(email)).idTok
  */
 export async function signUpFromLink(page: Page, link: string, email: string, name: string) {
   await page.goto(link);
-  await page.getByRole('link', { name: 'Creá una', exact: true }).click();
+  await page.getByRole('link', { name: 'Crea una', exact: true }).click();
   await page.getByLabel('Tu nombre', { exact: true }).fill(name);
   await page.getByLabel('Correo', { exact: true }).fill(email);
   await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
@@ -92,7 +92,7 @@ export async function productWithVariants(name: string): Promise<string> {
 }
 
 /**
- * Un texto que **empieza** con `text`: para un mensaje cuya oración sigue ("Puede que no exista… Revisá
+ * Un texto que **empieza** con `text`: para un mensaje cuya oración sigue ("Puede que no exista… Revisa
  * el código…"). Más estricto que la coincidencia parcial de Playwright, que acepta el texto en cualquier
  * lugar y choca con datos que lo contengan; menos que `exact`, que pide la oración entera.
  */
