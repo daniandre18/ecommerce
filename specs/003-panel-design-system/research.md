@@ -511,6 +511,10 @@ del paso de pruebas (`nx run admin-e2e:e2e`), sacadas de las marcas de tiempo de
 | 38472136770 (`71cd571`) | mitad 2/2 | 92 pasadas, 2 omitidas | 302 s | 0 |
 | 38481450673 (`7a714b2`) | mitad 1, por duración | 98 pasadas | 229 s | 0 |
 | 38481450673 (`7a714b2`) | mitad 2, por duración | 93 pasadas, 8 omitidas | 224 s | 0 |
+| 38590017817 (`81bb7a1`) | mitad 1, reparto de `7a714b2` | 110 pasadas | 315 s (reloj) | 0 |
+| 38590017817 (`81bb7a1`) | mitad 2, reparto de `7a714b2` | 99 pasadas, 8 omitidas | 222 s (reloj) | 0 |
+| 38591098328 (`ac97aa4`) | mitad 1, reparto regenerado | 94 pasadas | 314 s (reloj) | 0 |
+| 38591098328 (`ac97aa4`) | mitad 2, reparto regenerado | 115 pasadas, 8 omitidas | 319 s (reloj) | 0 |
 
 - **Lo que cuesta una prueba**: las tres de T030 sumaron 8 s al paso (de 562 a 570 s), unos 2,7 s cada
   una. Entre esas dos corridas el *trabajo* sí subió 101 s, pero 88 s fueron `npm install -g
@@ -528,7 +532,11 @@ del paso de pruebas (`nx run admin-e2e:e2e`), sacadas de las marcas de tiempo de
   `apps/admin-e2e/balance-shards.ts` arma la mitad 1 con las duraciones del reporte JSON de CI (el
   más largo primero, a la mitad más liviana) y la escribe en `shards.ts`; la mitad 2 es todo lo demás,
   así que una prueba nueva nunca queda fuera (`E2E_SHARD`). Medido: 229 y 224 s, un 2 % de diferencia.
-  Se vuelve a generar cuando la diferencia pase del 15 %.
+  Se vuelve a generar cuando la diferencia pase del 15 %. Ya pasó una vez: los casos de T033 a T035
+  cayeron en la mitad 1 y la llevaron a 315 contra 222 s (42 %); regenerado, 314 y 319 s (1,6 %). La
+  mitad más lenta no bajó: entre corridas, el runner varía más que lo que mueve el reparto. Con el
+  reparto parejo, la mitad más lenta queda a 281 s del tope (47 % libre). Las filas de `81bb7a1` y
+  `ac97aa4` son el reloj de Playwright, que incluye levantar los emuladores; las anteriores, el paso.
 - **`firebase-tools` en caché** (T059): instalarlo del registro en cada corrida tardaba de 15 a 106 s en
   la e2e, sin cambios, según la red de npm, y `rules` e `integration` lo bajaban con `npx`. Ahora se
   instala en `~/.firebase-tools`, cacheado por versión, desde `setup-emulators`. Con caché: de 2,3 a
