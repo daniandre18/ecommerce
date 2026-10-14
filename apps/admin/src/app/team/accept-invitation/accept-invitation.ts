@@ -50,9 +50,7 @@ const REJECTIONS: Readonly<Record<string, string>> = {
     }
 
     h1 {
-      margin: 0 0 var(--ds-space-6);
-      font: var(--ds-type-page-title);
-      letter-spacing: var(--ds-type-page-title-tracking);
+      margin-bottom: var(--ds-space-6);
     }
 
     .failure:empty {

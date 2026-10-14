@@ -83,11 +83,6 @@ type Membership = Record<SectionId, boolean>;
     </fieldset>
   `,
   styles: `
-    h2 {
-      margin: 0 0 var(--ds-space-2);
-      font: var(--ds-type-section-title);
-    }
-
     fieldset {
       margin: 0 0 var(--ds-space-4);
       padding: 0;

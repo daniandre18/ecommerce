@@ -23,8 +23,12 @@ export interface CompiledTokens {
  * compuertas miden lo que llega al navegador, no las variables del SCSS.
  */
 export function compileTokens(entry = STYLES_ENTRY): CompiledTokens {
-  const { css } = compile(entry, { loadPaths: [`${ROOT}node_modules`], quietDeps: true, silenceDeprecations: ['import'] });
-  return readTokens(css);
+  return readTokens(compileStyles(entry));
+}
+
+/** La hoja global compilada, como la recibe el navegador. */
+export function compileStyles(entry = STYLES_ENTRY): string {
+  return compile(entry, { loadPaths: [`${ROOT}node_modules`], quietDeps: true, silenceDeprecations: ['import'] }).css;
 }
 
 export function readTokens(css: string): CompiledTokens {

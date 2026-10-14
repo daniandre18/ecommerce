@@ -50,9 +50,7 @@ const SIGN_IN_FAILURES: Record<SignInFailure, string> = {
     }
 
     h1 {
-      margin: 0 0 var(--ds-space-6);
-      font: var(--ds-type-page-title);
-      letter-spacing: var(--ds-type-page-title-tracking);
+      margin-bottom: var(--ds-space-6);
     }
 
     /* Fuera del comercio hay dos planos, página y tarjeta: el formulario es la tarjeta (SC-005). */

@@ -108,20 +108,9 @@ interface Draft {
       min-height: var(--ds-touch-target);
     }
 
-    h1 {
-      margin: 0 0 var(--ds-space-4);
-      font: var(--ds-type-page-title);
-      letter-spacing: var(--ds-type-page-title-tracking);
-    }
-
     /* El formulario y "Eliminar el rol" son tarjetas (\`.ds-card\`), separadas por \`--ds-space-8\`. */
     form + section {
       margin-top: var(--ds-space-8);
-    }
-
-    h2 {
-      margin: 0 0 var(--ds-space-2);
-      font: var(--ds-type-section-title);
     }
 
     mat-form-field {

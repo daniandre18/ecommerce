@@ -224,8 +224,6 @@ const NO_FILTERS: Filters = { search: '', status: 'all', attribute: 'none', attr
 
     h1 {
       margin: 0;
-      font: var(--ds-type-page-title);
-      letter-spacing: var(--ds-type-page-title-tracking);
     }
 
     .filters {

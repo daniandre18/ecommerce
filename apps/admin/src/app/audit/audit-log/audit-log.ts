@@ -126,12 +126,6 @@ const nextDay = (day: Date) => new Date(day.getFullYear(), day.getMonth(), day.g
     }
   `,
   styles: `
-    h1 {
-      margin: 0 0 var(--ds-space-4);
-      font: var(--ds-type-page-title);
-      letter-spacing: var(--ds-type-page-title-tracking);
-    }
-
     .filters {
       display: flex;
       flex-wrap: wrap;

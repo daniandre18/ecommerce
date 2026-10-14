@@ -213,7 +213,7 @@ function suggest(tokens: CompiledTokens, prop: string, category: LiteralCategory
 
 // ── Fuentes de estilos: .scss, estilos y plantillas de .ts, plantillas .html e index.html ──────────
 
-interface StyleSource {
+export interface StyleSource {
   /** El CSS o SCSS a revisar. */
   readonly css: string;
   readonly syntax: 'scss' | 'css';
@@ -283,7 +283,7 @@ function componentSources(fileText: string, fileName: string): { styles: StyleSo
   return { styles, decls };
 }
 
-function sourcesOf(file: string, text: string): { styles: StyleSource[]; decls: InlineDecl[] } {
+export function sourcesOf(file: string, text: string): { styles: StyleSource[]; decls: InlineDecl[] } {
   if (file.endsWith('.scss')) return { styles: [{ css: text, syntax: 'scss', line: 1, column: 1 }], decls: [] };
   if (file.endsWith('.ts')) return componentSources(text, file);
   if (file.endsWith('index.html')) {

@@ -105,6 +105,20 @@ a {
   color: var(--ds-text-link);
 }
 
+// Los títulos de página y de sección: su tipo del catálogo, una sola vez (T060). Una vista solo cambia lo
+// suyo, como el margen; headings.spec.ts falla si repite el tipo. El título de un diálogo no cambia:
+// `.mat-mdc-dialog-title`, de clase, gana a esta regla de elemento.
+h1 {
+  margin: 0 0 var(--ds-space-4);
+  font: var(--ds-type-page-title);
+  letter-spacing: var(--ds-type-page-title-tracking);
+}
+
+h2 {
+  margin: 0 0 var(--ds-space-2);
+  font: var(--ds-type-section-title);
+}
+
 // ── Marcado propio del panel (T023) ─────────────────────────────────────────────────────────────────
 // Tarjeta, fila de tabla, barra y aviso son marcado propio, no componentes de Material (research §11).
 // Las clases se agregan a elementos que ya existen, sin envolverlos ni moverlos (FR-032).

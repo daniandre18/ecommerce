@@ -54,11 +54,6 @@ import { VariantRow } from './variant-row';
     }
   `,
   styles: `
-    h2 {
-      margin: 0 0 var(--ds-space-2);
-      font: var(--ds-type-section-title);
-    }
-
     ul {
       margin: 0;
       padding: 0;

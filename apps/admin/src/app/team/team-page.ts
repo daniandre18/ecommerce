@@ -58,20 +58,9 @@ const pending = (read: { hasValue(): boolean; error(): unknown }) => !read.hasVa
     }
   `,
   styles: `
-    h1 {
-      margin: 0 0 var(--ds-space-4);
-      font: var(--ds-type-page-title);
-      letter-spacing: var(--ds-type-page-title-tracking);
-    }
-
     /* Cada sección es una tarjeta (\`.ds-card\`); entre tarjetas, \`--ds-space-8\` (FR-019). */
     section + section {
       margin-top: var(--ds-space-8);
-    }
-
-    h2 {
-      margin: 0 0 var(--ds-space-2);
-      font: var(--ds-type-section-title);
     }
   `,
 })

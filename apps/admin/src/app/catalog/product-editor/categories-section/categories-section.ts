@@ -74,8 +74,7 @@ import { inTreeOrder, pathLabel } from '../../categories/category-messages';
   `,
   styles: `
     h2 {
-      margin: 0 0 var(--ds-space-1);
-      font: var(--ds-type-section-title);
+      margin-bottom: var(--ds-space-1);
     }
 
     .count,

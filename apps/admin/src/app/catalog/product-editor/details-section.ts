@@ -46,11 +46,6 @@ const detailsOf = (product: Product): Details => ({ name: product.name, descript
     </form>
   `,
   styles: `
-    h2 {
-      margin: 0 0 var(--ds-space-2);
-      font: var(--ds-type-section-title);
-    }
-
     mat-form-field {
       display: block;
     }
