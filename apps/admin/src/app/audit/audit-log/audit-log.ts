@@ -110,7 +110,7 @@ const nextDay = (day: Date) => new Date(day.getFullYear(), day.getMonth(), day.g
             <button matButton type="button" (click)="clearFilters()">Quitar filtros</button>
           </ui-empty-state>
         } @else {
-          <ui-empty-state class="ds-card" heading="Todavía no hay cambios registrados" message="Los cambios de precio, de existencias y del equipo van a aparecer acá." />
+          <ui-empty-state class="ds-card" heading="Todavía no hay cambios registrados" message="Los cambios de precio, de existencias y del equipo van a aparecer aquí." />
         }
       } @else {
         <ul class="ds-card" aria-label="Entradas de la bitácora">
@@ -301,7 +301,7 @@ export class AuditLog {
       // Si mientras tanto cambiaron los filtros, esta página ya no corresponde.
       if (this.page1() === base) this.more.update((pages) => [...pages, page]);
     } catch {
-      this.moreFailure.set('No pudimos cargar más entradas. Reintentá.');
+      this.moreFailure.set('No pudimos cargar más entradas. Reintenta.');
     } finally {
       this.loadingMore.set(false);
     }

@@ -65,7 +65,7 @@ describe('RoleEditor', () => {
     expect([...root.querySelectorAll<HTMLInputElement>('mat-checkbox input')].some((input) => input.checked)).toBe(false);
   });
 
-  it('guarda solo lo que cambió: acá, los permisos y no el nombre', async () => {
+  it('guarda solo lo que cambió: aquí, los permisos y no el nombre', async () => {
     commands.updateRole.mockResolvedValue({ ok: true, data: {} });
     const { checkbox, button } = await open();
     checkbox('Cambiar precios').click();
@@ -95,7 +95,7 @@ describe('RoleEditor', () => {
 
   it('con personas asignadas no se elimina (FR-013)', async () => {
     const { root, button } = await open(presetRolesOfT1()[1]);
-    expect(root.textContent).toContain('Lo tienen 2 personas: asignales otro rol antes de eliminarlo.');
+    expect(root.textContent).toContain('Lo tienen 2 personas: asígnales otro rol antes de eliminarlo.');
     expect(button('Eliminar rol')?.disabled).toBe(true);
   });
 

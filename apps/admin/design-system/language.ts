@@ -46,7 +46,7 @@ export interface LanguageInput {
 
 /** Presentes e imperativos de vos que no se confunden con nada correcto (research §7, regla 1). */
 const KNOWN_VOS = new Set([
-  'tenés', 'querés', 'podés', 'sabés', 'sos', 'hacés', 'decís', 'venís', 'salís', 'ponés', 'vení', 'decí', 'hacé', 'poné', 'salí', 'tené', 'andá', 'vení', 'pedile', 'decile', 'fijate',
+  'vos', 'tenés', 'querés', 'podés', 'sabés', 'sos', 'hacés', 'decís', 'venís', 'salís', 'ponés', 'vení', 'decí', 'hacé', 'poné', 'salí', 'tené', 'andá', 'vení', 'pedile', 'decile', 'fijate',
 ]);
 
 /** FR-039: la lista cerrada de imperativos de usted, como palabra completa. */
@@ -62,8 +62,12 @@ function encliticWithoutAccent(word: string): boolean {
   const match = /^(.+)(nos|los|las|lo|la|les|le|me|te|se)$/.exec(word);
   if (!match) return false;
   const stem = match[1] as string;
-  return stem.length >= 4 && /[^aeiouáéíóúü][aei]$/.test(stem);
+  // La raíz termina en la vocal del imperativo (`revisa-`, `copia-`), sin la u muda de "que" o "gue".
+  return stem.length >= 4 && /[aei]$/.test(stem) && !/[qg]u[ei]$/.test(stem);
 }
+
+/** Imperativo de vos con dos pronombres: conserva su tilde justo antes (`pedíselo`); el de tú, antes (`pídeselo`). */
+const DOUBLE_ENCLITIC = /[áéí](?:se|me|te|nos)(?:lo|la|los|las|le|les)$/;
 
 /** Más de una sílaba terminada en vocal tildada, o un presente en `-ás`, `-és`, `-ís` (research §7, regla 2). */
 function morphological(word: string): boolean {
@@ -202,6 +206,7 @@ export function checkLanguage(input: LanguageInput): LanguageFinding[] {
         if (!exempt) report('usted', text, word);
       } else if (lexicon.has(word)) continue;
       else if (encliticWithoutAccent(word)) report('voseo', text, word, 'enclítico sin tilde');
+      else if (DOUBLE_ENCLITIC.test(word)) report('voseo', text, word, 'dos pronombres tras la tilde de vos');
       else if (morphological(word)) report('revisar', text, word, 'palabra no clasificada: ¿voseo o léxico?');
     }
   }

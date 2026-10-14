@@ -20,7 +20,7 @@
       <mat-form-field subscriptSizing="dynamic">
         <mat-label>URL (opcional)</mat-label>
         <input matInput data-field="newSlug" autocomplete="off" [value]="draft().slug" (input)="edit('slug', $any($event.target).value)" />
-        <mat-hint>Si la dejás vacía, se genera del nombre.</mat-hint>
+        <mat-hint>Si la dejas vacía, se genera del nombre.</mat-hint>
       </mat-form-field>
     </div>
     <!-- La URL es plana y única en todo el comercio: se ve antes de confirmar (FR-021). -->
@@ -53,7 +53,7 @@
   <ui-error-state heading="No pudimos cargar las categorías" [retrying]="tree.status() === 'reloading'" (retry)="tree.reload()" />
 } @else if (ready(); as tree) {
   @if (empty()) {
-    <ui-empty-state class="ds-card" heading="Todavía no hay categorías" [message]="canWrite() ? 'Creá la primera para empezar a organizar tu catálogo.' : ''" />
+    <ui-empty-state class="ds-card" heading="Todavía no hay categorías" [message]="canWrite() ? 'Crea la primera para empezar a organizar tu catálogo.' : ''" />
   } @else if (filter() === 'all') {
     <div cdkDropListGroup>
       <ng-container [ngTemplateOutlet]="branch" [ngTemplateOutletContext]="{ $implicit: null, level: 1 }" />

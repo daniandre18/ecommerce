@@ -27,6 +27,7 @@ export const LEXICON: readonly ReviewedWord[] = [
   { word: 'invite', reason: 'subjuntivo de invitar, tercera persona ("que te invite")' },
   { word: 'digitales', reason: 'adjetivo en plural' },
   { word: 'decimales', reason: 'sustantivo en plural' },
+  { word: 'actuales', reason: 'adjetivo en plural' },
 ];
 
 /**

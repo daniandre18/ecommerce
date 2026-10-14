@@ -21,7 +21,7 @@ export interface TransferOwnershipData {
   template: `
     <h2 mat-dialog-title>¿Hacer Propietario a {{ data.name }}?</h2>
     <mat-dialog-content>
-      <p>Va a poder todo en este comercio, incluido administrar el equipo. Vos dejás de ser Propietario y te quedás con el rol que elijas.</p>
+      <p>Va a poder todo en este comercio, incluido administrar el equipo. Dejas de ser Propietario y te quedas con el rol que elijas.</p>
       <mat-form-field>
         <mat-label>Tu rol desde ahora</mat-label>
         <select matNativeControl (change)="choose($any($event.target).value)">

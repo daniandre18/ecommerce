@@ -45,7 +45,7 @@ interface Draft {
     @if (access() === undefined) {
       <ui-skeleton rows="4" label="Cargando el rol…" />
     } @else if (!access()?.isOwner) {
-      <ui-empty-state heading="Solo el Propietario administra los roles" message="Si necesitás un cambio, pedíselo a quien es Propietario del comercio." />
+      <ui-empty-state heading="Solo el Propietario administra los roles" message="Si necesitas un cambio, pídeselo a quien es Propietario del comercio." />
     } @else if (roles.error()) {
       <ui-error-state heading="No pudimos cargar el rol" [retrying]="roles.status() === 'reloading'" (retry)="roles.reload()" />
     } @else if (!roles.hasValue()) {
@@ -53,7 +53,7 @@ interface Draft {
     } @else if (role(); as current) {
       <h1>{{ current.name }}</h1>
       @if (!current.editable) {
-        <p class="note">El rol Propietario puede todo en el comercio y no se edita. Para cambiar quién es Propietario, traspasá la propiedad desde Equipo.</p>
+        <p class="note">El rol Propietario puede todo en el comercio y no se edita. Para cambiar quién es Propietario, traspasa la propiedad desde Equipo.</p>
       } @else {
         <form class="ds-card" novalidate (submit)="$event.preventDefault(); save()">
           <mat-form-field>
@@ -89,7 +89,7 @@ interface Draft {
           <h2 id="eliminar">Eliminar el rol</h2>
           @if (current.memberCount > 0) {
             <p class="note">
-              {{ current.memberCount === 1 ? 'Lo tiene 1 persona' : 'Lo tienen ' + current.memberCount + ' personas' }}: asignales otro rol antes de
+              {{ current.memberCount === 1 ? 'Lo tiene 1 persona' : 'Lo tienen ' + current.memberCount + ' personas' }}: asígnales otro rol antes de
               eliminarlo.
             </p>
           }
@@ -260,7 +260,7 @@ export class RoleEditor {
       void this.announcer.announce(`Rol ${role.name} eliminado`);
       await this.router.navigate(this.teamLink());
     } else {
-      this.failure.set(result.code === 'invalid-argument' ? 'Alguien tiene este rol: asignale otro antes de eliminarlo.' : commandErrorMessage(result.code));
+      this.failure.set(result.code === 'invalid-argument' ? 'Alguien tiene este rol: asígnale otro antes de eliminarlo.' : commandErrorMessage(result.code));
     }
   }
 }

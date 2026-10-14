@@ -73,7 +73,7 @@ export interface CategoryMove {
 }
 
 /**
- * Mueve y lo anuncia: arrastrar no se oye, así que quien usa un lector de pantalla se entera por acá
+ * Mueve y lo anuncia: arrastrar no se oye, así que quien usa un lector de pantalla se entera por aquí
  * de dónde quedó (WCAG 4.1.3).
  */
 export async function moveAndAnnounce(

@@ -27,7 +27,7 @@ const pending = (read: { hasValue(): boolean; error(): unknown }) => !read.hasVa
     @if (access() === undefined || loading()) {
       <ui-skeleton class="ds-card" rows="6" rowHeight="64px" label="Cargando el equipo…" />
     } @else if (!isOwner()) {
-      <ui-empty-state class="ds-card" heading="Solo el Propietario administra el equipo" message="Si necesitás un cambio, pedíselo a quien es Propietario del comercio." />
+      <ui-empty-state class="ds-card" heading="Solo el Propietario administra el equipo" message="Si necesitas un cambio, pídeselo a quien es Propietario del comercio." />
     } @else {
       <section class="ds-card" aria-labelledby="personas">
         <h2 id="personas">Personas</h2>

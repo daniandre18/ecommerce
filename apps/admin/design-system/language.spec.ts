@@ -56,6 +56,16 @@ describe('la compuerta de lenguaje', () => {
     ]);
   });
 
+  it('encuentra el pronombre "vos", el enclítico tras un diptongo ("copialo") y el de dos pronombres con tilde ("pedíselo")', () => {
+    const text = '«Vos dejás de ser dueño: copialo a mano y pedíselo al equipo, o pídeselo tú.»';
+    expect(run(['voseo.ts']).filter((line) => line.includes(':7 '))).toEqual([
+      `voseo  ${FIXTURES}/voseo.ts:7  ${text}  (vos)`,
+      `revisar  ${FIXTURES}/voseo.ts:7  ${text}  (dejás: palabra no clasificada: ¿voseo o léxico?)`,
+      `voseo  ${FIXTURES}/voseo.ts:7  ${text}  (copialo: enclítico sin tilde)`,
+      `voseo  ${FIXTURES}/voseo.ts:7  ${text}  (pedíselo: dos pronombres tras la tilde de vos)`,
+    ]);
+  });
+
   it('deja pasar las palabras del léxico, y marca una candidata que no está como "revisar"', () => {
     expect(run(['lexicon.ts'])).toEqual([`revisar  ${FIXTURES}/lexicon.ts:3  «La tienda invitará a sus clientes.»  (invitará: palabra no clasificada: ¿voseo o léxico?)`]);
   });

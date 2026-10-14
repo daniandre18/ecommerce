@@ -4,3 +4,4 @@ export const candidates = 'Revisá el SKU, elegí una opción y escribí el nomb
 export const enclitic = 'Revisalos antes de seguir, movelas a otra categoría y asegurate de que no falte nada.';
 export const tuteo = 'Revísalos, muévelas y asegúrate: esto es tuteo y pasa.';
 export const hiatus = 'Creá una cuenta nueva, o sé breve: qué querés.';
+export const missed = 'Vos dejás de ser dueño: copialo a mano y pedíselo al equipo, o pídeselo tú.';

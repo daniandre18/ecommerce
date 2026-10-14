@@ -23,7 +23,7 @@ import { TransferOwnershipDialog, type TransferOwnershipData } from './transfer-
   imports: [MatButton, MatFormField, MatLabel, MatInput],
   template: `
     @if (onlyOwner()) {
-      <p class="hint">Todavía no sumaste a nadie: invitá a tu equipo más abajo.</p>
+      <p class="hint">Todavía no sumaste a nadie: invita a tu equipo más abajo.</p>
     }
     <ul>
       @for (member of sorted(); track member.uid) {
@@ -142,7 +142,7 @@ export class MembersSection {
   protected async disable(member: Membership): Promise<void> {
     const data: ConfirmData = {
       title: `¿Dar de baja a ${member.displayName}?`,
-      message: 'Pierde el acceso a este comercio de inmediato; sus otros comercios no cambian. Su nombre sigue en la bitácora y podés reactivarla cuando quieras.',
+      message: 'Pierde el acceso a este comercio de inmediato; sus otros comercios no cambian. Su nombre sigue en la bitácora y puedes reactivarla cuando quieras.',
       confirm: 'Dar de baja',
     };
     const confirmed = await firstValueFrom(this.dialog.open<ConfirmDialog, ConfirmData, boolean>(ConfirmDialog, { data }).afterClosed());

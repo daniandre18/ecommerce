@@ -49,7 +49,7 @@ function defaultRole(roles: readonly Role[]): RoleId | '' {
 
     @if (lastInvite(); as sent) {
       <div class="link" role="status">
-        <p>Compartí este enlace con {{ sent.email }}. Solo sirve para esa dirección y vence en 14 días.</p>
+        <p>Comparte este enlace con {{ sent.email }}. Solo sirve para esa dirección y vence en 14 días.</p>
         <input matInput readonly aria-label="Enlace de la invitación" [value]="sent.link" />
         <button matButton type="button" (click)="copy(sent.link)">Copiar enlace</button>
       </div>
@@ -182,7 +182,7 @@ export class InvitationsSection {
       previous && roles.some((role) => role.id === previous.value.roleId) ? previous.value : { email: previous?.value.email ?? '', roleId: defaultRole(roles) },
   });
   protected readonly inviteForm = form(this.model, (path) => {
-    required(path.email, { message: 'Escribí el correo de la persona' });
+    required(path.email, { message: 'Escribe el correo de la persona' });
     email(path.email, { message: 'Ese correo no parece válido' });
   });
   protected readonly failure = signal('');
@@ -231,6 +231,6 @@ export class InvitationsSection {
 
   protected copy(link: string): void {
     const copied = this.clipboard.copy(link);
-    void this.announcer.announce(copied ? 'Enlace copiado' : 'No se pudo copiar: seleccioná el enlace y copialo a mano');
+    void this.announcer.announce(copied ? 'Enlace copiado' : 'No se pudo copiar: selecciona el enlace y cópialo a mano');
   }
 }

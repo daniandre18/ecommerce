@@ -114,7 +114,7 @@ type Mode = 'idle' | 'rename' | 'slug' | 'move' | 'hide' | 'delete' | 'delete-bl
       }
       @case ('delete-blocked') {
         <div class="panel confirm">
-          <p>Primero mové o eliminá sus subcategorías.</p>
+          <p>Primero mueve o elimina sus subcategorías.</p>
           <div class="buttons">
             <button matButton type="button" (click)="cancel()">Entendido</button>
           </div>
@@ -310,7 +310,7 @@ export class CategoryRow {
     if (Object.values(this.tree().nodes).some((other) => other.id !== node.id && other.slug === next)) {
       return { text: 'La usa otra categoría, o está reservada.', canSave: false };
     }
-    if (this.reservation.error()) return { text: 'No pudimos comprobar la URL. Revisá la conexión.', canSave: false };
+    if (this.reservation.error()) return { text: 'No pudimos comprobar la URL. Revisa la conexión.', canSave: false };
     if (this.reservation.isLoading() || !this.reservation.hasValue()) return { text: 'Comprobando…', canSave: false };
     const holder = this.reservation.value() ?? null;
     if (holder === node.id) return { text: 'Era una URL anterior de esta categoría: se recupera.', canSave: true };
@@ -386,7 +386,7 @@ export class CategoryRow {
     try {
       this.affected.set(await this.queries.countInCategory(this.tenantId(), this.node().id));
     } catch {
-      this.failure.set('No pudimos contar sus productos. Reintentá.');
+      this.failure.set('No pudimos contar sus productos. Reintenta.');
     }
   }
 

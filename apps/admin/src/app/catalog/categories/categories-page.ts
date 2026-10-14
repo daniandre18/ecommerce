@@ -139,7 +139,7 @@ export class CategoriesPage {
     },
   });
   protected readonly slugPreview = computed<{ text: string; ok: boolean } | null>(() => {
-    if (this.slugCheck.error()) return { text: 'No pudimos comprobar la URL. Revisá la conexión.', ok: false };
+    if (this.slugCheck.error()) return { text: 'No pudimos comprobar la URL. Revisa la conexión.', ok: false };
     if (this.slugCheck.isLoading()) return { text: 'Comprobando la URL…', ok: false };
     return this.slugCheck.hasValue() ? (this.slugCheck.value() ?? null) : null;
   });
