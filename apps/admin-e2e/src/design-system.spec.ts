@@ -411,6 +411,7 @@ test.describe('estado presionado', () => {
     await productAsOwner(`DS-Presionado ${Date.now()}`);
     await page.goto('/login');
     await signIn(page, OWNER);
+    await expect(page.getByRole('heading', { level: 1, name: 'Catálogo', exact: true })).toBeVisible();
     await expect(page.locator('ui-skeleton')).toHaveCount(0);
     await measure(page, 'Nuevo producto (acento)', page.getByRole('button', { name: 'Nuevo producto', exact: true }));
     await measure(page, 'Categorías (texto sobre la barra)', page.getByRole('link', { name: 'Categorías', exact: true }));
@@ -514,6 +515,7 @@ test.describe('foco', () => {
     await page.emulateMedia({ forcedColors: 'active' });
     await page.goto('/login');
     await signIn(page, OWNER);
+    await expect(page.getByRole('heading', { level: 1, name: 'Catálogo', exact: true })).toBeVisible();
     await expect(page.locator('ui-skeleton')).toHaveCount(0);
     const found = await ring(page, page.getByRole('button', { name: 'Nuevo producto', exact: true }));
     expect(found.focusVisible).toBe(true);
@@ -580,4 +582,44 @@ test('deshabilitado: "Cambiar estado" junto a "Archivar producto"', async ({ pag
   await change.click({ force: true });
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.locator('.status')).toContainText('Borrador');
+});
+
+// T039 (FR-013): en colores forzados el sistema quita los fondos, y lo que separa un plano de otro es el
+// borde. La tarjeta, la barra y los campos tienen que conservar uno visible.
+test.describe('colores forzados', () => {
+  async function borders(page: Page, selectors: Record<string, string>) {
+    return page.evaluate((entries) => {
+      const found: Record<string, string> = {};
+      for (const [name, selector] of Object.entries(entries)) {
+        const element = document.querySelector(selector.replace(/::before$/, ''));
+        if (!element) {
+          found[name] = 'no está';
+          continue;
+        }
+        // `selector::before` mide el pseudo-elemento: la línea activa de un campo de Material es un borde ahí.
+        const style = selector.endsWith('::before') ? getComputedStyle(element, '::before') : getComputedStyle(element);
+        const sides = (['Top', 'Right', 'Bottom', 'Left'] as const).filter((side) => style.getPropertyValue(`border-${side.toLowerCase()}-style`) !== 'none' && Number.parseFloat(style.getPropertyValue(`border-${side.toLowerCase()}-width`)) > 0);
+        found[name] = sides.length ? `borde en ${sides.length} lados` : 'sin borde';
+      }
+      return found;
+    }, selectors);
+  }
+
+  test('catálogo y editor: la tarjeta, la barra y los campos conservan su borde', async ({ page }) => {
+    await page.emulateMedia({ forcedColors: 'active' });
+    const { url } = await productAsOwner(`DS-Forzados ${Date.now()}`);
+    await page.goto('/login');
+    await signIn(page, OWNER);
+    // El catálogo cargado, no la página de inicio de sesión, que tampoco tiene esqueleto.
+    await expect(page.getByRole('heading', { level: 1, name: 'Catálogo', exact: true })).toBeVisible();
+    await expect(page.locator('ui-skeleton')).toHaveCount(0);
+    // El límite de un campo `fill` es su línea activa: sin fondo, es lo que lo marca.
+    const catalog = await borders(page, { tarjeta: '.ds-card', barra: '.ds-bar', campo: '.mdc-line-ripple::before' });
+    await page.goto(url);
+    await expect(page.getByRole('group', { name: /^Única/ })).toBeVisible();
+    const editor = await borders(page, { tarjeta: '.ds-card', barra: '.ds-bar', campo: '.mdc-line-ripple::before' });
+    for (const [where, found] of Object.entries({ catalog, editor })) {
+      for (const [name, value] of Object.entries(found)) expect(value, `${where}: ${name}`).not.toMatch(/sin borde|no está/);
+    }
+  });
 });

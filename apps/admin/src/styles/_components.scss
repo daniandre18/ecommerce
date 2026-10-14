@@ -148,6 +148,15 @@ a {
   box-shadow: var(--ds-elevation-bar);
 }
 
+// Colores forzados (FR-013, T039): el sistema quita los fondos. La tarjeta conserva su borde y los campos de
+// Material traen el suyo; la barra se distinguía solo por el tono, así que en ese modo lleva un borde
+// inferior, en el color que ponga el sistema.
+@media (forced-colors: active) {
+  .ds-bar {
+    border-bottom: var(--ds-border-width) solid;
+  }
+}
+
 // Un aviso en bloque: falla de navegación, error de carga, aviso de bloqueo. El ícono es T037.
 // Un botón dentro del aviso ("Reintentar") va en el color propio del aviso, con borde o como texto: un
 // botón en primario sobre una superficie de error es un emparejamiento malo por su cuenta, y ataba el
