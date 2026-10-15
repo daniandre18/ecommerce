@@ -31,6 +31,9 @@ html {
   @include mat.form-field-overrides(
     (
       filled-active-indicator-color: var(--ds-border-control),
+      // Los anchos de la línea, de la escala: el mismo valor que Material (1 y 2 px), pero desde el token.
+      filled-active-indicator-height: var(--ds-border-width),
+      filled-focus-active-indicator-height: var(--ds-border-width-strong),
       filled-hover-active-indicator-color: var(--ds-text-primary),
       filled-focus-active-indicator-color: var(--ds-primary),
       filled-disabled-input-text-color: var(--ds-text-disabled),
@@ -55,6 +58,13 @@ html {
       container-color: var(--ds-surface-overlay),
       container-shape: var(--ds-radius-lg),
       container-elevation-shadow: var(--ds-elevation-overlay),
+      // El título, en el tipo de título de sección (component-treatments.md): Material le daba su
+      // `headline-small`, 24 px y peso normal, más grande y menos marcado que los títulos de las tarjetas.
+      subhead-font: var(--ds-font-family),
+      subhead-size: var(--ds-type-section-title-size),
+      subhead-weight: var(--ds-type-section-title-weight),
+      subhead-line-height: var(--ds-type-section-title-line-height),
+      subhead-tracking: var(--ds-type-section-title-tracking),
     )
   );
   @include mat.menu-overrides(

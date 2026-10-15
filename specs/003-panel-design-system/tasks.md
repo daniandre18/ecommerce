@@ -479,7 +479,7 @@ que T036 los reemplaza. `styles.scss` no pertenece a ninguna tarea de vista.
 
 - [ ] T053 [P] Validación completa con `specs/003-panel-design-system/quickstart.md`: las tres compuertas sin navegador, las cuatro comprobaciones "de verdad fallan" y las cuatro historias en escritorio y a 360 px, en claro y en oscuro. Anotar el resultado al pie de esta tarea
 - [ ] T054 [P] Rendimiento en local (FR-033a lo deja fuera de CI): `npx nx run admin-e2e:perf` con los mismos umbrales (SC-009 y SC-008 de la 001). Anotar los números junto a los de la base
-- [ ] T055 [P] Revisión manual de los requisitos sin compuerta (`plan.md`, "Decisión: las e2e pasan a ser compuerta en CI"):
+- [X] T055 [P] Revisión manual de los requisitos sin compuerta (`plan.md`, "Decisión: las e2e pasan a ser compuerta en CI"):
   - FR-006: ninguna línea de la referencia en el diff (`git diff main -- apps libs` contra `~/Documents/github/angular-admin/src/app/styles/`).
   - FR-011: cada elemento usa el nivel de elevación de su papel.
   - FR-012: cada radio y borde, el paso declarado.
@@ -488,13 +488,14 @@ que T036 los reemplaza. `styles.scss` no pertenece a ninguna tarea de vista.
   - FR-032: el diff de plantillas solo agrega clases y cambia textos, sin mover, envolver ni quitar elementos.
 
   Anotar qué se revisó al pie de esta tarea.
-  **En curso (2026-10-14)**, pendiente de dos decisiones:
+  Hecho (2026-10-15):
   - **FR-006**: sin código de la referencia. Las líneas añadidas contra `main` (3.884 distintas) y las de `angular-admin/src/app/styles/` (683) comparten 8, todas declaraciones genéricas (`display: flex;`, `cursor: pointer;`…); `margin-bottom: 16px` es del esqueleto de `index.html`, excepción declarada.
-  - **FR-011**: tarjeta, barra, diálogo, menú y elemento arrastrado usan el nivel de su papel. **Defecto corregido**: el snack-bar llevaba la sombra fija de Material; ahora `--ds-elevation-overlay`, con su radio en `--ds-radius-sm` (antes el mismo valor por `corner-extra-small`, fuera de la escala). Caso nuevo en `design-system.spec.ts`, visto fallar en los tres proyectos; sin el `html` de la regla vuelve a fallar. Tercera excepción a FR-006, pendiente de aceptar.
+  - **FR-011, defecto corregido**: el snack-bar llevaba la sombra fija de Material; ahora `--ds-elevation-overlay`, con su radio en `--ds-radius-sm` (antes el mismo valor por `corner-extra-small`, fuera de la escala). Caso nuevo en `design-system.spec.ts`, visto fallar en los tres proyectos; sin el `html` de la regla vuelve a fallar. Es la tercera excepción a FR-006, aceptada por el usuario. El resto (tarjeta, barra, diálogo, menú, elemento arrastrado) ya usaba el nivel de su papel.
+  - **FR-012, corregido** (decisión del usuario): un grupo con borde dentro de una tarjeta usa `radius-md`. Cinco usaban `radius-lg` y uno `radius-md`; pasaron todos (**cambio de apariencia**, de 12 a 8 px). Se documentaron los papeles que faltaban: imágenes (`md`), barras de selección (`lg`), snack-bar (`sm`).
+  - **FR-019, contrato ajustado** (decisión del usuario): entre grupos de una tarjeta, `space-4`, como ya usaba todo el panel; el contrato decía `space-6`. Sin cambio de apariencia; 8 < 16 < 32 cumple FR-019. Entre tarjetas, `space-8` en todas las vistas.
+  - **FR-022, defecto corregido**: el título de los cinco diálogos tenía el `headline-small` de Material (400, 24/32 px) y no `section-title` (600, 20/28 px), como dice el contrato. Ahora `dialog-overrides` le da los tokens del título de sección (**cambio de apariencia**). Además, los anchos de la línea del campo (1 y 2 px) pasan a `--ds-border-width` y `--ds-border-width-strong`, con el mismo valor. El menú no tiene opción seleccionada en el panel; checkbox, radio, chip y barra de progreso toman sus colores del tema y los mide el inventario de contraste.
   - **FR-032**: de 30 plantillas cambiadas, ninguna mueve, envuelve ni quita un elemento (secuencia de etiquetas y atributos sin `class` ni textos). Solo cambian enlaces: `[retrying]` y `disabledInteractive` de T057, y `rowHeight` que deja `ui-skeleton`.
-  - **FR-012, abierto**: el grupo con borde dentro de una tarjeta usa `radius-lg` en cinco lugares y `radius-md` en uno (`assign-option-dialog`), y el papel no está en `contracts/tokens.md` (tampoco imágenes ni barras de selección).
-  - **FR-019, abierto**: `contracts/tokens.md` fija `space-6` entre grupos de una tarjeta; las vistas usan `space-4` en unos 14 lugares. Entre tarjetas sí es `space-8` (el editor lo logra con `gap` + margen).
-  - **FR-022**: pendiente, después de las decisiones.
+  - **Medido en la e2e**: `expectScale` (`design-system-support.ts`) corre en los 24 puntos de medición: entre dos tarjetas seguidas, `space-8`; un grupo con borde dentro de una tarjeta o un diálogo, `radius-md`; el título de un diálogo, `section-title`. Vista fallar antes de cada corrección (tres grupos a 12 px, cinco títulos de diálogo). Mutación: con `space-6` entre las tarjetas de Equipo, falla con 24 px. `design-system.spec.ts`: 93 de 93 en los tres proyectos.
 - [ ] T056 Cierre de documentación: tamaño final de la carga inicial (Δ JS y Δ CSS contra `main`) en `specs/003-panel-design-system/research.md` §8, y el valor final de cada color de `_palette.scss` en la tabla de §2 si cambió en T013. `Status` de `spec.md` en `Implemented`
 
 ---

@@ -317,11 +317,27 @@ export async function expectDeclaredPairs(page: Page, scope: Scope = 'view'): Pr
 /**
  * T055: la escala en la pantalla, en los mismos puntos de medición que el inventario. Entre dos tarjetas
  * apiladas, `--ds-space-8` (FR-019); un grupo con borde dentro de una tarjeta o de un diálogo, con
- * `--ds-radius-md` (FR-012). Un grupo es marcado propio con borde en los cuatro lados: los componentes de
- * Material tienen su tratamiento aparte. Los valores esperados salen de sondas, no de números escritos aquí.
+ * `--ds-radius-md` (FR-012); el título de un diálogo, en `section-title` (FR-022). Los valores esperados
+ * salen de sondas, no de números escritos aquí.
  */
 async function expectScale(page: Page): Promise<void> {
-  expect([...(await page.evaluate(cardGaps)), ...(await page.evaluate(groupRadii))], 'la escala de espacio entre tarjetas y de radio de los grupos').toEqual([]);
+  expect([...(await page.evaluate(cardGaps)), ...(await page.evaluate(groupRadii)), ...(await page.evaluate(dialogTitles))], 'la escala de espacio, de radio y de tipo').toEqual([]);
+}
+
+/** El título de un diálogo, en `section-title` (FR-022): Material le da su `headline-small`. Corre en la página. */
+function dialogTitles(): string[] {
+  const probe = document.body.appendChild(document.createElement('h2'));
+  probe.style.font = 'var(--ds-type-section-title)';
+  probe.style.letterSpacing = 'var(--ds-type-section-title-tracking)';
+  const read = (element: Element) => {
+    const style = getComputedStyle(element);
+    return `${style.fontWeight} ${style.fontSize}/${style.lineHeight} ${style.letterSpacing} ${style.fontFamily}`;
+  };
+  const expected = read(probe);
+  probe.remove();
+  return [...document.querySelectorAll('.mat-mdc-dialog-title')]
+    .filter((title) => title.getBoundingClientRect().height > 0 && read(title) !== expected)
+    .map((title) => `título de diálogo «${title.textContent?.trim().slice(0, 30)}»: ${read(title)}, no ${expected} (section-title)`);
 }
 
 /** Entre dos tarjetas seguidas, apiladas y sin otro contenido en medio: `--ds-space-8`. Corre en la página. */
