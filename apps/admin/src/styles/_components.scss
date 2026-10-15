@@ -63,6 +63,13 @@ html {
       container-elevation-shadow: var(--ds-elevation-overlay),
     )
   );
+  // El snack-bar también flota sobre la vista. Su radio era el `corner-extra-small` de Material: el mismo
+  // valor, pero fuera de la escala, así que un cambio de `--ds-radius-sm` no le llegaba.
+  @include mat.snack-bar-overrides(
+    (
+      container-shape: var(--ds-radius-sm),
+    )
+  );
 
   // Barra de progreso: pista en el contenedor del primario, indicador en el primario.
   @include mat.progress-bar-overrides(
@@ -117,6 +124,14 @@ h1 {
 h2 {
   margin: 0 0 var(--ds-space-2);
   font: var(--ds-type-section-title);
+}
+
+// La sombra del snack-bar: la de lo superpuesto (FR-011), como el diálogo y el menú. Material no ofrece un
+// token para ella —la escribe fija en `.mat-mdc-snackbar-surface`—, así que es una excepción declarada a
+// FR-006 (contracts/component-treatments.md). Su hoja llega al abrir el primer snack-bar, después de esta:
+// `html` sube la regla un nivel, como la del foco en `styles.scss`.
+html .mat-mdc-snackbar-surface {
+  box-shadow: var(--ds-elevation-overlay);
 }
 
 // ── Marcado propio del panel (T023) ─────────────────────────────────────────────────────────────────

@@ -6,7 +6,7 @@ Para cada componente, qué token usa en cada estado. "—" significa que el esta
 Todos los valores son `--ds-*` ([tokens.md](./tokens.md)). Material se ajusta **solo** con
 `mat.<componente>-overrides()`, nunca con selectores de sus clases internas (FR-006).
 
-**Excepciones declaradas a FR-006** (aceptadas el 2026-10-14), las dos porque Material no ofrece un
+**Excepciones declaradas a FR-006** (las dos primeras, aceptadas el 2026-10-14; la tercera, pendiente de aceptar), las tres porque Material no ofrece un
 `*-overrides()` para lo que hace falta:
 
 - `html .mat-mdc-button-base:focus-visible` y `html .mat-mdc-menu-item:focus-visible` (`styles.scss`,
@@ -14,6 +14,9 @@ Todos los valores son `--ds-*` ([tokens.md](./tokens.md)). Material se ajusta **
   uno de 1 px tenga o no foco. Sin esta regla, su foco era solo el velo.
 - `.mat-mdc-form-field-error::before` (`_components.scss`, T037): el ícono del error de un campo, que la
   tarea prescribe sobre esa clase.
+- `html .mat-mdc-snackbar-surface` (`_components.scss`, T055): la sombra del snack-bar, que Material
+  escribe fija, sin token. Sin la regla, el snack-bar flotaba con una sombra propia de Material en lugar de
+  `--ds-elevation-overlay` (FR-011). Agregada en la revisión manual de T055.
 
 Cualquier otra regla sobre una clase de Material es una excepción nueva, y entra aquí con su razón.
 
@@ -44,7 +47,7 @@ Cualquier otra regla sobre una clase de Material es una excepción nueva, y entr
 | Chip | fondo `primary-container`, texto `on-primary-container` | — | — | — | La cruz conserva su zona táctil de 48 px (`.chip-touch-target`) |
 | Diálogo | fondo `surface-overlay`, radio `radius-lg`, elevación `overlay` | — | — | — | Título en `section-title` |
 | Menú | fondo `surface-overlay`, elevación `overlay` | opción con `surface-selected` | — | — | |
-| Snack-bar | fondo `text-primary` invertido (contenedor inverso) | — | — | — | |
+| Snack-bar | fondo `text-primary` invertido (contenedor inverso), texto `surface-card`, radio `radius-sm`, elevación `overlay` | — | — | — | Sin botón de acción en el panel |
 | Barra de progreso | pista `primary-container`, indicador `primary` | — | — | indeterminada | |
 
 ## Marcado propio del panel

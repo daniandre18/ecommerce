@@ -475,7 +475,8 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     declared: { light: 6.83, dark: 9.19 },
   },
   // El enlace para saltar al contenido, en colores invertidos (T026): el par de texto sobre tarjeta, con los
-  // papeles cambiados. Se ve al recibir el foco.
+  // papeles cambiados. Se ve al recibir el foco. El texto del snack-bar es el mismo par: `_theme.scss` da al
+  // contenedor inverso estos dos tokens, y ningún snack-bar del panel lleva botón.
   {
     id: 'surface-card/text-primary',
     foreground: '--ds-surface-card',

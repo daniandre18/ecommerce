@@ -330,6 +330,26 @@ test.describe('pantalla: categorías', () => {
     await expectDeclaredPairs(page);
     await expectDestructive(page, ['Eliminar']);
   });
+
+  // T055: el snack-bar flota sobre la vista, así que su elevación es la de lo superpuesto (FR-011), y su
+  // radio, un paso de la escala (FR-012). Material dibuja una sombra propia, fuera del catálogo.
+  test('el aviso al crear es un snack-bar con la elevación de lo superpuesto y el radio pequeño', async ({ page }) => {
+    await withCategory(page);
+    await page.getByRole('button', { name: 'Crear categoría', exact: true }).click();
+    const surface = page.locator('.mat-mdc-snackbar-surface');
+    await expect(surface).toBeVisible();
+    const [actual, expected] = await surface.evaluate((element) => {
+      const probe = document.body.appendChild(document.createElement('div'));
+      probe.style.boxShadow = 'var(--ds-elevation-overlay)';
+      probe.style.borderRadius = 'var(--ds-radius-sm)';
+      const read = (target: Element) => ({ shadow: getComputedStyle(target).boxShadow, radius: getComputedStyle(target).borderTopLeftRadius });
+      const values = [read(element), read(probe)] as const;
+      probe.remove();
+      return values;
+    });
+    expect(expected.shadow, 'la sonda resuelve el token').not.toBe('none');
+    expect(actual).toEqual(expected);
+  });
 });
 
 // T034: equipo y rol. "Invitar" es la tarea del equipo; "Crear rol" es confirmación de sección.

@@ -147,7 +147,7 @@ tarjetas, `space-8`.
 
 | Token | Valor | Uso |
 |---|---|---|
-| `--ds-radius-sm` | 4 px | Chips de estado, enlace para saltar al contenido |
+| `--ds-radius-sm` | 4 px | Chips de estado, enlace para saltar al contenido, snack-bar |
 | `--ds-radius-md` | 8 px | Campos, filas de esqueleto, avisos |
 | `--ds-radius-lg` | 12 px | Tarjetas, diálogos |
 | `--ds-radius-pill` | 9999 px | Botones |
