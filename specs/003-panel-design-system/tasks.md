@@ -488,6 +488,13 @@ que T036 los reemplaza. `styles.scss` no pertenece a ninguna tarea de vista.
   - FR-032: el diff de plantillas solo agrega clases y cambia textos, sin mover, envolver ni quitar elementos.
 
   Anotar qué se revisó al pie de esta tarea.
+  **En curso (2026-10-14)**, pendiente de dos decisiones:
+  - **FR-006**: sin código de la referencia. Las líneas añadidas contra `main` (3.884 distintas) y las de `angular-admin/src/app/styles/` (683) comparten 8, todas declaraciones genéricas (`display: flex;`, `cursor: pointer;`…); `margin-bottom: 16px` es del esqueleto de `index.html`, excepción declarada.
+  - **FR-011**: tarjeta, barra, diálogo, menú y elemento arrastrado usan el nivel de su papel. **Defecto corregido**: el snack-bar llevaba la sombra fija de Material; ahora `--ds-elevation-overlay`, con su radio en `--ds-radius-sm` (antes el mismo valor por `corner-extra-small`, fuera de la escala). Caso nuevo en `design-system.spec.ts`, visto fallar en los tres proyectos; sin el `html` de la regla vuelve a fallar. Tercera excepción a FR-006, pendiente de aceptar.
+  - **FR-032**: de 30 plantillas cambiadas, ninguna mueve, envuelve ni quita un elemento (secuencia de etiquetas y atributos sin `class` ni textos). Solo cambian enlaces: `[retrying]` y `disabledInteractive` de T057, y `rowHeight` que deja `ui-skeleton`.
+  - **FR-012, abierto**: el grupo con borde dentro de una tarjeta usa `radius-lg` en cinco lugares y `radius-md` en uno (`assign-option-dialog`), y el papel no está en `contracts/tokens.md` (tampoco imágenes ni barras de selección).
+  - **FR-019, abierto**: `contracts/tokens.md` fija `space-6` entre grupos de una tarjeta; las vistas usan `space-4` en unos 14 lugares. Entre tarjetas sí es `space-8` (el editor lo logra con `gap` + margen).
+  - **FR-022**: pendiente, después de las decisiones.
 - [ ] T056 Cierre de documentación: tamaño final de la carga inicial (Δ JS y Δ CSS contra `main`) en `specs/003-panel-design-system/research.md` §8, y el valor final de cada color de `_palette.scss` en la tabla de §2 si cambió en T013. `Status` de `spec.md` en `Implemented`
 
 ---
