@@ -478,6 +478,10 @@ que T036 los reemplaza. `styles.scss` no pertenece a ninguna tarea de vista.
 ## Phase 7: Polish & Cross-Cutting Concerns
 
 - [ ] T053 [P] Validación completa con `specs/003-panel-design-system/quickstart.md`: las tres compuertas sin navegador, las cuatro comprobaciones "de verdad fallan" y las cuatro historias en escritorio y a 360 px, en claro y en oscuro. Anotar el resultado al pie de esta tarea
+  **En curso (2026-10-15)**:
+  - **Compuertas**: `admin:lint` sin hallazgos; `admin:design-check` 96 de 96; `admin:bundle-check` 11 de 11 (JS −392 B, CSS +4.392 B contra `main`).
+  - **Las cuatro "de verdad fallan"**: (1) `color: #ff0000; font-size: 13px; padding: 10px; border-radius: 3px` en `product-editor.scss` → 4 hallazgos con archivo, línea y token (`--ds-status-error`, `--ds-type-help-size`, `--ds-space-2`, `--ds-radius-sm`); (2) `width: 100%; margin: 0` → 0; (3) `$gray-600` a `#8a8a8a` → texto secundario 3,23 / 3,45 / 3,05 contra 5 sobre página, tarjeta y barra, y falla la derivación; (4) "Revisá tu conexión" en `app.ts:30` → bloquea como `revisar` (candidato sin clasificar), no como `voseo`: `quickstart.md` corregido, igual que el "bajo 4,5" del paso 3.
+  - **Las historias en el navegador**: la e2e de CI las cubre en escritorio, 360 px y oscuro (verde en `1138378`). Faltan las capturas en los cuatro casos (incluido 360 px en oscuro, que no es un proyecto de la e2e) y lo que solo se hace a mano: VoiceOver y las dos pestañas. La máquina no estuvo en condiciones (carga hasta 38, swap) para correrlas.
 - [ ] T054 [P] Rendimiento en local (FR-033a lo deja fuera de CI): `npx nx run admin-e2e:perf` con los mismos umbrales (SC-009 y SC-008 de la 001). Anotar los números junto a los de la base
   **Medido (2026-10-15)**, dos corridas por lado, en la misma máquina y a la misma hora (carga 3 a 4.5), `main` en un worktree con su propio `npm ci`. Todo pasa, 6 de 6 en las cuatro corridas. Estructura / contenido útil, en ms:
 

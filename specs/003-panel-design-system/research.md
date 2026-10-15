@@ -114,6 +114,13 @@ saturación de la referencia (`palette-derivation.ts`). El método, el objetivo,
 color y su medición están en [contracts/tokens.md](./contracts/tokens.md), "Derivación de la paleta
 semántica". La tabla de arriba queda como historia de los valores de partida.
 
+**Valores finales** (T056, 2026-10-15), en claro / oscuro: primario `#3848d7` / `#a6bbff`; error y
+destructivo `#cb005c` / `#ff7e9e`; aviso `#8b5e00`; éxito `#00755e` / `#31c2a0`; información `#9012fe` /
+`#ab76ff`; texto secundario `#666666` / `#a7a7a7`; contorno de control `#7d7d97` / `#80809a`. Acento
+`#ffc260` con texto `#1f1f1f`. Planos claros: página `#f6f7ff`, tarjeta `#ffffff`, barra `#eef0ff`; oscuros:
+página `#13131a`, tarjeta `#23232d`. El par que restringe a cada uno y su razón están en
+[contracts/tokens.md](./contracts/tokens.md), "Derivación de la paleta semántica".
+
 **El valor exacto se fija en la implementación**: la tabla es el punto de partida. Lo que obliga es
 la prueba de §6. Si un ajuste visual cambia un valor, la prueba recalcula la razón y el catálogo de
 pares se actualiza con la razón nueva.
@@ -302,6 +309,17 @@ creció cada uno y qué archivo lo explica.
 dependencias) y no puede usar los `node_modules` de la rama. Se acepta: la alternativa, un
 número fijo en el repositorio, deja que otra feature consuma el presupuesto de esta, que es justo lo
 que la spec descarta.
+
+**Medida final** (T056, 2026-10-15, `npx nx run admin:bundle-check` contra `origin/main` en `cf590a3`):
+
+| | `main` | Esta rama | Δ | Presupuesto |
+|---|---|---|---|---|
+| JS inicial (gzip -9) | 235.334 B | 234.942 B | **−392 B** | +0 B |
+| CSS inicial (gzip -9) | 3.938 B | 8.330 B | **+4.392 B** | +10.240 B |
+
+El CSS se reparte en `styles.css` (1.916 → 4.565 B), el CSS crítico que beasties pone en `index.html`
+(1.662 → 3.314 B: incluye el catálogo de tokens de `:root`) y la estructura de arranque (360 → 451 B). El
+JS baja porque los estilos de las vistas se volvieron tokens y T060 dejó una sola regla de títulos.
 
 **La prueba existente de capas** (`layers.spec.ts`) no cambia. La nueva es `size.spec.ts`, en la
 misma carpeta y con el mismo objetivo Nx.

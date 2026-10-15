@@ -67,26 +67,30 @@ moverse para entrar, y varios pares quedaron a 0,01 del mínimo (T058).
 par del uso nuevo, y se vuelve a derivar. Si un uso nuevo deja a un color sin luminosidad posible, la
 derivación lo dice en vez de elegir un valor que no cumple.
 
+Valores al cierre de la feature (T056, 2026-10-15), generados con las funciones de `palette-derivation.ts`;
+cada uno es exactamente el que deriva la compuerta.
+
 | Papel | Esquema | Variable | Referencia | Valor | Objetivo | Lo restringe | Medido | Pares |
 |---|---|---|---|---|---|---|---|---|
-| Primario: texto, enlaces, confirmación de sección y anillo activo | claro | `$blue-500` | `#536dfe` | `#3949d8` | 5 | `primary/surface-selected/presionado` | 5,01 (de 5,01 a 6,73) | 12 |
-| Primario en oscuro | oscuro | `$blue-300` | `#536dfe` | `#a4baff` | 5 | `primary/surface-selected/presionado` | 5,01 (de 5,01 a 9,73) | 12 |
-| Error y acción destructiva | claro | `$pink-600` | `#ff4081` | `#cb005c` | 5 | `status-error/surface-selected` | 5,02 (de 5,02 a 5,69) | 6 |
-| Error y acción destructiva en oscuro | oscuro | `$pink-400` | `#ff4081` | `#ff7d9e` | 5 | `status-error/surface-selected` | 5,01 (de 5,01 a 7,85) | 6 |
+| Primario: texto, enlaces, confirmación de sección y anillo activo | claro | `$blue-500` | `#536dfe` | `#3848d7` | 5 | `primary/surface-selected/con-foco` | 5,05 (de 5,05 a 6,83) | 19 |
+| Primario en oscuro | oscuro | `$blue-300` | `#536dfe` | `#a6bbff` | 5 | `primary/surface-selected/con-foco` | 5,01 (de 5,01 a 9,84) | 19 |
+| Error y acción destructiva | claro | `$pink-600` | `#ff4081` | `#cb005c` | 5 | `status-error/surface-selected` | 5,02 (de 5,02 a 5,69) | 8 |
+| Error y acción destructiva en oscuro | oscuro | `$pink-400` | `#ff4081` | `#ff7e9e` | 5 | `status-error/surface-selected` | 5,02 (de 5,02 a 7,89) | 8 |
 | Aviso (texto) | claro | `$yellow-700` | `#ffc260` | `#8b5e00` | 5 | `status-warning/surface-bar` | 5,01 (de 5,01 a 5,68) | 3 |
 | Éxito | claro | `$green-600` | `#31c2a0` | `#00755e` | 5 | `status-success/surface-bar` | 5,00 (de 5,00 a 5,67) | 3 |
 | Éxito en oscuro | oscuro | `$green-400` | `#31c2a0` | `#31c2a0` | 5 | `status-success/surface-card` | 6,93 (de 6,93 a 8,24) | 3 |
 | Información | claro | `$violet-600` | `#9013fe` | `#9012fe` | 5 | `status-info/surface-bar` | 5,01 (de 5,01 a 5,67) | 3 |
 | Información en oscuro | oscuro | `$violet-300` | `#9013fe` | `#ab76ff` | 5 | `status-info/surface-card` | 5,01 (de 5,01 a 5,96) | 3 |
-| Texto secundario | claro | `$gray-600` | `#6e6e6e` | `#666666` | 5 | `text-secondary/surface-selected` | 5,07 (de 5,07 a 5,74) | 5 |
-| Texto secundario en oscuro | oscuro | `$gray-350` | `#6e6e6e` | `#a7a7a7` | 5 | `text-secondary/surface-selected` | 5,04 (de 5,04 a 7,69) | 5 |
+| Texto secundario | claro | `$gray-600` | `#6e6e6e` | `#666666` | 5 | `text-secondary/surface-selected` | 5,07 (de 5,07 a 5,74) | 6 |
+| Texto secundario en oscuro | oscuro | `$gray-350` | `#6e6e6e` | `#a7a7a7` | 5 | `text-secondary/surface-selected` | 5,02 (de 5,02 a 7,69) | 6 |
 | Contorno de control | claro | `$gray-500` | `#80809a` | `#7d7d97` | 3,5 | `border-control/surface-bar` | 3,53 (de 3,53 a 4,00) | 3 |
 | Contorno de control en oscuro | oscuro | `$gray-550` | `#80809a` | `#80809a` | 3,5 | `border-control/surface-card` | 4,05 (de 4,05 a 4,82) | 3 |
 
 **Estados**: el inventario incluye el estado presionado de cada botón (pares con `layers`: el velo de
 `:active` y la onda, los dos a `--ds-state-pressed-opacity`), así que el primario se deriva también contra
-su propio velo. Las opacidades de estado son del panel (hover y foco 4 %, presionado 6 %), más tenues que
-las de Material (8 % y 12 %): con las de Material, el primario tendría que oscurecerse alrededor de un 20 %.
+su propio velo. Las opacidades de estado son del panel (hover 4 %, presionado 6 %, foco 12 %); el foco
+conserva el 12 % de Material porque, con menos, casillas y radios perdían su señal. Los pares `/con-foco`
+lo miden, y hoy son los que restringen al primario en los dos esquemas.
 
 **Inventario completo**: `expectDeclaredPairs` (`apps/admin-e2e/src/design-system-support.ts`) recorre en
 cada caso `pantalla:` todo texto visible en reposo y exige que su color y su fondo sean un par declarado. Si

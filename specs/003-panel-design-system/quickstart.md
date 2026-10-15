@@ -40,9 +40,9 @@ Esperado: las tres terminan con código 0. Qué dice cada una al fallar: [gates.
    sugerido. Revertir.
 2. Agregar `width: 100%; margin: 0;` → 0 hallazgos. Revertir.
 3. En `_palette.scss`, aclarar el gris del texto secundario → `design-check` falla con la razón
-   calculada bajo 4,5. Revertir.
-4. Cambiar "Revisa tu conexión" por "Revisá tu conexión" → `design-check` falla con `voseo` y la
-   línea. Revertir.
+   calculada bajo 5 (4,5 de WCAG + 0,5 de margen), y porque el valor ya no es el derivado. Revertir.
+4. Cambiar "Revisa tu conexión" por "Revisá tu conexión" → `design-check` falla con `revisar`
+   (candidato de voseo sin clasificar: "revisá" no está en la lista cerrada) y la línea. Revertir.
 
 ## Comprobaciones por historia
 
