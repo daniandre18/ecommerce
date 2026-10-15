@@ -134,23 +134,32 @@ Unidad base: **4 px**. Progresión: lineal hasta 24 px, después de a 8 o 16 px.
 | `--ds-space-1` | 4 px | Ícono y texto dentro de un control |
 | `--ds-space-2` | 8 px | Entre elementos **relacionados**: campos de un grupo, botones de un grupo |
 | `--ds-space-3` | 12 px | Relleno interno de chips y avisos compactos |
-| `--ds-space-4` | 16 px | Relleno de tarjeta en móvil, margen de página |
+| `--ds-space-4` | 16 px | Relleno de tarjeta en móvil, margen de página; entre **grupos** distintos de una tarjeta |
 | `--ds-space-5` | 20 px | — (paso de ritmo, sin uso fijo) |
-| `--ds-space-6` | 24 px | Relleno de tarjeta en escritorio; entre **grupos** distintos de una tarjeta |
+| `--ds-space-6` | 24 px | Relleno de tarjeta en escritorio |
 | `--ds-space-8` | 32 px | Entre tarjetas |
 | `--ds-space-12` | 48 px | Entre bloques mayores de una vista |
 
-**FR-019** queda en la tabla: dentro de un grupo, `space-2`; entre grupos, `space-6`; entre
-tarjetas, `space-8`.
+**FR-019** queda en la tabla: dentro de un grupo, `space-2`; entre grupos, `space-4`; entre
+tarjetas, `space-8`. Entre grupos era `space-6` hasta la revisión de T055 (2026-10-15): las vistas
+migradas usaban `space-4` en todo el panel, y 8 < 16 < 32 ya cumple FR-019. Se ajustó el contrato al
+panel, sin cambio de apariencia. La e2e mide el paso entre tarjetas en cada punto de medición
+(`expectScale` de `design-system-support.ts`).
 
 ## Radio, borde y elevación (FR-011, FR-012)
 
 | Token | Valor | Uso |
 |---|---|---|
 | `--ds-radius-sm` | 4 px | Chips de estado, enlace para saltar al contenido, snack-bar |
-| `--ds-radius-md` | 8 px | Campos, filas de esqueleto, avisos |
-| `--ds-radius-lg` | 12 px | Tarjetas, diálogos |
+| `--ds-radius-md` | 8 px | Campos, filas de esqueleto, avisos, imágenes, grupos con borde dentro de una tarjeta o un diálogo |
+| `--ds-radius-lg` | 12 px | Tarjetas, diálogos, barras de selección |
 | `--ds-radius-pill` | 9999 px | Botones |
+
+Un grupo con borde dentro de una tarjeta (la edición de una fila de categorías, las opciones, la
+confirmación del tipo de envío, la vista previa de la tienda, una invitación) usa `radius-md`: lo que
+está adentro tiene un radio menor que lo que lo contiene. Hasta la revisión de T055 cinco usaban
+`radius-lg` y uno `radius-md`; pasaron todos a `radius-md` (**cambio de apariencia**, de 12 a 8 px). La
+e2e lo mide en cada punto de medición (`expectScale`).
 | `--ds-border-width` | 1 px | Tarjeta, filas, contorno de un control |
 | `--ds-border-width-strong` | 2 px | Campo con foco o con error |
 | `--ds-focus-ring-width` | 3 px | Trazo claro del anillo (el ancho que hoy usa `styles.scss`) |

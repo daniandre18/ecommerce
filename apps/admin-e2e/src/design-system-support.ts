@@ -311,6 +311,74 @@ export async function expectDeclaredPairs(page: Page, scope: Scope = 'view'): Pr
     { tokens: PAIR_TOKENS, declared: DECLARED, scope },
   );
   expect(problems, 'emparejamientos color–superficie sin declarar en contrast-pairs.ts').toEqual([]);
+  await expectScale(page);
+}
+
+/**
+ * T055: la escala en la pantalla, en los mismos puntos de medición que el inventario. Entre dos tarjetas
+ * apiladas, `--ds-space-8` (FR-019); un grupo con borde dentro de una tarjeta o de un diálogo, con
+ * `--ds-radius-md` (FR-012). Un grupo es marcado propio con borde en los cuatro lados: los componentes de
+ * Material tienen su tratamiento aparte. Los valores esperados salen de sondas, no de números escritos aquí.
+ */
+async function expectScale(page: Page): Promise<void> {
+  expect([...(await page.evaluate(cardGaps)), ...(await page.evaluate(groupRadii))], 'la escala de espacio entre tarjetas y de radio de los grupos').toEqual([]);
+}
+
+/** Entre dos tarjetas seguidas, apiladas y sin otro contenido en medio: `--ds-space-8`. Corre en la página. */
+function cardGaps(): string[] {
+  const probe = document.body.appendChild(document.createElement('div'));
+  probe.style.marginTop = 'var(--ds-space-8)';
+  const expected = Number.parseFloat(getComputedStyle(probe).marginTop);
+  probe.remove();
+  const visible = (element: Element) => element.getBoundingClientRect().height > 0 && getComputedStyle(element).visibility !== 'hidden';
+  const name = (element: Element) => `${element.tagName.toLowerCase()}.${[...element.classList].slice(0, 2).join('.')}`;
+  const cards = [...document.querySelectorAll('.ds-card')]
+    .filter((card) => visible(card) && !card.parentElement?.closest('.ds-card'))
+    .map((card) => ({ card, box: card.getBoundingClientRect() }))
+    .sort((a, b) => a.box.top - b.box.top);
+  const found: string[] = [];
+  for (const [index, upper] of cards.entries()) {
+    const lower = cards[index + 1];
+    if (!lower || lower.box.left >= upper.box.right || lower.box.right <= upper.box.left) continue;
+    const related = (element: Element) => element.contains(upper.card) || element.contains(lower.card) || upper.card.contains(element) || lower.card.contains(element);
+    const inBetween = [...document.querySelectorAll('main *')].some((element) => {
+      const box = element.getBoundingClientRect();
+      return !related(element) && visible(element) && box.top >= upper.box.bottom - 1 && box.bottom <= lower.box.top + 1;
+    });
+    const gap = Math.round(lower.box.top - upper.box.bottom);
+    if (!inBetween && gap !== expected) found.push(`entre ${name(upper.card)} y ${name(lower.card)}: ${gap} px, no ${expected} (space-8)`);
+  }
+  return found;
+}
+
+/**
+ * Un grupo con borde dentro de una tarjeta o de un diálogo: `--ds-radius-md`. Un grupo es marcado propio con
+ * borde en los cuatro lados; lo que es de Material, o está dentro de un componente de Material, tiene su
+ * tratamiento aparte. El contenido y las acciones de un diálogo son marco, no componente. Corre en la página.
+ */
+function groupRadii(): string[] {
+  const probe = document.body.appendChild(document.createElement('div'));
+  probe.style.borderTopLeftRadius = 'var(--ds-radius-md)';
+  const expected = getComputedStyle(probe).borderTopLeftRadius;
+  probe.remove();
+  const frame = /^(mat-mdc-dialog-(content|actions|title|surface|container)|mdc-dialog__\w+)$/;
+  const material = (element: Element) => element.tagName.startsWith('MAT-') || [...element.classList].some((name) => /^(mat|mdc)-/.test(name) && !frame.test(name));
+  const insideMaterial = (element: Element, container: Element) => {
+    for (let node: Element | null = element; node && node !== container; node = node.parentElement) if (material(node)) return true;
+    return false;
+  };
+  const bordered = (style: CSSStyleDeclaration) =>
+    ['top', 'right', 'bottom', 'left'].every((side) => style.getPropertyValue(`border-${side}-style`) !== 'none' && Number.parseFloat(style.getPropertyValue(`border-${side}-width`)) > 0);
+  const name = (element: Element) => `${element.tagName.toLowerCase()}${element.classList.length ? '.' + [...element.classList].slice(0, 2).join('.') : ''}`;
+  const found: string[] = [];
+  for (const container of document.querySelectorAll('.ds-card, .mat-mdc-dialog-surface')) {
+    for (const element of container.querySelectorAll('*')) {
+      const style = getComputedStyle(element);
+      if (element.getBoundingClientRect().height === 0 || insideMaterial(element, container) || !bordered(style)) continue;
+      if (style.borderTopLeftRadius !== '0px' && style.borderTopLeftRadius !== expected) found.push(`${name(element)} dentro de ${name(container)}: radio ${style.borderTopLeftRadius}, no ${expected} (radius-md)`);
+    }
+  }
+  return found;
 }
 
 /**

@@ -101,7 +101,7 @@ function defaultRole(roles: readonly Role[]): RoleId | '' {
       margin: var(--ds-space-3) 0;
       padding: var(--ds-space-3);
       border: var(--ds-border-width) solid var(--ds-border-subtle);
-      border-radius: var(--ds-radius-lg);
+      border-radius: var(--ds-radius-md);
     }
 
     .link p {

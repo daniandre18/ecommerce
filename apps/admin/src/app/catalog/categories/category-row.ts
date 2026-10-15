@@ -179,7 +179,7 @@ type Mode = 'idle' | 'rename' | 'slug' | 'move' | 'hide' | 'delete' | 'delete-bl
       margin: 0 0 var(--ds-space-3);
       padding: var(--ds-space-3) var(--ds-space-4);
       border: var(--ds-border-width) solid var(--ds-border-subtle);
-      border-radius: var(--ds-radius-lg);
+      border-radius: var(--ds-radius-md);
     }
 
     .panel mat-form-field {
