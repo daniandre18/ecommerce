@@ -479,6 +479,20 @@ que T036 los reemplaza. `styles.scss` no pertenece a ninguna tarea de vista.
 
 - [ ] T053 [P] Validación completa con `specs/003-panel-design-system/quickstart.md`: las tres compuertas sin navegador, las cuatro comprobaciones "de verdad fallan" y las cuatro historias en escritorio y a 360 px, en claro y en oscuro. Anotar el resultado al pie de esta tarea
 - [ ] T054 [P] Rendimiento en local (FR-033a lo deja fuera de CI): `npx nx run admin-e2e:perf` con los mismos umbrales (SC-009 y SC-008 de la 001). Anotar los números junto a los de la base
+  **Medido (2026-10-15)**, dos corridas por lado, en la misma máquina y a la misma hora (carga 3 a 4.5), `main` en un worktree con su propio `npm ci`. Todo pasa, 6 de 6 en las cuatro corridas. Estructura / contenido útil, en ms:
+
+  | Medida | `main` | Esta rama | Tope |
+  |---|---|---|---|
+  | Catálogo, primera visita | 200/2.745 · 176/2.713 | 192/2.725 · 192/2.743 | 1.000/3.000 |
+  | Catálogo, siguientes | 188/826 · 204/810 | 220/811 · 208/847 | 1.000/3.000 |
+  | SC-008, 100 colaboradores | 2.745→2.721 · 2.713→2.690 | 2.725→2.737 · 2.743→2.725 | +20 % o +100 ms |
+  | SC-006, p95 de 36 filtros | 537 · 528 | 538 · 544 | 1.000 |
+  | Árbol (1.000 categorías), primera | 212/2.731 · 232/2.734 | 216/2.829 · 216/2.854 | 1.000/3.000 |
+  | Árbol, siguientes | 244/948 · 212/938 | 212/931 · 220/984 | 1.000/3.000 |
+  | Editor de producto, primera | 184/2.777 · 196/2.777 | 208/2.837 · 188/2.832 | 1.000/3.000 |
+  | Editor de producto, siguientes | 212/835 · 200/846 | 208/841 · 200/870 | 1.000/3.000 |
+
+  **Abierta**: la primera visita del árbol cuesta +100 a +120 ms con esta rama, y queda a 146–171 ms del tope; la del editor de producto, +55 a +60 ms (a 163–168 ms). El resto, igual que `main` dentro del ruido. Al filo del tope: se detiene para decidir. Antes, con la máquina cargada (carga 8 a 9, otro editor al 280 % de CPU), la suite no terminaba: páginas que no llegaban a `load`; con la máquina tranquila no volvió a pasar.
 - [X] T055 [P] Revisión manual de los requisitos sin compuerta (`plan.md`, "Decisión: las e2e pasan a ser compuerta en CI"):
   - FR-006: ninguna línea de la referencia en el diff (`git diff main -- apps libs` contra `~/Documents/github/angular-admin/src/app/styles/`).
   - FR-011: cada elemento usa el nivel de elevación de su papel.
