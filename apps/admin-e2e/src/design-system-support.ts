@@ -317,11 +317,42 @@ export async function expectDeclaredPairs(page: Page, scope: Scope = 'view'): Pr
 /**
  * T055: la escala en la pantalla, en los mismos puntos de medición que el inventario. Entre dos tarjetas
  * apiladas, `--ds-space-8` (FR-019); un grupo con borde dentro de una tarjeta o de un diálogo, con
- * `--ds-radius-md` (FR-012); el título de un diálogo, en `section-title` (FR-022). Los valores esperados
+ * `--ds-radius-md` (FR-012); el título de un diálogo, en `section-title`, y un `<select>` nativo con los
+ * tokens de un control (FR-022). Los valores esperados
  * salen de sondas, no de números escritos aquí.
  */
 async function expectScale(page: Page): Promise<void> {
-  expect([...(await page.evaluate(cardGaps)), ...(await page.evaluate(groupRadii)), ...(await page.evaluate(dialogTitles))], 'la escala de espacio, de radio y de tipo').toEqual([]);
+  expect([...(await page.evaluate(cardGaps)), ...(await page.evaluate(groupRadii)), ...(await page.evaluate(dialogTitles)), ...(await page.evaluate(nativeSelects))], 'la escala de espacio, de radio y de tipo').toEqual([]);
+}
+
+/**
+ * Un `<select>` nativo fuera de un campo de Material (las listas largas de categorías, la barra de
+ * selección): texto `text-primary`, contorno `border-control`, radio `radius-md` y el plano de la tarjeta,
+ * no los del navegador. Su texto vive en `<option>`, que no tiene caja, así que el inventario de contraste
+ * no lo veía. Corre en la página.
+ */
+function nativeSelects(): string[] {
+  const probe = document.body.appendChild(document.createElement('div'));
+  const token = (property: 'color' | 'borderTopColor' | 'backgroundColor' | 'borderTopLeftRadius', value: string) => {
+    probe.style[property] = value;
+    return getComputedStyle(probe)[property];
+  };
+  const expected = {
+    color: token('color', 'var(--ds-text-primary)'),
+    borderTopColor: token('borderTopColor', 'var(--ds-border-control)'),
+    backgroundColor: token('backgroundColor', 'var(--ds-surface-card)'),
+    borderTopLeftRadius: token('borderTopLeftRadius', 'var(--ds-radius-md)'),
+  };
+  probe.remove();
+  const found: string[] = [];
+  for (const select of document.querySelectorAll<HTMLSelectElement>('select:not(.mat-mdc-input-element)')) {
+    if (select.disabled || select.getBoundingClientRect().height === 0) continue;
+    const style = getComputedStyle(select);
+    for (const [property, value] of Object.entries(expected) as [keyof typeof expected, string][]) {
+      if (style[property] !== value) found.push(`select#${select.id || '?'}: ${property} ${style[property]}, no ${value}`);
+    }
+  }
+  return found;
 }
 
 /** El título de un diálogo, en `section-title` (FR-022): Material le da su `headline-small`. Corre en la página. */

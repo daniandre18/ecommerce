@@ -374,7 +374,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'ui',
     state: 'rest',
     plane: 'page',
-    declared: { light: 3.74, dark: 4.82 },
+    declared: { light: 3.74, dark: 5.36 },
   },
   {
     id: 'border-control/surface-card',
@@ -383,7 +383,7 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'ui',
     state: 'rest',
     plane: 'card',
-    declared: { light: 4, dark: 4.05 },
+    declared: { light: 4, dark: 4.51 },
   },
   {
     id: 'border-control/surface-bar',
@@ -392,7 +392,17 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     kind: 'ui',
     state: 'rest',
     plane: 'bar',
-    declared: { light: 3.53, dark: 4.45 },
+    declared: { light: 3.53, dark: 4.96 },
+  },
+  // El `<select>` nativo de la barra de selección del catálogo (T053): su contorno, sobre la barra.
+  {
+    id: 'border-control/surface-selected',
+    foreground: '--ds-border-control',
+    background: '--ds-surface-selected',
+    kind: 'ui',
+    state: 'rest',
+    plane: 'control',
+    declared: { light: 3.53, dark: 3.5 },
   },
   // Anillo de foco (FR-023): sus dos tonos entre sí (C40), y el margen contra cada fondo del sistema.
   {

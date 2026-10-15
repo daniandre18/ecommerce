@@ -136,6 +136,27 @@ h2 {
   font: var(--ds-type-section-title);
 }
 
+// Un `<select>` nativo fuera de un campo de Material: las listas largas de categorías y la barra de
+// selección lo usan por su rendimiento con cientos de opciones. Sin esto tenía el texto negro, el borde y el
+// fondo del navegador: fuera del catálogo, y en oscuro un bloque gris. Toma los tokens de un control
+// (component-treatments.md, "Selector nativo"); el foco es el anillo global.
+select:not(.mat-mdc-input-element) {
+  box-sizing: border-box;
+  min-height: var(--ds-touch-target);
+  padding: 0 var(--ds-space-2);
+  border: var(--ds-border-width) solid var(--ds-border-control);
+  border-radius: var(--ds-radius-md);
+  background-color: var(--ds-surface-card);
+  color: var(--ds-text-primary);
+  font: var(--ds-type-body);
+
+  &:disabled {
+    border-color: var(--ds-border-subtle);
+    color: var(--ds-text-disabled);
+    cursor: not-allowed;
+  }
+}
+
 // La sombra del snack-bar: la de lo superpuesto (FR-011), como el diálogo y el menú. Material no ofrece un
 // token para ella —la escribe fija en `.mat-mdc-snackbar-surface`—, así que es una excepción declarada a
 // FR-006 (contracts/component-treatments.md). Su hoja llega al abrir el primer snack-bar, después de esta:

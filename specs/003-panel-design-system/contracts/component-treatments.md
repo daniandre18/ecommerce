@@ -49,6 +49,7 @@ Cualquier otra regla sobre una clase de Material es una excepción nueva, y entr
 | Menú | fondo `surface-overlay`, elevación `overlay` | opción con `surface-selected` | — | — | |
 | Snack-bar | fondo `text-primary` invertido (contenedor inverso), texto `surface-card`, radio `radius-sm`, elevación `overlay` | — | — | — | Sin botón de acción en el panel |
 | Barra de progreso | pista `primary-container`, indicador `primary` | — | — | indeterminada | |
+| Selector nativo (`<select>` sin `matNativeControl`: listas de categorías, barra de selección) | texto `text-primary`, contorno `border-control`, radio `radius-md`, fondo `surface-card`, alto `touch-target` | — | — | — | Deshabilitado: `text-disabled` y contorno `border-subtle`. Agregado en T053: tenía el texto negro y el borde del navegador, y el inventario no lo veía porque su texto vive en `<option>` |
 
 ## Marcado propio del panel
 

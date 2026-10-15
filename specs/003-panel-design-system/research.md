@@ -116,7 +116,7 @@ semántica". La tabla de arriba queda como historia de los valores de partida.
 
 **Valores finales** (T056, 2026-10-15), en claro / oscuro: primario `#3848d7` / `#a6bbff`; error y
 destructivo `#cb005c` / `#ff7e9e`; aviso `#8b5e00`; éxito `#00755e` / `#31c2a0`; información `#9012fe` /
-`#ab76ff`; texto secundario `#666666` / `#a7a7a7`; contorno de control `#7d7d97` / `#80809a`. Acento
+`#ab76ff`; texto secundario `#666666` / `#a7a7a7`; contorno de control `#7d7d97` / `#8888a2` (re-derivado en T053 por el `<select>` de la barra de selección). Acento
 `#ffc260` con texto `#1f1f1f`. Planos claros: página `#f6f7ff`, tarjeta `#ffffff`, barra `#eef0ff`; oscuros:
 página `#13131a`, tarjeta `#23232d`. El par que restringe a cada uno y su razón están en
 [contracts/tokens.md](./contracts/tokens.md), "Derivación de la paleta semántica".

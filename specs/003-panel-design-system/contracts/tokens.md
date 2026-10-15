@@ -83,8 +83,8 @@ cada uno es exactamente el que deriva la compuerta.
 | Información en oscuro | oscuro | `$violet-300` | `#9013fe` | `#ab76ff` | 5 | `status-info/surface-card` | 5,01 (de 5,01 a 5,96) | 3 |
 | Texto secundario | claro | `$gray-600` | `#6e6e6e` | `#666666` | 5 | `text-secondary/surface-selected` | 5,07 (de 5,07 a 5,74) | 6 |
 | Texto secundario en oscuro | oscuro | `$gray-350` | `#6e6e6e` | `#a7a7a7` | 5 | `text-secondary/surface-selected` | 5,02 (de 5,02 a 7,69) | 6 |
-| Contorno de control | claro | `$gray-500` | `#80809a` | `#7d7d97` | 3,5 | `border-control/surface-bar` | 3,53 (de 3,53 a 4,00) | 3 |
-| Contorno de control en oscuro | oscuro | `$gray-550` | `#80809a` | `#80809a` | 3,5 | `border-control/surface-card` | 4,05 (de 4,05 a 4,82) | 3 |
+| Contorno de control | claro | `$gray-500` | `#80809a` | `#7d7d97` | 3,5 | `border-control/surface-selected` | 3,53 (de 3,53 a 4,00) | 4 |
+| Contorno de control en oscuro | oscuro | `$gray-550` | `#80809a` | `#8888a2` | 3,5 | `border-control/surface-selected` | 3,50 (de 3,50 a 5,36) | 4 |
 
 **Estados**: el inventario incluye el estado presionado de cada botón (pares con `layers`: el velo de
 `:active` y la onda, los dos a `--ds-state-pressed-opacity`), así que el primario se deriva también contra
