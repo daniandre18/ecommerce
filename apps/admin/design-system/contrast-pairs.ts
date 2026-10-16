@@ -394,6 +394,29 @@ export const CONTRAST_PAIRS: readonly ContrastPair[] = [
     plane: 'bar',
     declared: { light: 3.53, dark: 4.96 },
   },
+  // La línea de foco de un campo de Material (T062): dentro de un campo el foco no es el anillo sino esta
+  // línea, en primario o, con error, en el color del error. El fondo es el del campo (`surface-variant` →
+  // `surface-bar`), con la capa de hover de Material encima: el peor caso, foco con el puntero sobre el campo.
+  {
+    id: 'primary/surface-bar/linea-de-foco',
+    foreground: '--ds-primary',
+    background: '--ds-surface-bar',
+    layers: [{ color: '--ds-text-primary', opacity: '--ds-state-hover-opacity' }],
+    kind: 'ui',
+    state: 'focus',
+    plane: 'control',
+    declared: { light: 5.68, dark: 8.25 },
+  },
+  {
+    id: 'status-error/surface-bar/linea-de-foco',
+    foreground: '--ds-status-error',
+    background: '--ds-surface-bar',
+    layers: [{ color: '--ds-text-primary', opacity: '--ds-state-hover-opacity' }],
+    kind: 'ui',
+    state: 'error',
+    plane: 'control',
+    declared: { light: 4.73, dark: 6.45 },
+  },
   // El `<select>` nativo de la barra de selección del catálogo (T053): su contorno, sobre la barra.
   {
     id: 'border-control/surface-selected',

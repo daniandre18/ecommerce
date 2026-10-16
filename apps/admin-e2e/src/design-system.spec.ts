@@ -531,9 +531,85 @@ test.describe('foco', () => {
     await expectTwoTone(page, 'diálogo (Cancelar)', dialog.getByRole('button', { name: 'Cancelar', exact: true }));
   });
 
+  // T062: dentro de un campo de Material el foco es la línea del campo, no el anillo. El anillo se dibujaba
+  // alrededor del control nativo, dentro del campo, y cruzaba la etiqueta flotante. No basta con que la
+  // línea exista: su color computado tiene que contrastar 3:1 (WCAG 1.4.11) con el fondo del campo tal
+  // como se ve con foco, es decir con la capa de foco de Material compuesta encima.
+  async function fieldFocus(page: Page, control: ReturnType<Page['locator']>) {
+    await page.keyboard.press('Shift');
+    await control.focus();
+    const field = control.locator('xpath=ancestor::mat-form-field[1]');
+    await field.evaluate((element) => Promise.all(element.getAnimations({ subtree: true }).map((animation) => animation.finished.catch(() => undefined))));
+    return field.evaluate((element, focused) => {
+      const parse = (value: string): [number, number, number, number] => {
+        const [r = 0, g = 0, b = 0, a = 1] = (value.match(/-?[\d.]+/g) ?? []).map(Number);
+        return [r, g, b, a];
+      };
+      const over = (top: [number, number, number, number], bottom: [number, number, number], alpha: number): [number, number, number] =>
+        [0, 1, 2].map((i) => (top[i] ?? 0) * top[3] * alpha + (bottom[i] ?? 0) * (1 - top[3] * alpha)) as [number, number, number];
+      const luminance = (rgb: readonly number[]) =>
+        rgb.map((c) => c / 255).map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)).reduce((sum, c, i) => sum + c * ([0.2126, 0.7152, 0.0722][i] ?? 0), 0);
+      const container = element.querySelector('.mdc-text-field--filled') as HTMLElement;
+      const overlay = element.querySelector('.mat-mdc-form-field-focus-overlay') as HTMLElement;
+      const line = getComputedStyle(element.querySelector('.mdc-line-ripple') as Element, '::after').borderBottomColor;
+      let background = parse(getComputedStyle(container).backgroundColor).slice(0, 3) as [number, number, number];
+      background = over(parse(getComputedStyle(overlay).backgroundColor), background, Number(getComputedStyle(overlay).opacity));
+      const [l1 = 0, l2 = 0] = [luminance(parse(line).slice(0, 3)), luminance(background)].sort((a, b) => b - a);
+      const control = focused as HTMLElement;
+      const style = getComputedStyle(control);
+      return {
+        focusVisible: control.matches(':focus-visible'),
+        ring: style.outlineStyle !== 'none' && Number.parseFloat(style.outlineWidth) > 0 ? `outline ${style.outlineWidth}` : style.boxShadow !== 'none' ? `sombra ${style.boxShadow}` : 'ninguno',
+        line,
+        ratio: Math.round(((l1 + 0.05) / (l2 + 0.05)) * 100) / 100,
+      };
+    }, await control.elementHandle());
+  }
+
+  test('en un campo de Material, el foco es la línea del campo a 3:1 sobre su fondo, sin anillo', async ({ page }) => {
+    const { url } = await productAsOwner(`DS-Campo ${Date.now()}`);
+    await page.goto(url);
+    await signIn(page, OWNER);
+    const only = page.getByRole('group', { name: /^Única/ });
+    await expect(only).toBeVisible();
+
+    const name = await fieldFocus(page, page.getByLabel('Nombre', { exact: true }));
+    expect(name.focusVisible, 'Nombre: foco de teclado').toBe(true);
+    expect(name.ring, 'Nombre: sin anillo dentro del campo').toBe('ninguno');
+    expect(name.ratio, `Nombre: la línea ${name.line} contra el fondo del campo`).toBeGreaterThanOrEqual(3);
+
+    // Con error, la línea es la del error.
+    const sku = only.getByLabel('SKU', { exact: true });
+    await sku.fill(`SKU-${Date.now()}`);
+    await sku.press('Enter');
+    await expect(only).not.toContainText('Falta el SKU');
+    await sku.fill('');
+    await sku.press('Enter');
+    await expect(only.locator('mat-error')).toHaveText('El SKU no se puede quitar');
+    const error = await fieldFocus(page, sku);
+    expect(error.ring, 'SKU con error: sin anillo dentro del campo').toBe('ninguno');
+    expect(error.ratio, `SKU con error: la línea ${error.line} contra el fondo del campo`).toBeGreaterThanOrEqual(3);
+  });
+
   test('en colores forzados el anillo conserva el trazo', async ({ page }) => {
     await page.emulateMedia({ forcedColors: 'active' });
     await page.goto('/login');
+    // T062: en colores forzados el sistema reemplaza el color de la línea y quita las sombras, y Material le
+    // quita el `outline` al control. El foco del campo es entonces el de Material: un contorno discontinuo de
+    // 3 px alrededor del campo entero. Estilo y ancho juntos: con `outline: none`, Chrome sigue reportando
+    // el ancho ("none 3px").
+    const email = page.getByLabel('Correo', { exact: true });
+    const wrapper = email.locator('xpath=ancestor::mat-form-field[1]').locator('.mat-mdc-text-field-wrapper');
+    const outlineOf = () => wrapper.evaluate((element) => `${getComputedStyle(element).outlineStyle} ${getComputedStyle(element).outlineWidth}`);
+    const ringWidth = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--ds-focus-ring-width').trim());
+    // Sin foco, Material ya dibuja el borde del campo con `outline`; con foco lo cambia y lo engrosa.
+    const resting = await outlineOf();
+    await page.keyboard.press('Shift');
+    await email.focus();
+    const focused = await outlineOf();
+    expect(focused, 'campo en colores forzados: el foco cambia el contorno').not.toBe(resting);
+    expect(focused.split(' ')[0], 'campo con foco en colores forzados: hay contorno').not.toBe('none');
+    expect(focused.split(' ')[1], 'campo con foco en colores forzados: del ancho del anillo').toBe(ringWidth);
     await signIn(page, OWNER);
     await expect(page.getByRole('heading', { level: 1, name: 'Catálogo', exact: true })).toBeVisible();
     await expect(page.locator('ui-skeleton')).toHaveCount(0);

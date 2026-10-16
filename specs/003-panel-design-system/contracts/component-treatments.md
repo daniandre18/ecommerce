@@ -28,6 +28,11 @@ Cualquier otra regla sobre una clase de Material es una excepción nueva, y entr
   cuyo radio de expansión cubre la separación, el trazo claro y `--ds-focus-ring-outer-width`. Así, el
   claro queda entre dos bandas oscuras y se distingue sobre cualquier fondo. Ninguno de los dos ocupa
   espacio. En colores forzados, el navegador quita la sombra y conserva el `outline`, con color de sistema.
+  **Dentro de un campo de Material** el foco no es el anillo sino la línea activa del campo, en primario o
+  en el color del error y de 2 px, con contraste de 3:1 o más contra el fondo del campo (pares
+  `/linea-de-foco`). El anillo, dibujado alrededor del control nativo, quedaba dentro del campo y cruzaba la
+  etiqueta (T062). En colores forzados, el foco del campo es el de Material: un contorno discontinuo de 3 px
+  alrededor del campo entero.
 - **Hover**: capa `--ds-surface-hover` compuesta sobre el reposo. Nunca agrega información (FR-026).
 - **Deshabilitado**: `--ds-text-disabled`, `opacity` del token de Material y `cursor: not-allowed`.
   Nunca usa el tono de error ni su borde (FR-025).

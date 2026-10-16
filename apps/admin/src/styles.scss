@@ -59,6 +59,17 @@ html .mat-mdc-menu-item:focus-visible {
   @include focus-ring;
 }
 
+// Dentro de un campo de Material el foco es la línea del campo, en primario o en el color del error y de
+// 2 px (T062): su contraste contra el fondo del campo está en el inventario (`/linea-de-foco`). El anillo se
+// dibujaba alrededor del control nativo, dentro del campo, y cruzaba la etiqueta flotante; `main` ya tenía
+// ese recuadro, de 3 px de primario. En colores forzados el foco del campo es el de Material: un contorno
+// discontinuo de 3 px alrededor del campo entero.
+.mat-mdc-form-field .mat-mdc-input-element:focus-visible,
+.mat-mdc-form-field .mat-mdc-select:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 // Respetar la preferencia de movimiento reducido (WCAG 2.3.3).
 @media (prefers-reduced-motion: reduce) {
   *,
