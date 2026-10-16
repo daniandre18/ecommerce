@@ -8,21 +8,23 @@ import { commandErrorMessage } from '../../shared/command-errors';
 
 /** Por qué el servidor rechaza una invitación (`details.reason`, contracts/callable-functions.md). */
 const REJECTIONS: Readonly<Record<string, string>> = {
-  'email-mismatch': 'Esta invitación es para otro correo. Cerrá sesión y entrá con la cuenta a la que te invitaron.',
-  'already-member': 'Ya sos parte de este comercio.',
-  expired: 'La invitación venció. Pedile al Propietario del comercio que te invite de nuevo.',
-  revoked: 'La invitación fue cancelada. Si es un error, pedile al Propietario que te invite de nuevo.',
+  'email-mismatch': 'Esta invitación es para otro correo. Cierra sesión y entra con la cuenta a la que te invitaron.',
+  'already-member': 'Ya eres parte de este comercio.',
+  expired: 'La invitación venció. Pídele al Propietario del comercio que te invite de nuevo.',
+  revoked: 'La invitación fue cancelada. Si es un error, pídele al Propietario que te invite de nuevo.',
   accepted: 'Esta invitación ya se usó.',
 };
 
 /**
  * El enlace de invitación: `/invitation/{tenantId}/{invitationId}` (T080). Exige sesión —quien no
- * tiene cuenta la crea desde el inicio de sesión y vuelve acá—, y no da acceso a nada hasta que se
+ * tiene cuenta la crea desde el inicio de sesión y vuelve aquí—, y no da acceso a nada hasta que se
  * acepta (FR-007). Si la cuenta ya está en otros comercios, se le suma este (FR-005).
  */
 @Component({
   selector: 'app-accept-invitation',
   imports: [MatButton, RouterLink],
+  // Fuera del comercio hay dos planos, página y tarjeta: la vista entera es la tarjeta (SC-005).
+  host: { class: 'ds-card' },
   template: `
     <h1>Te invitaron a un comercio</h1>
     @if (user.value(); as account) {
@@ -32,18 +34,23 @@ const REJECTIONS: Readonly<Record<string, string>> = {
     <div role="alert" class="failure">{{ failure() }}</div>
 
     @if (alreadyMember()) {
-      <a matButton="filled" [routerLink]="['/t', tenantId()]">Entrar al comercio</a>
+      <a matButton="filled" class="ds-primary-action" [routerLink]="['/t', tenantId()]">Entrar al comercio</a>
     } @else if (wrongAccount()) {
-      <button matButton="filled" type="button" (click)="signOut.run()">Cerrar sesión</button>
+      <!-- Secundaria: con otra cuenta no hay nada que aceptar aquí, y salir no es la tarea de la vista. -->
+      <button matButton type="button" (click)="signOut.run()">Cerrar sesión</button>
     } @else {
-      <button matButton="filled" type="button" [disabled]="accepting()" (click)="accept()">Aceptar invitación</button>
+      <button matButton="filled" class="ds-primary-action" type="button" [disabled]="accepting()" (click)="accept()">Aceptar invitación</button>
     }
   `,
   styles: `
     :host {
       display: block;
       max-width: 480px;
-      margin: 48px auto;
+      margin: var(--ds-space-12) auto;
+    }
+
+    h1 {
+      margin-bottom: var(--ds-space-6);
     }
 
     .failure:empty {
@@ -51,9 +58,9 @@ const REJECTIONS: Readonly<Record<string, string>> = {
     }
 
     .failure {
-      margin-bottom: 16px;
-      color: var(--mat-sys-error);
-      font: var(--mat-sys-body-medium);
+      margin-bottom: var(--ds-space-4);
+      color: var(--ds-status-error);
+      font: var(--ds-type-body);
     }
   `,
 })

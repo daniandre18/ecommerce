@@ -11,7 +11,7 @@ test.describe('shell del panel', () => {
     await page.goto('/');
 
     await page.keyboard.press('Tab');
-    const skipLink = page.getByRole('link', { name: 'Saltar al contenido' });
+    const skipLink = page.getByRole('link', { name: 'Saltar al contenido', exact: true });
     await expect(skipLink).toBeFocused();
     await expect(skipLink).toBeInViewport();
 

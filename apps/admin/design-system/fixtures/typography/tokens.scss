@@ -1,0 +1,21 @@
+// Fixture de typography.spec.ts: niveles que se distinguen y un par que solo cambia de peso.
+:root {
+  --ds-text-primary: light-dark(#1f1f24, #ececf1);
+  --ds-text-secondary: light-dark(#6a6a6a, #a0a0a8);
+  --ds-type-title-size: 1.75rem;
+  --ds-type-title-weight: 700;
+  --ds-type-title-line-height: 2.25rem;
+  --ds-type-title-tracking: -0.01em;
+  --ds-type-heading-size: 1.25rem;
+  --ds-type-heading-weight: 600;
+  --ds-type-heading-line-height: 1.75rem;
+  --ds-type-heading-tracking: 0;
+  --ds-type-strong-size: 1rem;
+  --ds-type-strong-weight: 600;
+  --ds-type-strong-line-height: 1.5rem;
+  --ds-type-strong-tracking: 0;
+  --ds-type-plain-size: 1rem;
+  --ds-type-plain-weight: 400;
+  --ds-type-plain-line-height: 1.5rem;
+  --ds-type-plain-tracking: 0;
+}

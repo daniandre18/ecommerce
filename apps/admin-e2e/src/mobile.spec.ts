@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { call, idTokenOf, OWNER, productAsOwner, productWithVariants, signIn } from './support';
+import { call, idTokenOf, OWNER, productAsOwner, productWithVariants, signIn, startsWith } from './support';
 
 /** El objetivo táctil mínimo de los flujos frecuentes: el de Material, 48 px, con 4 de tolerancia. */
 const TOUCH = 44;
@@ -83,13 +83,13 @@ test.describe('en el teléfono', () => {
 
     await row.getByLabel(/^Precio \(/).fill('45000');
     await row.getByLabel(/^Precio \(/).press('Enter');
-    await row.getByLabel('Existencias').fill('12');
-    await row.getByLabel('Existencias').press('Enter');
+    await row.getByLabel('Existencias', { exact: true }).fill('12');
+    await row.getByLabel('Existencias', { exact: true }).press('Enter');
     await expect(row.getByLabel(/^Precio \(/)).toHaveValue('45.000');
-    await expect(row.getByLabel('Existencias')).toHaveValue('12');
+    await expect(row.getByLabel('Existencias', { exact: true })).toHaveValue('12');
 
     // La edición masiva queda a mano, abajo, sin tapar la fila elegida ni sobresalir.
-    await page.getByRole('checkbox', { name: 'Seleccionar todas las variantes' }).check();
+    await page.getByRole('checkbox', { name: 'Seleccionar todas las variantes', exact: true }).check();
     const bar = page.locator('app-bulk-edit');
     await expect(bar).toBeInViewport();
     await expectNoHorizontalScroll(page);
@@ -201,21 +201,21 @@ test.describe('en el teléfono', () => {
     await page.goto('/t/t1/catalog');
     await signIn(page, OWNER);
     await expect(page.locator('ui-skeleton')).toHaveCount(0);
-    await page.getByLabel('Mostrar').selectOption('category');
+    await page.getByLabel('Mostrar', { exact: true }).selectOption('category');
     await page.locator('[data-field="category"]').selectOption({ label: leaving });
-    for (const name of names) await page.getByRole('checkbox', { name: `Seleccionar «${name}»` }).check();
-    await page.getByRole('button', { name: 'Activar envío gratis' }).click();
-    await expect(page.getByRole('button', { name: 'Quitar de la selección y reintentar' })).toBeVisible();
+    for (const name of names) await page.getByRole('checkbox', { name: `Seleccionar «${name}»`, exact: true }).check();
+    await page.getByRole('button', { name: 'Activar envío gratis', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Quitar de la selección y reintentar', exact: true })).toBeVisible();
     await expectNoHorizontalScroll(page);
     await expectTouchTargets(page);
 
     await page.goto('/t/t1/categories');
     await expect(page.locator('ui-skeleton')).toHaveCount(0);
     for (const [name, action] of [[moving, 'Mover a…'], [leaving, 'Eliminar']] as const) {
-      await page.getByRole('button', { name: `Acciones de «${name}»` }).click();
+      await page.getByRole('button', { name: `Acciones de «${name}»`, exact: true }).click();
       await page.getByRole('menuitem', { name: action, exact: true }).click();
     }
-    await expect(page.getByText(`2 productos dejarán de estar en «${leaving}»`)).toBeVisible();
+    await expect(page.getByText(startsWith(`2 productos dejarán de estar en «${leaving}»`))).toBeVisible();
     await expectNoHorizontalScroll(page);
     await expectTouchTargets(page);
   });

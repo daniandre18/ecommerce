@@ -1,9 +1,9 @@
 name: Preparar los emuladores de Firebase
-description: Java para el emulador de Firestore y caché de los binarios del emulador.
+description: Java para el emulador de Firestore, firebase-tools en el PATH y caché de los binarios del emulador.
 
 inputs:
   firebase-tools-version:
-    description: Versión de firebase-tools cuyos emuladores se cachean.
+    description: Versión de firebase-tools que se instala, y cuyos emuladores se cachean.
     required: true
 
 runs:
@@ -18,3 +18,21 @@ runs:
       with:
         path: ~/.cache/firebase/emulators
         key: firebase-emulators-${{ inputs.firebase-tools-version }}
+
+    # firebase-tools en su propio prefijo, cacheado por versión. Bajarlo del registro en cada corrida
+    # (`npm install -g` o `npx --yes`) tardaba de 15 a 106 s según la red de npm, sin ningún cambio
+    # (research §15 de la 003): una variación así se come el margen del tope de la e2e.
+    - id: firebase-tools
+      uses: actions/cache@v4
+      with:
+        path: ~/.firebase-tools
+        key: firebase-tools-${{ runner.os }}-${{ inputs.firebase-tools-version }}
+
+    - if: steps.firebase-tools.outputs.cache-hit != 'true'
+      shell: bash
+      run: npm install -g --prefix ~/.firebase-tools "firebase-tools@${{ inputs.firebase-tools-version }}"
+
+    - shell: bash
+      run: |
+        echo "$HOME/.firebase-tools/bin" >> "$GITHUB_PATH"
+        test "$("$HOME/.firebase-tools/bin/firebase" --version)" = "${{ inputs.firebase-tools-version }}"

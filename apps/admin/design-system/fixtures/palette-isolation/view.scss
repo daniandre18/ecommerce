@@ -1,0 +1,7 @@
+// Fixture de palette-isolation.spec.ts: una hoja de vista que alcanza la paleta.
+// Un `@use` comentado no cuenta: @use 'styles/tokens';
+@use '../../../src/styles/palette' as p;
+
+.price {
+  color: p.$blue-500;
+}

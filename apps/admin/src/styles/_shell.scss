@@ -1,0 +1,68 @@
+// Los estilos del componente raíz `App` (apps/admin/src/app/app.ts), fuera de su JavaScript (T017,
+// research §3). `App` es el único componente de la carga inicial: con sus estilos dentro del componente,
+// cada cambio de valor hacía crecer el JS inicial, y FR-034 no admite ni un byte. En la hoja global los
+// absorbe el presupuesto de estilos. Van anidados bajo `app-root` para que, como con el encapsulamiento
+// del componente, no alcancen a nada fuera de él. Los valores son tokens desde T026.
+// La falla de navegación es el aviso de error del sistema: con `@extend` desde la hoja y no con una clase
+// en la plantilla, porque la plantilla de `App` es JS inicial (T026).
+@use 'components';
+
+app-root {
+  position: relative;
+  display: block;
+  min-height: 100dvh;
+
+  > .boot {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: var(--ds-surface-page);
+  }
+
+  main {
+    padding: var(--ds-space-4);
+    max-width: 1200px;
+    margin-inline: auto;
+  }
+
+  main:focus {
+    outline: none;
+  }
+
+  // Visible solo al recibir el foco del teclado (WCAG 2.4.1). En colores invertidos, como el contenedor
+  // inverso de Material: el par es el de texto sobre tarjeta, con los papeles cambiados.
+  .skip-link {
+    position: absolute;
+    inset-inline-start: var(--ds-space-2);
+    inset-block-start: calc(-1 * var(--ds-space-12));
+    padding: var(--ds-space-2) var(--ds-space-4);
+    background: var(--ds-text-primary);
+    color: var(--ds-surface-card);
+    border-radius: var(--ds-radius-sm);
+    z-index: 10;
+  }
+
+  .skip-link:focus {
+    inset-block-start: var(--ds-space-2);
+  }
+
+  .navigation-failure {
+    @extend .ds-notice, .ds-notice--error;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ds-space-2) var(--ds-space-4);
+    margin-bottom: var(--ds-space-4);
+  }
+
+  .navigation-failure button {
+    min-height: var(--ds-touch-target);
+    padding-inline: var(--ds-space-4);
+    border: var(--ds-border-width) solid; // sin color: el del borde por omisión es el del texto
+    border-radius: var(--ds-radius-pill);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+}

@@ -453,7 +453,7 @@ describe('CategoriesPage', () => {
     it('con subcategorías no se ofrece confirmar: lo explica', async () => {
       const { act, row } = await render();
       await act('hombre', 'Eliminar');
-      expect(row('hombre').textContent).toContain('Primero mové o eliminá sus subcategorías');
+      expect(row('hombre').textContent).toContain('Primero mueve o elimina sus subcategorías');
       expect(commands.deleteCategory).not.toHaveBeenCalled();
     });
 

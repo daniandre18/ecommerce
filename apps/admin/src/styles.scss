@@ -1,30 +1,27 @@
 @use '@angular/cdk';
 @use '@angular/material' as mat;
+// El catálogo de tokens del panel (003): define `--ds-*` en :root.
+@use 'styles/tokens';
+// El tema de Material, con sus roles de color apuntando al catálogo (T021).
+@use 'styles/theme';
+// El tratamiento de los componentes de Material y las clases de patrón (T022, T023).
+@use 'styles/components';
+// Los estilos del componente raíz, fuera del JavaScript inicial (T017).
+@use 'styles/shell';
 
 // Clase `cdk-visually-hidden`: texto solo para lectores de pantalla. La usan los estados de @ecommerce/ui.
 @include cdk.a11y-visually-hidden();
 
-// Tipografía del sistema en lugar de una fuente web: evita una descarga bloqueante antes del
-// primer render (principio VIII, carga percibida) y se lee bien en cualquier dispositivo.
-$system-font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-
+// Los dos esquemas del sistema operativo, sin código de arranque (FR-002, FR-034).
 html {
   color-scheme: light dark;
-
-  @include mat.theme(
-    (
-      color: mat.$azure-palette,
-      typography: $system-font,
-      density: 0,
-    )
-  );
 }
 
 body {
   margin: 0;
-  background: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-large);
+  background: var(--ds-surface-page);
+  color: var(--ds-text-primary);
+  font: var(--ds-type-body);
 }
 
 // La cruz de un chip mide 18 px: esta zona invisible de 48 px, como la de los botones de Material, la
@@ -39,10 +36,38 @@ body {
   transform: translate(-50%, -50%);
 }
 
-// Foco siempre visible con teclado (WCAG 2.4.7 y 2.4.11).
+// Foco siempre visible con teclado (WCAG 2.4.7 y 2.4.11), con un anillo de dos tonos (técnica C40, FR-023):
+// el trazo claro es el `outline`, separado del control; el oscuro, una sombra que cubre la separación, el
+// trazo claro y su propio ancho. Entre los dos hay 17,26:1, así que sobre cualquier fondo uno de los dos
+// contrasta. Ninguno ocupa espacio. En colores forzados el navegador quita la sombra y deja el `outline`.
+@mixin focus-ring {
+  outline: var(--ds-focus-ring-width) solid var(--ds-focus-ring-inner);
+  outline-offset: var(--ds-focus-ring-offset);
+  box-shadow: 0 0 0 calc(var(--ds-focus-ring-offset) + var(--ds-focus-ring-width) + var(--ds-focus-ring-outer-width)) var(--ds-focus-ring-outer);
+}
+
 :focus-visible {
-  outline: 3px solid var(--mat-sys-primary);
-  outline-offset: 2px;
+  @include focus-ring;
+}
+
+// Los botones y las opciones de menú de Material se quitan el `outline` (`.mdc-button { outline: none }`), y
+// en colores forzados le ponen a todo botón un `outline` de 1 px, tenga foco o no. Su hoja llega después,
+// así que a igual especificidad ganaba: el foco era solo el velo, y en colores forzados no se distinguía
+// un botón con foco de uno sin él. `html` sube la regla un nivel.
+html .mat-mdc-button-base:focus-visible,
+html .mat-mdc-menu-item:focus-visible {
+  @include focus-ring;
+}
+
+// Dentro de un campo de Material el foco es la línea del campo, en primario o en el color del error y de
+// 2 px (T062): su contraste contra el fondo del campo está en el inventario (`/linea-de-foco`). El anillo se
+// dibujaba alrededor del control nativo, dentro del campo, y cruzaba la etiqueta flotante; `main` ya tenía
+// ese recuadro, de 3 px de primario. En colores forzados el foco del campo es el de Material: un contorno
+// discontinuo de 3 px alrededor del campo entero.
+.mat-mdc-form-field .mat-mdc-input-element:focus-visible,
+.mat-mdc-form-field .mat-mdc-select:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 // Respetar la preferencia de movimiento reducido (WCAG 2.3.3).

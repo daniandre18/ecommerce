@@ -23,10 +23,10 @@ export function parseMoneyInput(text: string, currency: CurrencyCode): Parsed<Mo
   const digits = fractionDigits(currency);
   if (digits === 0 && GROUPED.test(trimmed)) return wholeAmount(trimmed.replaceAll(/[.,]/g, ''), currency);
   const match = AMOUNT.exec(trimmed);
-  if (!match) return { ok: false, message: 'Escribí solo números, con coma decimal' };
+  if (!match) return { ok: false, message: 'Escribe solo números, con coma decimal' };
   const [, whole = '', fraction = ''] = match;
   if (fraction.length > digits) {
-    return { ok: false, message: digits === 0 ? 'Esta moneda no lleva decimales' : `Usá hasta ${digits} decimales` };
+    return { ok: false, message: digits === 0 ? 'Esta moneda no lleva decimales' : `Usa hasta ${digits} decimales` };
   }
   return wholeAmount(whole + fraction.padEnd(digits, '0'), currency);
 }
@@ -50,7 +50,7 @@ export function formatMoneyInput(value: Money | null): string {
 export function parseStockInput(text: string): Parsed<StockLevel> {
   const trimmed = text.trim();
   if (trimmed === '') return { ok: true, value: stockUndefined() };
-  if (!/^\d+$/.test(trimmed)) return { ok: false, message: 'Escribí un número entero, o dejalo vacío si no está definido' };
+  if (!/^\d+$/.test(trimmed)) return { ok: false, message: 'Escribe un número entero, o déjalo vacío si no está definido' };
   const quantity = Number(trimmed);
   if (!Number.isSafeInteger(quantity)) return { ok: false, message: 'La cantidad es demasiado grande' };
   return { ok: true, value: stockQuantity(quantity) };

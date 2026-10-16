@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { call, idTokenOf, MULTI, OWNER, productAsOwner, signIn } from './support';
 
 /** Lo que tarda en llegar cada respuesta de Firestore: suficiente para ver el esqueleto. */
@@ -46,7 +46,11 @@ async function loadSlowly(page: Page, url: string, ready: (page: Page) => Promis
   await expect(page.locator('ui-skeleton')).toHaveCount(0);
   // Lo que se acomoda justo después de llegar el contenido también cuenta.
   await page.waitForTimeout(300);
-  return layoutShift(page);
+  const shift = await layoutShift(page);
+  // El valor medido queda en el reporte, no solo si pasó: así se compara de una tarea a la siguiente.
+  test.info().annotations.push({ type: 'CLS', description: shift.toFixed(4) });
+  console.log(`CLS ${test.info().title} [${test.info().project.name}]: ${shift.toFixed(4)}`);
+  return shift;
 }
 
 /** "0 saltos perceptibles" (SC-009): por debajo de esto no se nota; 0,1 ya es el límite de "bueno". */
@@ -61,7 +65,7 @@ test.describe('estados de carga', () => {
   });
 
   test('catálogo', async ({ page }) => {
-    const shift = await loadSlowly(page, '/t/t1/catalog', (p) => expect(p.getByRole('heading', { name: 'Catálogo' })).toBeVisible());
+    const shift = await loadSlowly(page, '/t/t1/catalog', (p) => expect(p.getByRole('heading', { name: 'Catálogo', exact: true })).toBeVisible());
     expect(shift).toBeLessThan(IMPERCEPTIBLE);
   });
 
@@ -72,7 +76,7 @@ test.describe('estados de carga', () => {
   });
 
   test('equipo', async ({ page }) => {
-    const shift = await loadSlowly(page, '/t/t1/team', (p) => expect(p.getByRole('heading', { name: 'Roles' })).toBeVisible());
+    const shift = await loadSlowly(page, '/t/t1/team', (p) => expect(p.getByRole('heading', { name: 'Roles', exact: true })).toBeVisible());
     expect(shift).toBeLessThan(IMPERCEPTIBLE);
   });
 
@@ -82,7 +86,7 @@ test.describe('estados de carga', () => {
   });
 
   test('bitácora', async ({ page }) => {
-    const shift = await loadSlowly(page, '/t/t1/audit', (p) => expect(p.getByLabel('Tipo de evento')).toBeVisible());
+    const shift = await loadSlowly(page, '/t/t1/audit', (p) => expect(p.getByLabel('Tipo de evento', { exact: true })).toBeVisible());
     expect(shift).toBeLessThan(IMPERCEPTIBLE);
   });
 
@@ -90,7 +94,7 @@ test.describe('estados de carga', () => {
   test('árbol de categorías', async ({ page }) => {
     const name = `Carga ${Date.now()}`;
     await rootCategory(name);
-    const shift = await loadSlowly(page, '/t/t1/categories', (p) => expect(p.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible());
+    const shift = await loadSlowly(page, '/t/t1/categories', (p) => expect(p.getByRole('button', { name: `Acciones de «${name}»`, exact: true })).toBeVisible());
     expect(shift).toBeLessThan(IMPERCEPTIBLE);
   });
 });
@@ -101,8 +105,8 @@ test.describe('vacío y error', () => {
     await page.goto('/login');
     await signIn(page, MULTI);
     await page.getByRole('link', { name: /Comercio Dos/ }).click();
-    await expect(page.getByText('Todavía no hay productos')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Crear producto' })).toBeVisible();
+    await expect(page.getByText('Todavía no hay productos', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Crear producto', exact: true })).toBeVisible();
   });
 
   // 002, Polish (T097): el editor del árbol.
@@ -110,30 +114,59 @@ test.describe('vacío y error', () => {
     await page.goto('/login');
     await signIn(page, MULTI);
     await page.goto('/t/t2/categories');
-    await expect(page.getByText('Todavía no hay categorías')).toBeVisible();
-    await expect(page.getByText('Creá la primera para empezar a organizar tu catálogo.')).toBeVisible();
+    await expect(page.getByText('Todavía no hay categorías', { exact: true })).toBeVisible();
+    await expect(page.getByText('Crea la primera para empezar a organizar tu catálogo.', { exact: true })).toBeVisible();
   });
 
-  test('el árbol que no llega del servidor da error con reintento, no un árbol vacío', async ({ page, context }) => {
+  /** Abre Categorías sin red, con la vista ya descargada: lo que falta son los datos, no el código. */
+  async function treeWithoutNetwork(page: Page, context: BrowserContext): Promise<string> {
     const name = `Vuelve ${Date.now()}`;
     await rootCategory(name);
     await page.goto('/login');
     await signIn(page, OWNER);
-    // La vista ya descargada: sin red, lo que falta son los datos, no el código.
     const link = page.getByRole('link', { name: 'Categorías', exact: true });
     await link.click();
-    await expect(page.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible();
+    await expect(page.getByRole('button', { name: `Acciones de «${name}»`, exact: true })).toBeVisible();
     await page.getByRole('link', { name: 'Catálogo', exact: true }).click();
     await expect(page).toHaveURL(/\/t\/t1\/catalog$/);
 
     await context.setOffline(true);
     await link.click();
-    await expect(page.getByText('No pudimos cargar las categorías')).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText('Todavía no hay categorías')).toHaveCount(0);
+    await expect(page.getByText('No pudimos cargar las categorías', { exact: true })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Todavía no hay categorías', { exact: true })).toHaveCount(0);
+    return name;
+  }
+
+  // El reintento se pide SIN red. Con red, la vista se recupera sola apenas el servidor responde
+  // (`listen.ts`, T096 de la 001): el error sale del DOM unos 20 ms después de reconectar, y un clic
+  // en "Reintentar" después de `setOffline(false)` compite con esa recuperación. Si pierde, el botón
+  // ya no existe y el clic espera hasta el tope (la flaky que destapó T001 de la 003). Sin red, el
+  // error se queda hasta el clic.
+  //
+  // Y el clic tiene que dar una señal: al recargar, `resource` conserva el error anterior hasta que
+  // llega el resultado nuevo, y sin red eso son los 10 s de `OFFLINE_AFTER_MS` sin ningún cambio en la
+  // vista (el defecto que encontró esta misma investigación). Mientras reintenta, el botón lo dice.
+  test('el árbol que no llega del servidor da error con reintento, no un árbol vacío', async ({ page, context }) => {
+    const name = await treeWithoutNetwork(page, context);
+
+    await page.getByRole('button', { name: 'Reintentar', exact: true }).click();
+    const retrying = page.getByRole('button', { name: 'Reintentando…', exact: true });
+    await expect(retrying).toBeVisible();
+    await expect(retrying).toHaveAttribute('aria-disabled', 'true');
+    await expect(retrying).toBeFocused();
+    // Y le llega a un lector de pantalla: el `alert` no cambia al reintentar (T057 de la 003).
+    await expect(page.locator('.cdk-live-announcer-element')).toHaveText('Reintentando…');
 
     await context.setOffline(false);
-    await page.getByRole('button', { name: 'Reintentar' }).click();
-    await expect(page.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('button', { name: `Acciones de «${name}»`, exact: true })).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('al volver la red, el árbol se recupera solo, sin reintentar', async ({ page, context }) => {
+    const name = await treeWithoutNetwork(page, context);
+
+    await context.setOffline(false);
+    await expect(page.getByRole('button', { name: `Acciones de «${name}»`, exact: true })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('No pudimos cargar las categorías', { exact: true })).toHaveCount(0);
   });
 
   test('un comercio sin acceso lo dice y ofrece reintentar', async ({ page }) => {
@@ -141,7 +174,7 @@ test.describe('vacío y error', () => {
     await signIn(page, OWNER);
     await expect(page).toHaveURL(/\/t\/t1\/catalog$/);
     await page.goto('/t/t2/catalog');
-    await expect(page.getByText('No pudimos abrir este comercio')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Reintentar' })).toBeVisible();
+    await expect(page.getByText('No pudimos abrir este comercio', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Reintentar', exact: true })).toBeVisible();
   });
 });

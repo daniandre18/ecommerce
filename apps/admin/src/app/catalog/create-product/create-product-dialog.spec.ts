@@ -48,7 +48,7 @@ describe('CreateProductDialog', () => {
     const { root, submit } = await render();
     await submit();
     expect(commands.createProduct).not.toHaveBeenCalled();
-    expect(root.textContent).toContain('Ingresá un nombre');
+    expect(root.textContent).toContain('Ingresa un nombre');
   });
 
   it('crea el producto y devuelve su id al cerrar', async () => {

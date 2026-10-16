@@ -32,7 +32,7 @@ import { VariantRow } from './variant-row';
     }
     <ul>
       @for (row of rows(); track row.variant.id) {
-        <li>
+        <li class="ds-table-row">
           <app-variant-row
             [tenantId]="tenantId()"
             [productId]="product().id"
@@ -54,11 +54,6 @@ import { VariantRow } from './variant-row';
     }
   `,
   styles: `
-    h2 {
-      margin: 0 0 8px;
-      font: var(--mat-sys-title-large);
-    }
-
     ul {
       margin: 0;
       padding: 0;

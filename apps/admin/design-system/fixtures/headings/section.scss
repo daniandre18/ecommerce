@@ -1,0 +1,10 @@
+// Fixture de headings.spec.ts: solo el margen propio de la sección es válido; el tipo no.
+h2 {
+  margin: 0 0 var(--ds-space-1);
+}
+
+.card h2 {
+  font-weight: 700;
+}
+
+// h2 { font: var(--ds-type-section-title); }

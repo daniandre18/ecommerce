@@ -14,11 +14,11 @@ test('la Propietaria investiga los cambios de un producto: quién, cuándo, ante
 
   await page.goto(url);
   await signIn(page, OWNER);
-  await page.getByRole('link', { name: 'Ver sus cambios en la bitácora' }).click();
+  await page.getByRole('link', { name: 'Ver sus cambios en la bitácora', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/t/t1/audit\\?product=${productId}$`));
   await expect(page.locator('.product')).toContainText(`Bolso ${run}`);
 
-  const entries = page.getByRole('list', { name: 'Entradas de la bitácora' }).getByRole('listitem');
+  const entries = page.getByRole('list', { name: 'Entradas de la bitácora', exact: true }).getByRole('listitem');
   await expect(entries).toHaveCount(2);
   await expect(entries.nth(0)).toContainText(`Cambio de precio · Bolso ${run} · Única`);
   await expect(entries.nth(0)).toContainText('Propietaria de t1');
@@ -28,7 +28,7 @@ test('la Propietaria investiga los cambios de un producto: quién, cuándo, ante
   await expect(entries.nth(1)).toContainText('Catálogo de t1');
   await expect(entries.nth(1)).toContainText('Sin definir');
 
-  await page.getByLabel('Tipo de evento').selectOption({ label: 'Existencias' });
+  await page.getByLabel('Tipo de evento', { exact: true }).selectOption({ label: 'Existencias' });
   await expect(page).toHaveURL(/type=stock\.adjusted/);
   await expect(entries).toHaveCount(1);
   await expect(entries.nth(0)).toContainText('Ajuste de existencias');
@@ -72,8 +72,8 @@ test('una entrada de la bitácora no se edita ni se borra, ni siquiera siendo Pr
 test('el rol de Catálogo no ve la bitácora', async ({ page }) => {
   await page.goto('/t/t1/catalog');
   await signIn(page, CATALOG);
-  await expect(page.getByRole('link', { name: 'Catálogo' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Bitácora' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Catálogo', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Bitácora', exact: true })).toHaveCount(0);
   await page.goto('/t/t1/audit');
-  await expect(page.getByText('Solo el Propietario consulta la bitácora')).toBeVisible();
+  await expect(page.getByText('Solo el Propietario consulta la bitácora', { exact: true })).toBeVisible();
 });

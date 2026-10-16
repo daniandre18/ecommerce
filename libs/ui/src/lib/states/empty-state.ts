@@ -21,21 +21,21 @@ import { Component, input } from '@angular/core';
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
-      padding: 32px 16px;
+      gap: var(--ds-space-2);
+      padding: var(--ds-space-8) var(--ds-space-4);
       text-align: center;
-      color: var(--mat-sys-on-surface-variant);
+      color: var(--ds-text-secondary);
     }
 
     .heading {
       margin: 0;
-      font: var(--mat-sys-title-medium);
-      color: var(--mat-sys-on-surface);
+      font: var(--ds-type-subtitle);
+      color: var(--ds-text-primary);
     }
 
     .message {
       margin: 0;
-      font: var(--mat-sys-body-medium);
+      font: var(--ds-type-body);
     }
   `,
 })

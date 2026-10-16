@@ -25,7 +25,7 @@ import { MyTenants } from '../my-tenants';
       cambia el alto del encabezado ni empuja la vista (SC-009). Las acciones de la cuenta van en un
       menú para que no compitan por el ancho de una pantalla de 360 px.
     -->
-    <header>
+    <header class="ds-bar">
       <p class="tenant">{{ name() }}</p>
       <button matButton type="button" class="account" [matMenuTriggerFor]="account">Cuenta</button>
       <mat-menu #account="matMenu">
@@ -46,16 +46,18 @@ import { MyTenants } from '../my-tenants';
     </header>
 
     @if (offline()) {
-      <!-- Sin red no se sabe si hay acceso: decir "no tenés acceso" sería presentar un error como un hecho (FR-037). -->
+      <!-- Sin red no se sabe si hay acceso: decir "no tienes acceso" sería presentar un error como un hecho (FR-037). -->
       <ui-error-state
         heading="No pudimos conectarnos"
-        message="Revisá tu conexión. Cuando vuelva, el comercio se abre solo."
+        message="Revisa tu conexión. Cuando vuelva, el comercio se abre solo."
+        [retrying]="tenant.status() === 'reloading' || memberAccess.status() === 'reloading'"
         (retry)="tenant.reload(); memberAccess.reload()"
       />
     } @else if (noAccess()) {
       <ui-error-state
         heading="No pudimos abrir este comercio"
-        message="Puede que no exista o que no tengas acceso. Revisá el código o pedile acceso a su Propietario."
+        message="Puede que no exista o que no tengas acceso. Revisa el código o pídele acceso a su Propietario."
+        [retrying]="tenant.status() === 'reloading' || memberAccess.status() === 'reloading'"
         (retry)="tenant.reload(); memberAccess.reload()"
       />
     } @else {
@@ -63,18 +65,22 @@ import { MyTenants } from '../my-tenants';
     }
   `,
   styles: `
+    /* La barra ocupa también el relleno de la página: así se lee como barra, y su contenido conserva
+       el ancho que tenía antes de tener fondo, que en 360 px es justo el que necesita la navegación. */
     header {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       grid-template-rows: 48px 48px;
       align-items: center;
-      column-gap: 8px;
-      margin-bottom: 8px;
+      column-gap: var(--ds-space-2);
+      margin-inline: calc(-1 * var(--ds-space-4));
+      margin-bottom: var(--ds-space-4);
+      padding-inline: var(--ds-space-4);
     }
 
     .tenant {
       margin: 0;
-      font: var(--mat-sys-title-medium);
+      font: var(--ds-type-section-title);
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
@@ -84,10 +90,11 @@ import { MyTenants } from '../my-tenants';
       grid-column: 1 / -1;
       display: flex;
       flex-wrap: nowrap;
-      margin-inline: -12px;
+      margin-inline: calc(-1 * var(--ds-space-3));
     }
 
     .active {
+      color: var(--ds-text-link);
       text-decoration: underline;
       text-underline-offset: 4px;
     }
@@ -122,7 +129,7 @@ export class TenantShell {
   protected readonly canSwitch = computed(() => (this.myTenants.hasValue() ? this.myTenants.value().length : 0) > 1);
   /** El comercio, para las vistas hijas (`CURRENT_TENANT`). */
   readonly current = computed(() => (this.tenant.hasValue() ? (this.tenant.value() ?? undefined) : undefined));
-  /** Qué puede hacer la cuenta acá, para las vistas hijas (`CURRENT_ACCESS`); `undefined` mientras carga. */
+  /** Qué puede hacer la cuenta aquí, para las vistas hijas (`CURRENT_ACCESS`); `undefined` mientras carga. */
   readonly access = computed(() => (this.memberAccess.hasValue() ? this.memberAccess.value() : undefined));
   /** Mientras carga, el nombre queda vacío y no empuja nada: el encabezado ya tiene su alto. */
   protected readonly name = computed(() => this.current()?.name ?? '');

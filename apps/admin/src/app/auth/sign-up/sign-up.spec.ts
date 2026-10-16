@@ -54,8 +54,8 @@ describe('SignUp', () => {
     await fill('Contraseña', '123');
     await submit();
     expect(session.signUps).toEqual([]);
-    expect(root.textContent).toContain('Escribí tu nombre');
-    expect(root.textContent).toContain('Usá al menos 6 caracteres');
+    expect(root.textContent).toContain('Escribe tu nombre');
+    expect(root.textContent).toContain('Usa al menos 6 caracteres');
   });
 
   it('si el correo ya tiene cuenta, invita a iniciar sesión conservando adónde volver', async () => {

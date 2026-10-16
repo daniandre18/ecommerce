@@ -144,7 +144,7 @@ function parseMeasures(m: Measures): { weightGrams: number | null; dimensionsMm:
   const sides = [amount(m.length, 10), amount(m.width, 10), amount(m.height, 10)];
   if (sides.includes('invalid')) return 'Cada dimensión tiene que ser un número mayor que cero.';
   const filled = sides.filter((side) => side !== null);
-  if (filled.length !== 0 && filled.length !== 3) return 'Completá largo, ancho y alto, o dejá los tres vacíos.';
+  if (filled.length !== 0 && filled.length !== 3) return 'Completa largo, ancho y alto, o deja los tres vacíos.';
   const [length, width, height] = sides as (number | null)[];
   return {
     weightGrams: weight,

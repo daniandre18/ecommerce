@@ -50,7 +50,7 @@ import { commandErrorMessage } from '../../shared/command-errors';
   `,
   styles: `
     ul {
-      margin: 0 0 16px;
+      margin: 0 0 var(--ds-space-4);
       padding: 0;
       list-style: none;
     }
@@ -58,28 +58,28 @@ import { commandErrorMessage } from '../../shared/command-errors';
     a {
       display: flex;
       flex-direction: column;
-      min-height: 48px;
+      min-height: var(--ds-touch-target);
       justify-content: center;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--mat-sys-outline-variant);
+      padding: var(--ds-space-2) 0;
+      border-bottom: var(--ds-border-width) solid var(--ds-border-subtle);
       color: inherit;
       text-decoration: none;
     }
 
     .name {
-      font: var(--mat-sys-title-small);
+      font: var(--ds-type-label);
     }
 
     .meta {
-      color: var(--mat-sys-on-surface-variant);
-      font: var(--mat-sys-body-medium);
+      color: var(--ds-text-secondary);
+      font: var(--ds-type-body);
     }
 
     form {
       display: flex;
       flex-wrap: wrap;
       align-items: flex-start;
-      gap: 8px;
+      gap: var(--ds-space-2);
     }
 
     form mat-form-field {
@@ -87,11 +87,11 @@ import { commandErrorMessage } from '../../shared/command-errors';
     }
 
     form button {
-      margin-top: 8px;
+      margin-top: var(--ds-space-2);
     }
 
     .failure {
-      color: var(--mat-sys-error);
+      color: var(--ds-status-error);
     }
 
     .failure:empty {

@@ -1,0 +1,16 @@
+// Fixture de contrast.spec.ts: un catálogo chico con pares que pasan y pares que tienen que fallar.
+:root {
+  --ds-surface-page: light-dark(#f6f7ff, #13131a);
+  --ds-surface-card: light-dark(#ffffff, #23232d);
+  --ds-surface-bar: light-dark(#eef0ff, #1b1b24);
+  --ds-surface-overlay: light-dark(#ffffff, #23232d);
+  --ds-action-accent: light-dark(#ffc260, #ffc260);
+  --ds-text-primary: light-dark(#4a4a4a, #ececf1);
+  --ds-text-faint: light-dark(#bbbbbb, #44444c);
+  --ds-text-orphan: light-dark(#000000, #ffffff);
+  --ds-text-thin: light-dark(#3c5afe, #3c5afe);
+  --ds-focus-ring-inner: #ffffff;
+  --ds-focus-ring-outer: #10173f;
+  --ds-gray-a: #767676;
+  --ds-gray-b: #e0e0e0;
+}

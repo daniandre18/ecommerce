@@ -2,13 +2,15 @@
   display: block;
 }
 
+// Un `h3` es el nivel `subtitle`: peso y color secundario lo separan del texto (FR-015).
 h3 {
-  margin: 0 0 8px;
-  font: var(--mat-sys-title-medium);
+  margin: 0 0 var(--ds-space-2);
+  font: var(--ds-type-subtitle);
+  color: var(--ds-text-secondary);
 }
 
 ul {
-  margin: 0 0 8px;
+  margin: 0 0 var(--ds-space-2);
   padding: 0;
   list-style: none;
 }
@@ -16,8 +18,8 @@ ul {
 li {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: var(--ds-space-2);
+  margin-bottom: var(--ds-space-2);
 }
 
 .alt {
@@ -27,18 +29,18 @@ li {
 }
 
 .empty {
-  color: var(--mat-sys-on-surface-variant);
+  color: var(--ds-text-secondary);
 }
 
 form {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--ds-space-2);
 }
 
 .preview {
-  border-radius: 8px;
+  border-radius: var(--ds-radius-md);
   object-fit: cover;
 }
 
@@ -54,11 +56,11 @@ mat-progress-bar,
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: var(--ds-space-2);
 }
 
 .failure {
-  color: var(--mat-sys-error);
+  color: var(--ds-status-error);
 }
 
 .failure:empty {

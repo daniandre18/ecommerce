@@ -15,7 +15,7 @@ test.describe('sin conexión', () => {
     await page.evaluate((url) => history.pushState({}, '', url), second.url);
     await page.evaluate(() => dispatchEvent(new PopStateEvent('popstate')));
     await expect(page.getByText(/^No pudimos cargar/).first()).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText('Variantes (0)')).toHaveCount(0);
+    await expect(page.getByText('Variantes (0)', { exact: true })).toHaveCount(0);
 
     await context.setOffline(false);
     await expect(page.getByRole('heading', { level: 1, name: /^Sin red/ })).toBeVisible({ timeout: 15_000 });
@@ -27,7 +27,7 @@ test.describe('sin conexión', () => {
     await signIn(page, OWNER);
     await expect(page).toHaveURL(/\/t\/t1\/catalog$/);
     // El enlace aparece cuando llega el acceso de la cuenta: cortar la red antes dejaría sin él.
-    const audit = page.getByRole('link', { name: 'Bitácora' });
+    const audit = page.getByRole('link', { name: 'Bitácora', exact: true });
     await expect(audit).toBeVisible();
 
     await context.setOffline(true);
@@ -36,7 +36,7 @@ test.describe('sin conexión', () => {
     await expect(notice).toBeVisible();
 
     await context.setOffline(false);
-    await notice.getByRole('button', { name: 'Reintentar' }).click();
+    await notice.getByRole('button', { name: 'Reintentar', exact: true }).click();
     await expect(page).toHaveURL(/\/t\/t1\/audit$/);
     await expect(notice).toHaveCount(0);
   });

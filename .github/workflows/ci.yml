@@ -1,9 +1,10 @@
 # Compuertas del principio X de la constitución. Un merge se rechaza si falla cualquiera de estos
 # trabajos, sin excepción por plazos.
 #
-# IMPORTANTE: este archivo no bloquea nada por sí solo. Para que un merge se rechace, los seis
+# IMPORTANTE: este archivo no bloquea nada por sí solo. Para que un merge se rechace, los siete
 # trabajos tienen que estar marcados como "required status checks" en la protección de la rama
-# principal (Settings → Branches → Branch protection rules).
+# principal (Settings → Branches → Branch protection rules). De la e2e se marca `e2e`, que reúne a
+# sus dos mitades; las mitades (`e2e (1/2)`, `e2e (2/2)`) no hace falta marcarlas.
 name: ci
 
 on:
@@ -30,17 +31,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-workspace
-      - run: npx nx run-many -t lint --skip-nx-cache
+      # Con la salida de cada tarea a la vista: el lint del panel también corre la compuerta de valores
+      # literales (003), y su resumen tiene que poder leerse en el log aunque pase.
+      - run: npx nx run-many -t lint --skip-nx-cache --output-style=stream
 
   # La misma frontera, verificada sobre lo que llega al navegador (T103 de la 002): construye el panel
   # de producción y falla si algún fragmento trae código de servidor de application. La regla de
   # módulos cubre los imports; esta, cualquier camino que se le escape.
+  # Y el tamaño de la carga inicial contra la rama base al integrar (FR-034, FR-035 de la 003): 0 B
+  # más de JavaScript y hasta 10 KB comprimidos más de estilos. La base se construye en un worktree.
   bundle-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: ./.github/actions/setup-workspace
-      - run: npx nx run admin:bundle-check --skip-nx-cache
+      - run: npx nx run admin:bundle-check --skip-nx-cache --base=${{ github.event.pull_request.base.sha || github.event.before }}
 
   # Vitest no chequea tipos: las pruebas pueden pasar con el código roto. Por eso va aparte.
   typecheck:
@@ -69,9 +76,9 @@ jobs:
       - uses: ./.github/actions/setup-emulators
         with:
           firebase-tools-version: ${{ env.FIREBASE_TOOLS_VERSION }}
+      # `firebase` viene de setup-emulators, en la versión de FIREBASE_TOOLS_VERSION y sin bajarlo.
       - run: >
-          npx --yes firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}
-          emulators:exec --only firestore,storage --project demo-ecommerce "npm run test:rules"
+          firebase emulators:exec --only firestore,storage --project demo-ecommerce "npm run test:rules"
 
   # Atomicidad de la bitácora en ambos sentidos (FR-030, FR-033) y sembrador, contra los emuladores.
   integration:
@@ -83,6 +90,60 @@ jobs:
         with:
           firebase-tools-version: ${{ env.FIREBASE_TOOLS_VERSION }}
       - run: >
-          npx --yes firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}
-          emulators:exec --only auth,firestore,storage --project demo-ecommerce
+          firebase emulators:exec --only auth,firestore,storage --project demo-ecommerce
           "npm run test:infrastructure && npm run test:functions && npm run test:tools"
+
+  # La suite e2e completa del panel, contra los emuladores (FR-033a de la 003): 360 px sin desborde,
+  # zonas táctiles de 44 px, cero saltos de diseño, axe y los flujos. El rendimiento
+  # (`admin-e2e:perf`) queda fuera: en máquinas compartidas sus tiempos dan ruido, y un umbral que
+  # falla al azar enseña a ignorar la compuerta. Se corre antes de integrar.
+  # La e2e en dos mitades, en paralelo y cada una con sus propios emuladores: en un solo runner pasaba
+  # los 9 minutos (research §15 de la 003). Se reparten por duración medida en CI, no por cantidad:
+  # `apps/admin-e2e/shards.ts` lista la mitad 1, y la 2 es todo lo demás (`E2E_SHARD`).
+  e2e-shard:
+    name: e2e (${{ matrix.shard }}/2)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-workspace
+      - uses: ./.github/actions/setup-emulators
+        with:
+          firebase-tools-version: ${{ env.FIREBASE_TOOLS_VERSION }}
+      # El `webServer` de playwright.config.ts levanta los emuladores con `firebase`, no con `npx`: lo
+      # deja en el PATH setup-emulators, en la misma versión que el resto de los trabajos.
+      - run: npx playwright install --with-deps chromium
+      # GitHub define CI=true: la configuración activa forbidOnly, dos reintentos y el reportero github.
+      - run: npx nx run admin-e2e:e2e --skip-nx-cache
+        env:
+          E2E_SHARD: ${{ matrix.shard }}
+      # La duración de cada prueba en el runner, siempre: con ella se reparten las mitades (research §15).
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-durations-${{ matrix.shard }}
+          path: apps/admin-e2e/reports/
+          if-no-files-found: ignore
+          retention-days: 30
+      # Las trazas del primer reintento, para diagnosticar un fallo sin reproducirlo.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-test-results-${{ matrix.shard }}
+          path: |
+            apps/admin-e2e/test-results/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # El check obligatorio sigue siendo `e2e`: pasa solo si pasaron las dos mitades. Corre siempre
+  # (`always()`), para que una mitad que falla o se cancela deje `e2e` en rojo y no en "omitido".
+  e2e:
+    needs: e2e-shard
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ needs.e2e-shard.result }}" = "success"

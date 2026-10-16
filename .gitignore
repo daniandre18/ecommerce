@@ -52,3 +52,9 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Worktree de la rama base que arma `admin:bundle-check` (T016 de la 003); se borra al terminar.
+.bundle-base/
+
+# Duraciones de la e2e en CI (reporte JSON de Playwright)
+apps/admin-e2e/reports/

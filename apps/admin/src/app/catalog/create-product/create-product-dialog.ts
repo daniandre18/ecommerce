@@ -61,7 +61,7 @@ const PREVIEW_CANDIDATES = 20;
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button matButton type="button" mat-dialog-close>Cancelar</button>
-        <button matButton="filled" type="submit" [disabled]="productForm().submitting()">Crear</button>
+        <button matButton="filled" class="ds-primary-action" type="submit" [disabled]="productForm().submitting()">Crear</button>
       </mat-dialog-actions>
     </form>
   `,
@@ -75,8 +75,8 @@ const PREVIEW_CANDIDATES = 20;
     }
 
     .failure {
-      color: var(--mat-sys-error);
-      font: var(--mat-sys-body-medium);
+      color: var(--ds-status-error);
+      font: var(--ds-type-body);
     }
   `,
 })
@@ -91,7 +91,7 @@ export class CreateProductDialog {
 
   protected readonly draft = signal({ name: '', description: '' });
   protected readonly productForm = form(this.draft, (path) => {
-    required(path.name, { message: 'Ingresá un nombre' });
+    required(path.name, { message: 'Ingresa un nombre' });
   });
   protected readonly failure = signal('');
 

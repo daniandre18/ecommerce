@@ -31,7 +31,7 @@ interface Row {
     <form novalidate (submit)="$event.preventDefault(); confirm()">
       <mat-dialog-content>
         <p>
-          Estas variantes ya tienen datos cargados. Elegí su valor en la opción nueva y conservan su SKU, sus importes, sus
+          Estas variantes ya tienen datos cargados. Elige su valor en la opción nueva y conservan su SKU, sus importes, sus
           existencias y sus imágenes.
         </p>
 
@@ -39,7 +39,7 @@ interface Row {
           <mat-form-field class="all">
             <mat-label>{{ option.name }}: aplicar a todas</mat-label>
             <select #all matNativeControl (change)="applyToAll(option.id, all.value)">
-              <option value="">Elegí…</option>
+              <option value="">Elige…</option>
               @for (value of option.values; track value.id) {
                 <option [value]="value.id">{{ value.label }}</option>
               }
@@ -54,7 +54,7 @@ interface Row {
               <mat-form-field>
                 <mat-label>{{ data.options[choiceIndex]?.name }}</mat-label>
                 <select matNativeControl [formField]="choice.valueId">
-                  <option value="">Elegí…</option>
+                  <option value="">Elige…</option>
                   @for (value of data.options[choiceIndex]?.values; track value.id) {
                     <option [value]="value.id">{{ value.label }}</option>
                   }
@@ -69,20 +69,20 @@ interface Row {
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button matButton type="button" mat-dialog-close>Cancelar</button>
-        <button matButton="filled" type="submit">Confirmar</button>
+        <button matButton="filled" class="ds-primary-action" type="submit">Confirmar</button>
       </mat-dialog-actions>
     </form>
   `,
   styles: `
     fieldset {
-      border: 1px solid var(--mat-sys-outline-variant);
-      border-radius: 8px;
-      margin: 0 0 8px;
-      padding: 8px 12px 0;
+      border: var(--ds-border-width) solid var(--ds-border-subtle);
+      border-radius: var(--ds-radius-md);
+      margin: 0 0 var(--ds-space-2);
+      padding: var(--ds-space-2) var(--ds-space-3) 0;
     }
 
     legend {
-      font: var(--mat-sys-title-small);
+      font: var(--ds-type-label);
     }
 
     mat-form-field {
@@ -104,7 +104,7 @@ export class AssignOptionDialog {
   protected readonly assignForm = form(this.model, (path) => {
     applyEach(path.rows, (row) => {
       applyEach(row.choices, (choice) => {
-        required(choice.valueId, { message: 'Elegí un valor' });
+        required(choice.valueId, { message: 'Elige un valor' });
       });
     });
   });

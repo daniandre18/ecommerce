@@ -30,6 +30,19 @@ panel; no cambia qué hace ni cómo está organizada ninguna pantalla.
   que la persona elija esquema queda **fuera**: la spec nunca lo incluyó y ahora lo excluye de forma
   explícita (Fuera de Alcance).
 
+### Sesión 2026-10-10
+
+- **Q: ¿Las e2e pasan a ser compuerta en CI?** → A: **sí, la suite completa, como primera tarea de
+  la feature y antes de tocar ningún token** (FR-033a). Esta feature cambia el estilo de todas las
+  vistas a la vez, y el 50 % de sus criterios automáticos (SC-003 a SC-006) se verifica solo en las
+  e2e. Es la primera vez que el riesgo más probable, una regresión visual en alguna vista, cae justo
+  donde no hay compuerta. Diez minutos por PR cuestan menos que descubrirlo en producción, y la
+  inversión queda para las features siguientes. Se descarta llevar solo las e2e de esta feature: las
+  vistas que cambian de estilo son todas, una selección parcial deja fuera regresiones que esta
+  feature puede causar, y después nadie recuerda que era parcial. Las pruebas de **rendimiento**
+  siguen en local: en máquinas compartidas dan ruido, y un umbral que falla al azar enseña a
+  ignorar la compuerta.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - El panel tiene jerarquía visual: se sabe dónde mirar y qué tocar (Priority: P1)
@@ -52,9 +65,11 @@ cada nivel tipográfico se diferencia del contiguo en más de un atributo.
 
 **Acceptance Scenarios**:
 
-1. **Given** el editor de un producto, **When** se abre, **Then** el fondo de la página, las tarjetas
-   de sus secciones y la barra superior se ven como tres planos distintos, y "Guardar" es el único
-   control con el color de acento.
+1. **Given** el editor de un producto, que no tiene acción principal (cada sección se guarda por
+   separado y ninguna completa por sí sola la tarea de la pantalla), **When** se abre, **Then** el
+   fondo de la página, las tarjetas de sus secciones y la barra superior se ven como tres planos
+   distintos, ningún control lleva el color de acento, y los botones que guardan cada sección se ven
+   todos iguales.
 2. **Given** el listado de productos visto por un colaborador sin permiso para crear productos,
    **When** se abre, **Then** ningún control lleva el color de acento: sin acción principal
    disponible, el acento no se usa como decoración.
@@ -230,17 +245,26 @@ un token y se verifica que el cambio se refleja en todas las vistas que lo usan.
 
 - **FR-007**: La paleta MUST definir un color primario, que da la identidad (barra, selección, enlaces,
   indicadores activos), y un color de acento distinto, reservado para la acción principal.
-- **FR-008**: Cada pantalla —una vista o un diálogo— MUST tener como máximo un elemento con el color
-  de acento, y ese elemento MUST ser su acción principal. El acento MUST NOT usarse como decoración ni
-  en acciones secundarias.
+- **FR-008**: El acento señala la acción principal de una pantalla; una pantalla sin acción
+  principal no lleva acento. Cada pantalla —una vista o un diálogo— MUST tener como máximo un
+  elemento con el color de acento, y ese elemento MUST ser su acción principal. El acento MUST NOT
+  usarse como decoración ni en acciones secundarias. Si una pantalla tiene acción principal se decide
+  por su tarea, no por cuántos botones muestra: si la pantalla cambia, se vuelve a preguntar si alguna
+  acción completa esa tarea.
 - **FR-009**: La paleta MUST definir colores con significado para error, aviso, éxito e información,
   cada uno con sus pares de texto y fondo, para estados de los controles y para indicadores como el
   estado de un producto.
+- **FR-009a**: Entre las acciones, el color de error MUST reservarse para las destructivas: archivar,
+  eliminar, dar de baja, traspasar la propiedad, descartar cambios. Un botón en ese color MUST NOT
+  usarse para nada más, y en un botón el color de error nunca indica una validación fallida. La
+  acción destructiva tiene su propio papel en el catálogo, distinto del error de validación (FR-024),
+  aunque compartan tono.
 
 #### Planos de superficie, elevación y bordes
 
 - **FR-010**: El sistema MUST definir tres planos —fondo de página, tarjeta y barra— con tonos
-  distintos entre sí. La tarjeta MUST separarse del fondo, además, por borde o por elevación.
+  distintos entre sí. La tarjeta MUST separarse del fondo, además, por borde o por elevación. La
+  barra existe solo dentro del marco del comercio. Las vistas fuera de él no la agregan (FR-032).
 - **FR-011**: La elevación MUST ser una escala corta con un uso asignado a cada nivel: plano, tarjeta,
   barra y superpuesto (menús, diálogos). Un elemento MUST NOT usar un nivel distinto del que le
   corresponde a su papel.
@@ -271,8 +295,13 @@ un token y se verifica que el cambio se refleja en todas las vistas que lo usan.
 #### Tratamiento de componentes y estados
 
 - **FR-021**: El sistema MUST definir un tratamiento propio, derivado de la referencia, para cada
-  componente que usa el panel: al menos tabla, tarjeta, campo de formulario, paginador, pestañas,
-  barra de herramientas, botón, chip, diálogo y menú.
+  componente y patrón que usa el panel: al menos tarjeta, tabla y barra (hoy son marcado propio, no
+  componentes de la biblioteca), campo de formulario, botón, chip, diálogo y menú.
+- **FR-021a**: Paginador y pestañas, que ninguna vista usa, MUST quedar definidos —qué token usa cada
+  estado— sin emitir estilos. Un estilo de un componente que ninguna vista usa no lo verifica ninguna
+  prueba, y envejece sin que nadie lo note. Una vista que adopte uno de los dos MUST incluir su
+  tratamiento y su cobertura de pruebas en el mismo cambio, y una verificación automática MUST
+  fallar si el componente se usa sin su tratamiento.
 - **FR-022**: Cada componente interactivo MUST definir los estados que le apliquen entre reposo,
   hover, foco, activo, deshabilitado, cargando, error y vacío, con los mismos tokens en todo el panel.
 - **FR-023**: El foco con teclado MUST ser siempre visible, con un indicador de contraste de al menos
@@ -304,6 +333,13 @@ un token y se verifica que el cambio se refleja en todas las vistas que lo usan.
   percibida y accesibilidad MUST seguir pasando con los mismos umbrales. Ninguna MUST eliminarse,
   omitirse ni aflojarse; actualizar el texto que una prueba espera por el cambio de tratamiento
   (FR-037) no cuenta como aflojarla.
+
+- **FR-033a**: La suite completa de pruebas de extremo a extremo del panel MUST correr en la
+  integración continua y su fallo MUST bloquear la integración. Su primera corrida en verde MUST
+  ocurrir **antes** de aplicar ningún token: esa corrida fija la línea base, y cualquier fallo
+  posterior es atribuible al rediseño. Las pruebas de rendimiento (estructura visible, contenido útil
+  y catálogo con 100 colaboradores) quedan fuera de esta compuerta y siguen corriéndose antes de
+  integrar, porque en máquinas compartidas sus tiempos dan ruido y no señal.
 
 #### Tamaño de la carga inicial
 
@@ -363,7 +399,8 @@ un token y se verifica que el cambio se refleja en todas las vistas que lo usan.
 ### Criterios verificables automáticamente
 
 *Son compuertas de despliegue: el principio X exige que su incumplimiento bloquee el paso a
-producción.*
+producción. Todas bloquean en la integración continua (FR-033a), salvo la parte de rendimiento de
+SC-006, que se verifica antes de integrar.*
 
 - **SC-001**: 0 colores, tamaños de fuente, espaciados, radios, elevaciones o anchos de borde escritos
   a mano en los estilos del panel fuera de la lista de excepciones, verificado sobre el 100% de los
@@ -374,8 +411,10 @@ producción.*
   de nivel A ni AA (SC-014 de la 001), en los dos esquemas.
 - **SC-004**: En el 100% de las vistas y diálogos, como máximo un elemento lleva el color de acento,
   y cuando lo lleva es la acción principal declarada para esa pantalla.
-- **SC-005**: En el 100% de las vistas, los tres planos tienen colores de fondo distintos entre sí y
-  la tarjeta se separa del fondo por borde o elevación, en los dos esquemas.
+- **SC-005**: En el 100% de las vistas, los planos que la vista tiene se distinguen: dentro del
+  marco del comercio, página, tarjeta y barra tienen colores de fondo distintos entre sí; fuera de
+  él (inicio de sesión, alta de cuenta, comercios e invitación), página y tarjeta. La tarjeta se
+  separa del fondo por borde o elevación, en los dos esquemas.
 - **SC-006**: Las garantías vigentes pasan con sus umbrales actuales, sin pruebas eliminadas,
   omitidas ni aflojadas: 0 px de desplazamiento horizontal a 360 px; el 100% de las zonas táctiles
   de al menos 44 px; suma de saltos de diseño igual a 0 durante la carga; estructura visible en menos
@@ -462,4 +501,4 @@ automatizada, y por lo tanto MUST NOT bloquear un despliegue.*
 | VII. Trazabilidad inmutable | Sin cambios |
 | VIII. Optimización de carga percibida | FR-017, FR-027, FR-034 a FR-036; SC-006, SC-007 |
 | IX. Enfoque mobile-first | FR-020, FR-023 a FR-026, FR-030; SC-002, SC-003, SC-006 |
-| X. Regla de garantía automática | FR-005, FR-031, FR-035, FR-038, FR-039: las nuevas verificaciones bloquean la integración; FR-033: ninguna existente se afloja |
+| X. Regla de garantía automática | FR-005, FR-021a, FR-031, FR-033a, FR-035, FR-038, FR-039: las nuevas verificaciones bloquean la integración; FR-033: ninguna existente se afloja |

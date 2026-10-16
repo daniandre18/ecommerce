@@ -1,0 +1,347 @@
+@use '@angular/material' as mat;
+
+// Tratamiento de componentes (FR-021, FR-022, contracts/component-treatments.md). Material se ajusta solo
+// con sus `*-overrides()`, nunca con selectores de sus clases internas (FR-006): un nombre de token
+// inválido corta la compilación con `@error`. Lo que el tema ya resuelve —checkbox y radio en
+// primario y contorno, snack-bar en el contenedor inverso, el error de validación— no se repite aquí.
+
+// ── Componentes de Material (T022) ──────────────────────────────────────────────────────────────────
+html {
+  // Botones: forma de píldora y sin mayúsculas, que en español hacen perder legibilidad (research §10).
+  @include mat.button-overrides(
+    (
+      filled-container-shape: var(--ds-radius-pill),
+      outlined-container-shape: var(--ds-radius-pill),
+      text-container-shape: var(--ds-radius-pill),
+      filled-label-text-transform: none,
+      outlined-label-text-transform: none,
+      text-label-text-transform: none,
+      outlined-outline-color: var(--ds-border-control),
+      // Deshabilitado (FR-025, T038): el texto de deshabilitado, sin el tono ni el borde de error.
+      filled-disabled-container-color: var(--ds-surface-hover),
+      filled-disabled-label-text-color: var(--ds-text-disabled),
+      outlined-disabled-label-text-color: var(--ds-text-disabled),
+      outlined-disabled-outline-color: var(--ds-border-subtle),
+      text-disabled-label-text-color: var(--ds-text-disabled),
+    )
+  );
+
+  // Campo de formulario (apariencia `fill`, la de Material): la línea activa en el contorno de control,
+  // que cumple 3:1 (WCAG 1.4.11); con foco, el primario. El error con texto e ícono es T037.
+  @include mat.form-field-overrides(
+    (
+      filled-active-indicator-color: var(--ds-border-control),
+      // Los anchos de la línea, de la escala: el mismo valor que Material (1 y 2 px), pero desde el token.
+      filled-active-indicator-height: var(--ds-border-width),
+      filled-focus-active-indicator-height: var(--ds-border-width-strong),
+      filled-hover-active-indicator-color: var(--ds-text-primary),
+      filled-focus-active-indicator-color: var(--ds-primary),
+      filled-disabled-input-text-color: var(--ds-text-disabled),
+      filled-disabled-label-text-color: var(--ds-text-disabled),
+      filled-disabled-active-indicator-color: var(--ds-border-subtle),
+    )
+  );
+
+  // Chip: contenedor con tinte del primario. La cruz conserva su zona táctil (`.chip-touch-target`).
+  @include mat.chips-overrides(
+    (
+      outline-color: transparent,
+      elevated-container-color: var(--ds-primary-container),
+      label-text-color: var(--ds-on-primary-container),
+      with-trailing-icon-trailing-icon-color: var(--ds-on-primary-container),
+    )
+  );
+
+  // Diálogo y menú: el plano superpuesto, con su elevación.
+  @include mat.dialog-overrides(
+    (
+      container-color: var(--ds-surface-overlay),
+      container-shape: var(--ds-radius-lg),
+      container-elevation-shadow: var(--ds-elevation-overlay),
+      // El título, en el tipo de título de sección (component-treatments.md): Material le daba su
+      // `headline-small`, 24 px y peso normal, más grande y menos marcado que los títulos de las tarjetas.
+      subhead-font: var(--ds-font-family),
+      subhead-size: var(--ds-type-section-title-size),
+      subhead-weight: var(--ds-type-section-title-weight),
+      subhead-line-height: var(--ds-type-section-title-line-height),
+      subhead-tracking: var(--ds-type-section-title-tracking),
+    )
+  );
+  @include mat.menu-overrides(
+    (
+      container-color: var(--ds-surface-overlay),
+      container-elevation-shadow: var(--ds-elevation-overlay),
+    )
+  );
+  // El snack-bar también flota sobre la vista. Su radio era el `corner-extra-small` de Material: el mismo
+  // valor, pero fuera de la escala, así que un cambio de `--ds-radius-sm` no le llegaba.
+  @include mat.snack-bar-overrides(
+    (
+      container-shape: var(--ds-radius-sm),
+    )
+  );
+
+  // Barra de progreso: pista en el contenedor del primario, indicador en el primario.
+  @include mat.progress-bar-overrides(
+    (
+      track-color: var(--ds-primary-container),
+      active-indicator-color: var(--ds-primary),
+    )
+  );
+}
+
+// La acción principal: el acento, solo aquí (FR-008). El texto oscuro sobre el amarillo da 10,31:1.
+.ds-primary-action {
+  @include mat.button-overrides(
+    (
+      filled-container-color: var(--ds-action-accent),
+      filled-label-text-color: var(--ds-on-action-accent),
+      filled-state-layer-color: var(--ds-on-action-accent),
+      filled-ripple-color: color-mix(in srgb, var(--ds-on-action-accent) calc(var(--ds-state-pressed-opacity) * 100%), transparent),
+    )
+  );
+}
+
+// La acción destructiva: su propio papel, nunca el acento (FR-009a).
+.ds-destructive {
+  @include mat.button-overrides(
+    (
+      filled-container-color: var(--ds-action-destructive),
+      filled-label-text-color: var(--ds-on-action-destructive),
+      filled-state-layer-color: var(--ds-on-action-destructive),
+      filled-ripple-color: color-mix(in srgb, var(--ds-on-action-destructive) calc(var(--ds-state-pressed-opacity) * 100%), transparent),
+    )
+  );
+}
+
+// Un enlace de texto toma el color de enlace del sistema. Sin esto, los que no tenían color propio
+// ("Creá una", "← Equipo", los de la bitácora) usaban el azul del navegador, fuera del catálogo y sin par de
+// contraste (lo encontró la compuerta de inventario, T059). Un enlace que es un botón de Material, o una
+// fila con `color: inherit`, conserva el suyo.
+a {
+  color: var(--ds-text-link);
+}
+
+// Los títulos de página y de sección: su tipo del catálogo, una sola vez (T060). Una vista solo cambia lo
+// suyo, como el margen; headings.spec.ts falla si repite el tipo. El título de un diálogo no cambia:
+// `.mat-mdc-dialog-title`, de clase, gana a esta regla de elemento.
+h1 {
+  margin: 0 0 var(--ds-space-4);
+  font: var(--ds-type-page-title);
+  letter-spacing: var(--ds-type-page-title-tracking);
+}
+
+h2 {
+  margin: 0 0 var(--ds-space-2);
+  font: var(--ds-type-section-title);
+}
+
+// Un `<select>` nativo fuera de un campo de Material: las listas largas de categorías y la barra de
+// selección lo usan por su rendimiento con cientos de opciones. Sin esto tenía el texto negro, el borde y el
+// fondo del navegador: fuera del catálogo, y en oscuro un bloque gris. Toma los tokens de un control
+// (component-treatments.md, "Selector nativo"); el foco es el anillo global.
+select:not(.mat-mdc-input-element) {
+  box-sizing: border-box;
+  min-height: var(--ds-touch-target);
+  padding: 0 var(--ds-space-2);
+  border: var(--ds-border-width) solid var(--ds-border-control);
+  border-radius: var(--ds-radius-md);
+  background-color: var(--ds-surface-card);
+  color: var(--ds-text-primary);
+  font: var(--ds-type-body);
+
+  &:disabled {
+    border-color: var(--ds-border-subtle);
+    color: var(--ds-text-disabled);
+    cursor: not-allowed;
+  }
+}
+
+// La sombra del snack-bar: la de lo superpuesto (FR-011), como el diálogo y el menú. Material no ofrece un
+// token para ella —la escribe fija en `.mat-mdc-snackbar-surface`—, así que es una excepción declarada a
+// FR-006 (contracts/component-treatments.md). Su hoja llega al abrir el primer snack-bar, después de esta:
+// `html` sube la regla un nivel, como la del foco en `styles.scss`.
+html .mat-mdc-snackbar-surface {
+  box-shadow: var(--ds-elevation-overlay);
+}
+
+// ── Marcado propio del panel (T023) ─────────────────────────────────────────────────────────────────
+// Tarjeta, fila de tabla, barra y aviso son marcado propio, no componentes de Material (research §11).
+// Las clases se agregan a elementos que ya existen, sin envolverlos ni moverlos (FR-032).
+
+// La tarjeta: se separa del fondo por tono, borde y sombra. El borde está en los dos esquemas —en oscuro
+// una sombra no separa nada— y es lo que conserva el límite en colores forzados (FR-010, FR-013).
+.ds-card {
+  padding: var(--ds-space-4);
+  border: var(--ds-border-width) solid var(--ds-border-subtle);
+  border-radius: var(--ds-radius-lg);
+  background: var(--ds-surface-card);
+  box-shadow: var(--ds-elevation-card);
+
+  @media (min-width: 600px) {
+    padding: var(--ds-space-6);
+  }
+}
+
+// La fila de una tabla: sin fondo propio, con un separador que no tiene la última. El hover tenue de la
+// referencia solo refuerza lo que ya se ve en reposo (FR-026).
+.ds-table-row {
+  min-height: var(--ds-row-height);
+  border-bottom: var(--ds-border-width) solid var(--ds-border-subtle);
+  background: transparent;
+  transition: background-color var(--ds-motion-short);
+
+  &:last-child {
+    border-bottom-color: transparent;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      background: var(--ds-surface-hover);
+    }
+  }
+}
+
+// La barra del comercio: su propio tono, sin sombra.
+.ds-bar {
+  background: var(--ds-surface-bar);
+  box-shadow: var(--ds-elevation-bar);
+}
+
+// Colores forzados (FR-013, T039): el sistema quita los fondos. La tarjeta conserva su borde y los campos de
+// Material traen el suyo; la barra se distinguía solo por el tono, así que en ese modo lleva un borde
+// inferior, en el color que ponga el sistema.
+@media (forced-colors: active) {
+  .ds-bar {
+    border-bottom: var(--ds-border-width) solid;
+  }
+}
+
+// Un aviso en bloque: falla de navegación, error de carga, aviso de bloqueo. El ícono es T037.
+// Un botón dentro del aviso ("Reintentar") va en el color propio del aviso, con borde o como texto: un
+// botón en primario sobre una superficie de error es un emparejamiento malo por su cuenta, y ataba el
+// primario de toda la paleta a ese único uso (T059).
+// Deshabilitado (FR-025): se distingue por más que el color, con el cursor. Material le quita los eventos de
+// puntero a un botón deshabilitado, y así el cursor no se vería. Un `<button>` deshabilitado no recibe el
+// clic de todos modos; un enlace sí, así que la regla es solo de botones. `:root` le gana a la de Material
+// (`.mat-mdc-unelevated-button.mat-mdc-button-disabled`) sin nombrar sus clases internas (FR-006).
+:root button:disabled {
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
+// El ícono de error (FR-024): el error no depende solo del color. Un SVG en línea como máscara, pintado con el
+// color del texto: sin fuente de íconos (FR-017 no admite descargas) y sin tocar ninguna plantilla.
+$error-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 5h2v7h-2V7Zm0 9h2v2h-2v-2Z'/%3E%3C/svg%3E");
+
+@mixin error-icon {
+  content: '';
+  background: currentColor;
+  mask: $error-icon center / contain no-repeat;
+}
+
+// El error de un campo, en línea delante del mensaje.
+.mat-mdc-form-field-error::before {
+  @include error-icon;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-inline-end: var(--ds-space-1);
+  vertical-align: -0.125em;
+}
+
+@mixin notice-buttons($color) {
+  @include mat.button-overrides(
+    (
+      outlined-label-text-color: $color,
+      outlined-outline-color: $color,
+      outlined-state-layer-color: $color,
+      text-label-text-color: $color,
+      text-state-layer-color: $color,
+    )
+  );
+}
+
+.ds-notice {
+  padding: var(--ds-space-3) var(--ds-space-4);
+  border-radius: var(--ds-radius-md);
+
+  // El ícono a la izquierda del primer renglón, en el lugar que le abre el relleno: así queda igual en un aviso
+  // en fila (la falla de navegación) y en uno en columna (el estado de error).
+  &--error {
+    position: relative;
+    padding-inline-start: calc(var(--ds-space-4) + var(--ds-space-6) + var(--ds-space-2));
+    background: var(--ds-status-error-container);
+    color: var(--ds-on-status-error-container);
+    @include notice-buttons(var(--ds-on-status-error-container));
+
+    &::before {
+      @include error-icon;
+      position: absolute;
+      inset-block-start: var(--ds-space-3);
+      inset-inline-start: var(--ds-space-4);
+      width: var(--ds-space-6);
+      height: var(--ds-space-6);
+    }
+  }
+
+  &--warning {
+    background: var(--ds-status-warning-container);
+    color: var(--ds-on-status-warning-container);
+    @include notice-buttons(var(--ds-on-status-warning-container));
+  }
+}
+
+// ── Definidos y sin emitir (FR-021a, research §11) ──────────────────────────────────────────────────
+// El panel no usa estos componentes. Un estilo que ninguna vista usa no lo verifica ninguna prueba y
+// envejece sin que nadie lo note: se conserva la decisión, no código sin probar. Quien adopte uno lo
+// incluye aquí, en el mismo cambio, siguiendo "Adoptar uno de estos componentes" del contrato;
+// adoption.spec.ts (T051) falla si se usa sin su `@include`.
+
+@mixin ds-paginator {
+  @include mat.paginator-overrides(
+    (
+      container-background-color: transparent,
+      container-text-color: var(--ds-text-secondary),
+    )
+  );
+}
+
+@mixin ds-tabs {
+  @include mat.tabs-overrides(
+    (
+      divider-height: 0,
+      active-label-text-color: var(--ds-primary),
+      active-indicator-color: var(--ds-primary),
+      inactive-label-text-color: var(--ds-text-secondary),
+    )
+  );
+}
+
+@mixin ds-mat-table {
+  @include mat.table-overrides(
+    (
+      background-color: transparent,
+      row-item-outline-color: var(--ds-border-subtle),
+    )
+  );
+}
+
+@mixin ds-mat-card {
+  @include mat.card-overrides(
+    (
+      elevated-container-color: var(--ds-surface-card),
+      elevated-container-shape: var(--ds-radius-lg),
+      elevated-container-elevation: var(--ds-elevation-card),
+    )
+  );
+}
+
+@mixin ds-mat-toolbar {
+  @include mat.toolbar-overrides(
+    (
+      container-background-color: var(--ds-surface-bar),
+      container-text-color: var(--ds-text-primary),
+    )
+  );
+}

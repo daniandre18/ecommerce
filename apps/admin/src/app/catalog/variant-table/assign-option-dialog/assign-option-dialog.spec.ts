@@ -67,7 +67,7 @@ describe('AssignOptionDialog', () => {
     await choose(rowSelects()[0], 's');
     await submit();
     expect(dialogRef.close).not.toHaveBeenCalled();
-    expect(root.textContent).toContain('Elegí un valor');
+    expect(root.textContent).toContain('Elige un valor');
   });
 
   it('con todos elegidos, devuelve una asignación por variante', async () => {

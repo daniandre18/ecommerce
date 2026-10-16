@@ -12,7 +12,7 @@ test.describe('trabajo en curso', () => {
     await page.route(/\/setVariantPrice$/, (route) => route.abort('internetdisconnected'));
     await price.fill('38000');
     await price.press('Enter');
-    await expect(page.getByRole('group', { name: /^Única/ })).toContainText('Reintentá');
+    await expect(page.getByRole('group', { name: /^Única/ })).toContainText('Reintenta');
     await expect(price).toHaveValue('38000');
 
     await page.unroute(/\/setVariantPrice$/);
@@ -28,15 +28,15 @@ test.describe('trabajo en curso', () => {
     const name = page.getByLabel('Nombre', { exact: true });
     await name.fill('Nombre a medio escribir');
 
-    await page.getByRole('link', { name: '← Catálogo' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Hay cambios sin guardar' });
+    await page.getByRole('link', { name: '← Catálogo', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Hay cambios sin guardar', exact: true });
     await expect(dialog).toBeVisible();
-    await dialog.getByRole('button', { name: 'Cancelar' }).click();
+    await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click();
     await expect(page).toHaveURL(url);
     await expect(name).toHaveValue('Nombre a medio escribir');
 
-    await page.getByRole('link', { name: '← Catálogo' }).click();
-    await page.getByRole('dialog', { name: 'Hay cambios sin guardar' }).getByRole('button', { name: 'Salir sin guardar' }).click();
+    await page.getByRole('link', { name: '← Catálogo', exact: true }).click();
+    await page.getByRole('dialog', { name: 'Hay cambios sin guardar', exact: true }).getByRole('button', { name: 'Salir sin guardar', exact: true }).click();
     await expect(page).toHaveURL(/\/t\/t1\/catalog$/);
   });
 });
@@ -44,9 +44,9 @@ test.describe('trabajo en curso', () => {
 /** Intenta salir por `leave`: se pregunta antes, y quedarse conserva lo escrito en `field`. */
 async function asksBeforeLeaving(page: Page, leave: Locator, field: Locator, written: string) {
   await leave.click();
-  const dialog = page.getByRole('dialog', { name: 'Hay cambios sin guardar' });
+  const dialog = page.getByRole('dialog', { name: 'Hay cambios sin guardar', exact: true });
   await expect(dialog).toBeVisible();
-  await dialog.getByRole('button', { name: 'Cancelar' }).click();
+  await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(field).toHaveValue(written);
 }
@@ -65,7 +65,7 @@ test.describe('trabajo en curso en las vistas de la 002', () => {
     await expect(page).toHaveURL(/\/t\/t1\/categories$/);
 
     await catalog.click();
-    await page.getByRole('dialog', { name: 'Hay cambios sin guardar' }).getByRole('button', { name: 'Salir sin guardar' }).click();
+    await page.getByRole('dialog', { name: 'Hay cambios sin guardar', exact: true }).getByRole('button', { name: 'Salir sin guardar', exact: true }).click();
     await expect(page).toHaveURL(/\/t\/t1\/catalog$/);
   });
 
@@ -73,13 +73,13 @@ test.describe('trabajo en curso en las vistas de la 002', () => {
     const { url } = await productAsOwner(`Secciones sin guardar ${Date.now()}`);
     await page.goto(url);
     await signIn(page, OWNER);
-    const back = page.getByRole('link', { name: '← Catálogo' });
+    const back = page.getByRole('link', { name: '← Catálogo', exact: true });
     const variant = page.getByRole('group', { name: /^Única/ });
     await variant.getByRole('button', { name: /^Código de barras/ }).click();
     const sections: [string, Locator, string][] = [
-      ['En la tienda', page.getByLabel('Título para buscadores'), 'Título a medio escribir'],
+      ['En la tienda', page.getByLabel('Título para buscadores', { exact: true }), 'Título a medio escribir'],
       ['Envío', page.getByLabel('Peso', { exact: true }), '0,5'],
-      ['Catálogos externos', page.getByLabel('MPN (código del fabricante)'), 'MPN-123'],
+      ['Catálogos externos', page.getByLabel('MPN (código del fabricante)', { exact: true }), 'MPN-123'],
       // Inválido, no se guarda al salir del campo: queda escrito y sin guardar.
       ['Código de barras de la variante', variant.getByLabel('GTIN', { exact: true }), '4006381333932'],
     ];
@@ -97,17 +97,17 @@ test.describe('trabajo en curso en las vistas de la 002', () => {
     const { url } = await productAsOwner(`Ficha sin red ${Date.now()}`);
     await page.goto(url);
     await signIn(page, OWNER);
-    const title = page.getByLabel('Título para buscadores');
+    const title = page.getByLabel('Título para buscadores', { exact: true });
 
     await page.route(/\/updateProductDetails$/, (route) => route.abort('internetdisconnected'));
     await title.fill('Título que no se pierde');
-    await page.getByRole('button', { name: 'Guardar ficha' }).click();
+    await page.getByRole('button', { name: 'Guardar ficha', exact: true }).click();
     await expect(page.getByRole('alert').filter({ hasText: /reintent/i })).toBeVisible();
     await expect(title).toHaveValue('Título que no se pierde');
 
     await page.unroute(/\/updateProductDetails$/);
-    await page.getByRole('button', { name: 'Guardar ficha' }).click();
-    await expect(page.getByText('Ficha de tienda guardada')).toBeVisible();
+    await page.getByRole('button', { name: 'Guardar ficha', exact: true }).click();
+    await expect(page.getByText('Ficha de tienda guardada', { exact: true })).toBeVisible();
     await expect(title).toHaveValue('Título que no se pierde');
   });
 
@@ -120,12 +120,12 @@ test.describe('trabajo en curso en las vistas de la 002', () => {
 
     await page.route(/\/createCategory$/, (route) => route.abort('internetdisconnected'));
     await field.fill(name);
-    await page.getByRole('button', { name: 'Crear categoría' }).click();
+    await page.getByRole('button', { name: 'Crear categoría', exact: true }).click();
     await expect(page.getByRole('alert').filter({ hasText: /reintent/i })).toBeVisible();
     await expect(field).toHaveValue(name);
 
     await page.unroute(/\/createCategory$/);
-    await page.getByRole('button', { name: 'Crear categoría' }).click();
-    await expect(page.getByRole('button', { name: `Acciones de «${name}»` })).toBeVisible();
+    await page.getByRole('button', { name: 'Crear categoría', exact: true }).click();
+    await expect(page.getByRole('button', { name: `Acciones de «${name}»`, exact: true })).toBeVisible();
   });
 });

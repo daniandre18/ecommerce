@@ -68,7 +68,7 @@ const NO_FILTERS: Filters = { search: '', status: 'all', attribute: 'none', attr
   template: `
     <div class="head">
       <h1>Catálogo</h1>
-      <button *appHasPermission="'catalog.write'" matButton="filled" type="button" (click)="create()">Nuevo producto</button>
+      <button *appHasPermission="'catalog.write'" matButton="filled" class="ds-primary-action" type="button" (click)="create()">Nuevo producto</button>
     </div>
 
     <div class="filters">
@@ -103,7 +103,7 @@ const NO_FILTERS: Filters = { search: '', status: 'all', attribute: 'none', attr
           <mat-label>Categoría</mat-label>
           <!-- Incluye sus subcategorías (FR-023). -->
           <select matNativeControl data-field="category" [formField]="filterForm.category">
-            <option value="">Elegí una</option>
+            <option value="">Elige una</option>
             @for (option of categoryOptions(); track option.value) {
               <option [value]="option.value">{{ option.label }}</option>
             }
@@ -118,7 +118,7 @@ const NO_FILTERS: Filters = { search: '', status: 'all', attribute: 'none', attr
       }
     </div>
     @if (searching() && filters().attribute !== 'none') {
-      <p class="hint">La búsqueda por nombre no se combina con este filtro: se aplica cuando borrás la búsqueda.</p>
+      <p class="hint">La búsqueda por nombre no se combina con este filtro: se aplica cuando borras la búsqueda.</p>
     }
     @if (section(); as current) {
       <!-- El contador, también en el listado filtrado por la sección (FR-027a). -->
@@ -127,15 +127,15 @@ const NO_FILTERS: Filters = { search: '', status: 'all', attribute: 'none', attr
     }
 
     @if (products.error()) {
-      <ui-error-state heading="No pudimos cargar el catálogo" (retry)="products.reload()" />
+      <ui-error-state heading="No pudimos cargar el catálogo" [retrying]="products.status() === 'reloading'" (retry)="products.reload()" />
     } @else if (listed(); as list) {
       @if (list.length === 0) {
         @if (filtered()) {
-          <ui-empty-state heading="Ningún producto coincide con la búsqueda">
+          <ui-empty-state class="ds-card" heading="Ningún producto coincide con la búsqueda">
             <button matButton type="button" (click)="clearFilters()">Quitar filtros</button>
           </ui-empty-state>
         } @else {
-          <ui-empty-state heading="Todavía no hay productos" [message]="canWrite() ? 'Creá el primero para empezar a armar tu catálogo.' : ''">
+          <ui-empty-state class="ds-card" heading="Todavía no hay productos" [message]="canWrite() ? 'Crea el primero para empezar a armar tu catálogo.' : ''">
             <button *appHasPermission="'catalog.write'" matButton="filled" type="button" (click)="create()">Crear producto</button>
           </ui-empty-state>
         }
@@ -161,9 +161,9 @@ const NO_FILTERS: Filters = { search: '', status: 'all', attribute: 'none', attr
             />
           }
         }
-        <ul [attr.aria-busy]="products.isLoading()">
+        <ul class="ds-card" [attr.aria-busy]="products.isLoading()">
           @for (product of list; track product.id) {
-            <li [class.selectable]="canSelect()">
+            <li class="ds-table-row" [class.selectable]="canSelect()">
               @if (canSelect()) {
                 <mat-checkbox
                   class="pick"
@@ -207,7 +207,8 @@ const NO_FILTERS: Filters = { search: '', status: 'all', attribute: 'none', attr
         }
       }
     } @else {
-      <ui-skeleton rows="5" rowHeight="72px" label="Cargando el catálogo…" />
+      <!-- En la tarjeta, como el listado que reemplaza, y con su fila (FR-027). -->
+      <ui-skeleton class="ds-card" rows="5" label="Cargando el catálogo…" />
     }
   `,
   styles: `
@@ -217,40 +218,36 @@ const NO_FILTERS: Filters = { search: '', status: 'all', attribute: 'none', attr
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      min-height: 48px;
+      gap: var(--ds-space-2);
+      min-height: var(--ds-touch-target);
     }
 
     h1 {
       margin: 0;
-      font: var(--mat-sys-headline-small);
     }
 
     .filters {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin: 16px 0;
+      gap: var(--ds-space-2);
+      margin: var(--ds-space-4) 0;
     }
 
     .filters mat-form-field {
       flex: 1 1 200px;
     }
 
+    /* El listado es la tarjeta, y cada producto una fila (\`.ds-table-row\`): el separador y el hover son
+       los de la fila del sistema. */
     ul {
       list-style: none;
       margin: 0;
-      padding: 0;
-    }
-
-    li {
-      border-bottom: 1px solid var(--mat-sys-outline-variant);
     }
 
     li.selectable {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: var(--ds-space-1);
     }
 
     li.selectable a {
@@ -260,21 +257,21 @@ const NO_FILTERS: Filters = { search: '', status: 'all', attribute: 'none', attr
 
     .select-all {
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: var(--ds-space-2);
     }
 
     .section-count {
-      margin: -8px 0 8px;
-      font: var(--mat-sys-title-small);
+      margin: calc(-1 * var(--ds-space-2)) 0 var(--ds-space-2);
+      font: var(--ds-type-label);
     }
 
     .unseen {
-      font: var(--mat-sys-label-medium);
-      color: var(--mat-sys-on-surface-variant);
+      font: var(--ds-type-help);
+      color: var(--ds-text-secondary);
     }
 
     .row-failure {
-      color: var(--mat-sys-error);
+      color: var(--ds-status-error);
     }
 
     .row-failure:empty {
@@ -286,9 +283,9 @@ const NO_FILTERS: Filters = { search: '', status: 'all', attribute: 'none', attr
       display: flex;
       flex-direction: column;
       justify-content: center;
-      min-height: 72px;
+      min-height: var(--ds-row-height);
       box-sizing: border-box;
-      padding: 8px 4px;
+      padding: var(--ds-space-2) var(--ds-space-1);
       color: inherit;
       text-decoration: none;
     }
@@ -298,33 +295,33 @@ const NO_FILTERS: Filters = { search: '', status: 'all', attribute: 'none', attr
     }
 
     .name {
-      font: var(--mat-sys-title-medium);
+      font: var(--ds-type-subtitle);
       overflow-wrap: anywhere;
     }
 
     .meta {
-      font: var(--mat-sys-body-medium);
-      color: var(--mat-sys-on-surface-variant);
+      font: var(--ds-type-body);
+      color: var(--ds-text-secondary);
     }
 
     .incomplete {
-      font: var(--mat-sys-label-medium);
-      color: var(--mat-sys-error);
+      font: var(--ds-type-help);
+      color: var(--ds-status-error);
     }
 
     .missing-shipping {
-      font: var(--mat-sys-label-medium);
-      color: var(--mat-sys-on-surface-variant);
+      font: var(--ds-type-help);
+      color: var(--ds-text-secondary);
     }
 
     .hint {
-      margin: -8px 0 16px;
-      font: var(--mat-sys-body-medium);
-      color: var(--mat-sys-on-surface-variant);
+      margin: calc(-1 * var(--ds-space-2)) 0 var(--ds-space-4);
+      font: var(--ds-type-body);
+      color: var(--ds-text-secondary);
     }
 
     .more {
-      margin-top: 8px;
+      margin-top: var(--ds-space-2);
     }
   `,
 })

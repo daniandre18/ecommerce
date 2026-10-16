@@ -57,6 +57,7 @@
     },
     "test": {
       "executor": "@angular/build:unit-test",
+      "dependsOn": ["design-check"],
       "options": {
         "buildTarget": "admin:build:development",
         "tsConfig": "apps/admin/tsconfig.spec.json"
@@ -64,16 +65,24 @@
     },
     "typecheck": {
       "executor": "nx:run-commands",
-      "options": { "command": "ngc -p apps/admin/tsconfig.app.json --noEmit && tsc -p apps/admin/bundle-check/tsconfig.json --noEmit" }
+      "options": {
+        "command": "ngc -p apps/admin/tsconfig.app.json --noEmit && tsc -p apps/admin/bundle-check/tsconfig.json --noEmit && tsc -p apps/admin/design-system/tsconfig.json --noEmit"
+      }
     },
     "bundle-check": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
-      "options": { "command": "vitest run --config apps/admin/bundle-check/vite.config.mts" }
+      "options": { "command": "tsx apps/admin/bundle-check/run.ts" }
+    },
+    "design-check": {
+      "executor": "nx:run-commands",
+      "options": { "command": "vitest run --config apps/admin/design-system/vite.config.mts" }
     },
     "lint": {
       "executor": "nx:run-commands",
-      "options": { "command": "eslint apps/admin --no-error-on-unmatched-pattern --pass-on-no-patterns" }
+      "options": {
+        "command": "eslint apps/admin --no-error-on-unmatched-pattern --pass-on-no-patterns && tsx apps/admin/design-system/literals.ts"
+      }
     }
   }
 }

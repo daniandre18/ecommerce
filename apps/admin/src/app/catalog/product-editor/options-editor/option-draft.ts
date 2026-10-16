@@ -84,7 +84,7 @@ function structureMessage(error: OptionStructureError): string {
     case 'duplicate-value':
       return `La opción «${error.option}» repite el valor «${error.label}»`;
     case 'duplicate-id':
-      return 'Hay dos elementos con el mismo identificador. Recargá la página';
+      return 'Hay dos elementos con el mismo identificador. Recarga la página';
   }
 }
 

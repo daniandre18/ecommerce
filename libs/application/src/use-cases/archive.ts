@@ -52,7 +52,7 @@ export class ArchiveVariant {
     if (remaining.length === 0) {
       throw new BusinessRuleError(
         'invalid-argument',
-        'Es la última variante en circulación: para retirarla, archivá el producto',
+        'Es la última variante en circulación: para retirarla, archiva el producto',
       );
     }
 

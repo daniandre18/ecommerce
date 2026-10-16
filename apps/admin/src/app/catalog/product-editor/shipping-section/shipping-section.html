@@ -15,7 +15,7 @@
         <li>{{ impact }}</li>
       }
       @if (kind === 'digital') {
-        <li>El peso, las dimensiones y el envío gratis se conservan, pero dejan de usarse; vuelven si lo cambiás otra vez a físico.</li>
+        <li>El peso, las dimensiones y el envío gratis se conservan, pero dejan de usarse; vuelven si lo cambias otra vez a físico.</li>
       }
     </ul>
     <div class="actions">
@@ -29,7 +29,7 @@
   <p class="note">Un producto digital no se envía: no lleva peso ni dimensiones.</p>
 } @else {
   @if (product().missingShippingData) {
-    <p class="missing">Faltan datos de envío: cargá el peso y las tres dimensiones para poder cotizarlo.</p>
+    <p class="missing">Faltan datos de envío: carga el peso y las tres dimensiones para poder cotizarlo.</p>
   }
   <form novalidate (submit)="$event.preventDefault(); save()">
     <mat-form-field class="weight">

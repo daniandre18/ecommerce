@@ -46,11 +46,6 @@ const detailsOf = (product: Product): Details => ({ name: product.name, descript
     </form>
   `,
   styles: `
-    h2 {
-      margin: 0 0 8px;
-      font: var(--mat-sys-title-large);
-    }
-
     mat-form-field {
       display: block;
     }
@@ -58,11 +53,11 @@ const detailsOf = (product: Product): Details => ({ name: product.name, descript
     .actions {
       display: flex;
       justify-content: flex-end;
-      gap: 8px;
+      gap: var(--ds-space-2);
     }
 
     .failure {
-      color: var(--mat-sys-error);
+      color: var(--ds-status-error);
     }
 
     .failure:empty {
@@ -114,7 +109,7 @@ export class DetailsSection {
       } else {
         this.failure.set(
           result.code === 'version-conflict'
-            ? 'Alguien más editó el producto mientras lo tenías abierto. Descartá tus cambios para ver los actuales.'
+            ? 'Alguien más editó el producto mientras lo tenías abierto. Descarta tus cambios para ver los actuales.'
             : commandErrorMessage(result.code),
         );
       }

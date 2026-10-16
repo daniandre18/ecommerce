@@ -79,7 +79,7 @@ test.describe('datos por variante y catálogos externos', () => {
 
     await test.step('2. quitárselo a la archivada lo libera, y queda en esta variante', async () => {
       const other = page.getByRole('group', { name: /^Azul \/ M/ });
-      await other.getByRole('button', { name: 'Quitárselo a la archivada y usarlo acá' }).click();
+      await other.getByRole('button', { name: 'Quitárselo a la archivada y usarlo aquí', exact: true }).click();
       await expect(other).not.toContainText('Ese GTIN ya lo usa');
       const mine = (await variantsOf(productIdOf(url))).find((v) => v.label === 'azul/m');
       await expect.poll(() => gtinHolder(code)).toBe(mine?.id);
@@ -127,12 +127,12 @@ test.describe('datos por variante y catálogos externos', () => {
     await signIn(page, OWNER);
 
     await test.step('4. el selector muestra "0 a 3 meses" … "Adulto"; en Firestore queda adult', async () => {
-      const ageGroup = page.getByLabel('Rango de edad');
+      const ageGroup = page.getByLabel('Rango de edad', { exact: true });
       await expect(ageGroup.locator('option')).toHaveText(['Sin rango de edad', '0 a 3 meses', '3 a 12 meses', '1 a 5 años', '5 a 13 años', 'Adulto']);
       await ageGroup.selectOption({ label: 'Adulto' });
-      await page.getByLabel('Género').selectOption({ label: 'Unisex' });
-      await page.getByRole('button', { name: 'Guardar para catálogos externos' }).click();
-      await expect(page.getByText('Datos para catálogos externos guardados')).toBeVisible();
+      await page.getByLabel('Género', { exact: true }).selectOption({ label: 'Unisex' });
+      await page.getByRole('button', { name: 'Guardar para catálogos externos', exact: true }).click();
+      await expect(page.getByText('Datos para catálogos externos guardados', { exact: true })).toBeVisible();
       const doc = (await (await fetch(`${documents}/products/${productIdOf(url)}`, { headers: admin })).json()) as {
         fields: { ageGroup: { stringValue: string }; gender: { stringValue: string } };
       };

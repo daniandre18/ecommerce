@@ -12,10 +12,10 @@ export const EMULATORS = { auth: 'http://127.0.0.1:9099', firestore: 'http://127
 
 /** Inicia sesión desde la pantalla de inicio y espera a salir de ella: la sesión ya quedó guardada. */
 export async function signIn(page: Page, email: string) {
-  await page.getByLabel('Correo').fill(email);
-  await page.getByLabel('Contraseña').fill(PASSWORD);
-  await page.getByRole('button', { name: 'Entrar' }).click();
-  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toHaveCount(0);
+  await page.getByLabel('Correo', { exact: true }).fill(email);
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión', exact: true })).toHaveCount(0);
 }
 
 /** La sesión de una cuenta, como la obtendría su navegador: su token y su uid. */
@@ -37,12 +37,12 @@ export const idTokenOf = async (email: string) => (await sessionOf(email)).idTok
  */
 export async function signUpFromLink(page: Page, link: string, email: string, name: string) {
   await page.goto(link);
-  await page.getByRole('link', { name: 'Creá una' }).click();
-  await page.getByLabel('Tu nombre').fill(name);
+  await page.getByRole('link', { name: 'Crea una', exact: true }).click();
+  await page.getByLabel('Tu nombre', { exact: true }).fill(name);
   await page.getByLabel('Correo', { exact: true }).fill(email);
-  await page.getByLabel('Contraseña').fill(PASSWORD);
-  await page.getByRole('button', { name: 'Crear cuenta' }).click();
-  await expect(page.getByRole('heading', { name: 'Te invitaron a un comercio' })).toBeVisible();
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: 'Crear cuenta', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Te invitaron a un comercio', exact: true })).toBeVisible();
 }
 
 /** El token de App Check sin firmar que acepta el emulador, el mismo que fabrica el panel. */
@@ -89,4 +89,14 @@ export async function productWithVariants(name: string): Promise<string> {
   });
   expect(result.status).toBe(200);
   return url;
+}
+
+/**
+ * Un texto que **empieza** con `text`: para un mensaje cuya oración sigue ("Puede que no exista… Revisa
+ * el código…"). Más estricto que la coincidencia parcial de Playwright, que acepta el texto en cualquier
+ * lugar y choca con datos que lo contengan; menos que `exact`, que pide la oración entera.
+ */
+export function startsWith(text: string): RegExp {
+  // `\s*`: con una expresión, Playwright no recorta el texto, y una plantilla suele empezar con un salto.
+  return new RegExp(`^\\s*${text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
 }

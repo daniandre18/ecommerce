@@ -65,7 +65,7 @@ type Membership = Record<SectionId, boolean>;
           <span class="count">{{ sections()[section].length }} de {{ max }}</span>
         </div>
         @if (isFull(section) && canWrite()) {
-          <p class="note">{{ labels[section] }} está completa: quitá un producto de la sección para agregar este.</p>
+          <p class="note">{{ labels[section] }} está completa: quita un producto de la sección para agregar este.</p>
         }
         @if (membership()[section] && unseen(); as reason) {
           <p class="note">La tienda no lo muestra en {{ labels[section] }} mientras esté {{ reason }}.</p>
@@ -83,21 +83,16 @@ type Membership = Record<SectionId, boolean>;
     </fieldset>
   `,
   styles: `
-    h2 {
-      margin: 0 0 8px;
-      font: var(--mat-sys-title-large);
-    }
-
     fieldset {
-      margin: 0 0 16px;
+      margin: 0 0 var(--ds-space-4);
       padding: 0;
       border: 0;
     }
 
     legend {
       padding: 0;
-      margin-bottom: 4px;
-      font: var(--mat-sys-title-small);
+      margin-bottom: var(--ds-space-1);
+      font: var(--ds-type-label);
     }
 
     mat-checkbox {
@@ -109,28 +104,28 @@ type Membership = Record<SectionId, boolean>;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      column-gap: 8px;
+      column-gap: var(--ds-space-2);
     }
 
     .count {
-      font: var(--mat-sys-body-medium);
-      color: var(--mat-sys-on-surface-variant);
+      font: var(--ds-type-body);
+      color: var(--ds-text-secondary);
     }
 
     .note {
-      margin: 0 0 8px;
-      color: var(--mat-sys-on-surface-variant);
+      margin: 0 0 var(--ds-space-2);
+      color: var(--ds-text-secondary);
     }
 
     .actions {
       display: flex;
       flex-wrap: wrap;
       justify-content: flex-end;
-      gap: 8px;
+      gap: var(--ds-space-2);
     }
 
     .failure {
-      color: var(--mat-sys-error);
+      color: var(--ds-status-error);
     }
 
     .failure:empty {

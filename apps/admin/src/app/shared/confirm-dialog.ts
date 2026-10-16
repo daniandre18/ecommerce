@@ -9,7 +9,13 @@ export interface ConfirmData {
   readonly confirm: string;
 }
 
-/** Confirmación de una acción con consecuencias. Devuelve `true` solo si se confirma. */
+/**
+ * Confirmación de una acción con consecuencias. Devuelve `true` solo si se confirma.
+ *
+ * Todo lo que confirma es destructivo (archiva, elimina, da de baja o descarta), así que el botón lleva
+ * el color destructivo y nunca el acento (contracts/primary-actions.md de la 003). Una confirmación que
+ * no destruya necesita otro diálogo, o un dato que lo diga.
+ */
 @Component({
   selector: 'app-confirm-dialog',
   imports: [MatDialogTitle, MatDialogContent, MatDialogActions, MatDialogClose, MatButton],
@@ -20,7 +26,7 @@ export interface ConfirmData {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button matButton type="button" [mat-dialog-close]="false">Cancelar</button>
-      <button matButton="filled" type="button" [mat-dialog-close]="true">{{ data.confirm }}</button>
+      <button matButton="filled" class="ds-destructive" type="button" [mat-dialog-close]="true">{{ data.confirm }}</button>
     </mat-dialog-actions>
   `,
 })

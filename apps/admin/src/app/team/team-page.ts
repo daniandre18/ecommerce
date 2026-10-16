@@ -25,32 +25,32 @@ const pending = (read: { hasValue(): boolean; error(): unknown }) => !read.hasVa
       una lista de personas más larga que su esqueleto empujaría las de abajo (SC-009).
     -->
     @if (access() === undefined || loading()) {
-      <ui-skeleton rows="6" rowHeight="64px" label="Cargando el equipo…" />
+      <ui-skeleton class="ds-card" rows="6" rowHeight="64px" label="Cargando el equipo…" />
     } @else if (!isOwner()) {
-      <ui-empty-state heading="Solo el Propietario administra el equipo" message="Si necesitás un cambio, pedíselo a quien es Propietario del comercio." />
+      <ui-empty-state class="ds-card" heading="Solo el Propietario administra el equipo" message="Si necesitas un cambio, pídeselo a quien es Propietario del comercio." />
     } @else {
-      <section aria-labelledby="personas">
+      <section class="ds-card" aria-labelledby="personas">
         <h2 id="personas">Personas</h2>
         @if (members.error() || roles.error()) {
-          <ui-error-state heading="No pudimos cargar el equipo" (retry)="members.reload(); roles.reload()" />
+          <ui-error-state heading="No pudimos cargar el equipo" [retrying]="members.status() === 'reloading' || roles.status() === 'reloading'" (retry)="members.reload(); roles.reload()" />
         } @else if (members.hasValue() && roles.hasValue()) {
           <app-members-section [tenantId]="id()" [members]="members.value()" [roles]="roles.value()" />
         }
       </section>
 
-      <section aria-labelledby="invitaciones">
+      <section class="ds-card" aria-labelledby="invitaciones">
         <h2 id="invitaciones">Invitar</h2>
         @if (invitations.error() || roles.error()) {
-          <ui-error-state heading="No pudimos cargar las invitaciones" (retry)="invitations.reload(); roles.reload()" />
+          <ui-error-state heading="No pudimos cargar las invitaciones" [retrying]="invitations.status() === 'reloading' || roles.status() === 'reloading'" (retry)="invitations.reload(); roles.reload()" />
         } @else if (invitations.hasValue() && roles.hasValue()) {
           <app-invitations-section [tenantId]="id()" [invitations]="invitations.value()" [roles]="roles.value()" />
         }
       </section>
 
-      <section aria-labelledby="roles">
+      <section class="ds-card" aria-labelledby="roles">
         <h2 id="roles">Roles</h2>
         @if (roles.error()) {
-          <ui-error-state heading="No pudimos cargar los roles" (retry)="roles.reload()" />
+          <ui-error-state heading="No pudimos cargar los roles" [retrying]="roles.status() === 'reloading'" (retry)="roles.reload()" />
         } @else if (roles.hasValue()) {
           <app-roles-section [tenantId]="id()" [roles]="roles.value()" />
         }
@@ -58,14 +58,9 @@ const pending = (read: { hasValue(): boolean; error(): unknown }) => !read.hasVa
     }
   `,
   styles: `
-    h1 {
-      margin: 0 0 8px;
-      font: var(--mat-sys-headline-small);
-    }
-
-    h2 {
-      margin: 24px 0 8px;
-      font: var(--mat-sys-title-large);
+    /* Cada sección es una tarjeta (\`.ds-card\`); entre tarjetas, \`--ds-space-8\` (FR-019). */
+    section + section {
+      margin-top: var(--ds-space-8);
     }
   `,
 })

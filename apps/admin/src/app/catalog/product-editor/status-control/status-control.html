@@ -10,7 +10,7 @@
 
 <div role="alert" class="blocked">
   @if (blocking().length > 0) {
-    <p>Para dejarlo «{{ targetName() }}», completá el SKU de:</p>
+    <p>Para dejarlo «{{ targetName() }}», completa el SKU de:</p>
     <ul>
       @for (label of blocking(); track label) {
         <li>{{ label }}</li>
@@ -31,5 +31,5 @@
   >
     Cambiar estado
   </button>
-  <button matButton type="button" (click)="archive()">Archivar producto</button>
+  <button matButton="filled" class="ds-destructive" type="button" (click)="archive()">Archivar producto</button>
 </div>

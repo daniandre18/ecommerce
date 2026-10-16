@@ -84,7 +84,7 @@ describe('ImageUpload', () => {
     await choose(file());
     await submit();
     expect(storage.uploads).toEqual([]);
-    expect(root.textContent).toContain('Describí la imagen');
+    expect(root.textContent).toContain('Describe la imagen');
   });
 
   it('sube y guarda la lista completa con la nueva al final, y lo anuncia', async () => {

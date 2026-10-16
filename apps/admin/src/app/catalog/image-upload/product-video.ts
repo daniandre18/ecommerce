@@ -40,7 +40,7 @@ const WATCH: Record<VideoProvider, (id: string) => string> = {
         <mat-form-field>
           <mat-label>{{ product().video ? 'Reemplazar por otro enlace' : 'Enlace de YouTube o Vimeo' }}</mat-label>
           <input matInput data-field="videoUrl" type="url" autocomplete="off" [value]="url()" (input)="url.set($any($event.target).value)" />
-          <mat-hint>Pegá el enlace del video; se muestra junto a las imágenes.</mat-hint>
+          <mat-hint>Pega el enlace del video; se muestra junto a las imágenes.</mat-hint>
         </mat-form-field>
         <label class="position">
           Ubicación
@@ -59,8 +59,9 @@ const WATCH: Record<VideoProvider, (id: string) => string> = {
   `,
   styles: `
     h3 {
-      margin: 16px 0 8px;
-      font: var(--mat-sys-title-medium);
+      margin: var(--ds-space-4) 0 var(--ds-space-2);
+      font: var(--ds-type-subtitle);
+      color: var(--ds-text-secondary);
     }
 
     mat-form-field {
@@ -70,13 +71,13 @@ const WATCH: Record<VideoProvider, (id: string) => string> = {
     .position {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      margin-bottom: 8px;
-      font: var(--mat-sys-body-medium);
+      gap: var(--ds-space-1);
+      margin-bottom: var(--ds-space-2);
+      font: var(--ds-type-body);
     }
 
     .position select {
-      min-height: 48px;
+      min-height: var(--ds-touch-target);
       max-width: 100%;
       font: inherit;
     }
@@ -87,7 +88,7 @@ const WATCH: Record<VideoProvider, (id: string) => string> = {
     }
 
     .failure {
-      color: var(--mat-sys-error);
+      color: var(--ds-status-error);
     }
 
     .failure:empty {

@@ -9,8 +9,8 @@ import { SESSION } from '../../core/client';
 
 const SIGN_IN_FAILURES: Record<SignInFailure, string> = {
   'invalid-credentials': 'El correo o la contraseña no son correctos.',
-  'too-many-attempts': 'Hubo demasiados intentos. Esperá unos minutos y volvé a probar.',
-  unavailable: 'No pudimos conectarnos. Revisá tu red y reintentá.',
+  'too-many-attempts': 'Hubo demasiados intentos. Espera unos minutos y vuelve a probar.',
+  unavailable: 'No pudimos conectarnos. Revisa tu red y reintenta.',
 };
 
 @Component({
@@ -18,7 +18,7 @@ const SIGN_IN_FAILURES: Record<SignInFailure, string> = {
   imports: [FormField, MatFormField, MatLabel, MatError, MatInput, MatButton, RouterLink],
   template: `
     <h1>Iniciar sesión</h1>
-    <form novalidate (submit)="$event.preventDefault(); signIn()">
+    <form class="ds-card" novalidate (submit)="$event.preventDefault(); signIn()">
       <mat-form-field>
         <mat-label>Correo</mat-label>
         <input matInput type="email" autocomplete="username" [formField]="loginForm.email" />
@@ -37,22 +37,27 @@ const SIGN_IN_FAILURES: Record<SignInFailure, string> = {
 
       <div role="alert" class="failure">{{ failure() }}</div>
 
-      <button matButton="filled" type="submit" [disabled]="loginForm().submitting()">Entrar</button>
+      <button matButton="filled" class="ds-primary-action" type="submit" [disabled]="loginForm().submitting()">Entrar</button>
     </form>
-    <!-- Quien llega por una invitación y todavía no tiene cuenta la crea acá, y vuelve al enlace. -->
-    <p class="other">¿No tenés cuenta? <a routerLink="/signup" [queryParams]="{ returnUrl: returnUrl() }">Creá una</a></p>
+    <!-- Quien llega por una invitación y todavía no tiene cuenta la crea aquí, y vuelve al enlace. -->
+    <p class="other">¿No tienes cuenta? <a routerLink="/signup" [queryParams]="{ returnUrl: returnUrl() }">Crea una</a></p>
   `,
   styles: `
     :host {
       display: block;
       max-width: 400px;
-      margin: 48px auto;
+      margin: var(--ds-space-12) auto;
     }
 
+    h1 {
+      margin-bottom: var(--ds-space-6);
+    }
+
+    /* Fuera del comercio hay dos planos, página y tarjeta: el formulario es la tarjeta (SC-005). */
     form {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: var(--ds-space-2);
     }
 
     .failure:empty {
@@ -60,13 +65,13 @@ const SIGN_IN_FAILURES: Record<SignInFailure, string> = {
     }
 
     .failure {
-      color: var(--mat-sys-error);
-      font: var(--mat-sys-body-medium);
+      color: var(--ds-status-error);
+      font: var(--ds-type-body);
     }
 
     .other {
-      margin-top: 16px;
-      font: var(--mat-sys-body-medium);
+      margin-top: var(--ds-space-4);
+      font: var(--ds-type-body);
     }
   `,
 })
@@ -79,9 +84,9 @@ export class Login {
 
   protected readonly credentials = signal({ email: '', password: '' });
   protected readonly loginForm = form(this.credentials, (path) => {
-    required(path.email, { message: 'Ingresá tu correo' });
+    required(path.email, { message: 'Ingresa tu correo' });
     email(path.email, { message: 'Ese correo no parece válido' });
-    required(path.password, { message: 'Ingresá tu contraseña' });
+    required(path.password, { message: 'Ingresa tu contraseña' });
   });
   /** El contenedor del aviso existe siempre: un `alert` agregado de golpe no siempre se anuncia. */
   protected readonly failure = signal('');

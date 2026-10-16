@@ -2,23 +2,18 @@
   display: block;
 }
 
-h2 {
-  margin: 0 0 8px;
-  font: var(--mat-sys-title-large);
-}
-
 mat-radio-group {
   display: flex;
   flex-direction: column;
 }
 
 .hint {
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-small);
+  color: var(--ds-text-secondary);
+  font: var(--ds-type-help);
 }
 
 .blocked {
-  color: var(--mat-sys-error);
+  color: var(--ds-status-error);
 }
 
 .blocked:empty {
@@ -27,12 +22,12 @@ mat-radio-group {
 
 .blocked p,
 .blocked ul {
-  margin: 8px 0;
+  margin: var(--ds-space-2) 0;
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--ds-space-2);
 }

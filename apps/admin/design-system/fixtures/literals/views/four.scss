@@ -1,0 +1,11 @@
+// Historia 4, escenario 1: un color, un tamaño de fuente, un espaciado y un radio escritos a mano.
+.card {
+  color: #ff0000;
+  font-size: 13px;
+  padding: 10px;
+  border-radius: 3px;
+  // Anchos y altos de diseño: no son ninguna de las categorías de FR-004.
+  width: 560px;
+  max-width: 1200px;
+  min-height: 48px;
+}

@@ -16,7 +16,7 @@ test.describe('con el teclado', () => {
     await expect(first).toBeVisible();
 
     await test.step('cada campo se guarda con Enter y se anuncia; Tab pasa al siguiente', async () => {
-      await first.getByLabel('SKU').focus();
+      await first.getByLabel('SKU', { exact: true }).focus();
       // El SKU es único en el comercio: uno nuevo por corrida.
       await page.keyboard.type(`TEC-${Date.now()}`);
       await page.keyboard.press('Enter');
@@ -41,14 +41,14 @@ test.describe('con el teclado', () => {
     });
 
     await test.step('la casilla se marca con Espacio y la barra de edición en lote sigue a la última fila', async () => {
-      await first.getByRole('checkbox', { name: 'Seleccionar Rojo / S' }).focus();
+      await first.getByRole('checkbox', { name: 'Seleccionar Rojo / S', exact: true }).focus();
       await page.keyboard.press('Space');
-      await expect(page.getByText('1 variante seleccionada')).toBeVisible();
-      await last.getByLabel('Existencias').focus();
+      await expect(page.getByText('1 variante seleccionada', { exact: true })).toBeVisible();
+      await last.getByLabel('Existencias', { exact: true }).focus();
       await page.keyboard.press('Tab');
-      await expect(page.getByLabel('Campo')).toBeFocused();
+      await expect(page.getByLabel('Campo', { exact: true })).toBeFocused();
       await page.keyboard.press('Tab');
-      await expect(page.getByLabel('Valor para todas')).toBeFocused();
+      await expect(page.getByLabel('Valor para todas', { exact: true })).toBeFocused();
       await page.keyboard.type('50000');
       await page.keyboard.press('Enter');
       await expect(announced).toHaveText('Precio aplicado a 1 variante');
@@ -85,7 +85,7 @@ test.describe('con el teclado', () => {
     await signIn(page, OWNER);
     await page.goto('/t/t1/categories');
     const announced = page.locator('.cdk-live-announcer-element');
-    const actions = (name: string) => page.getByRole('button', { name: `Acciones de «${name}»` });
+    const actions = (name: string) => page.getByRole('button', { name: `Acciones de «${name}»`, exact: true });
     const children = page.locator('li[data-category]').filter({ hasText: parent }).locator('li[data-category] .category-name');
     await expect(actions(second)).toBeVisible();
 

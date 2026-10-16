@@ -49,9 +49,9 @@ let instances = 0;
     </article>
   `,
   styles: `
+    /* El separador es el de la fila del sistema (\`.ds-table-row\`, en el \`<li>\` de la bitácora). */
     article {
-      padding: 12px 0;
-      border-bottom: 1px solid var(--mat-sys-outline-variant);
+      padding: var(--ds-space-3) 0;
     }
 
     p {
@@ -63,29 +63,30 @@ let instances = 0;
     }
 
     .title {
-      font: var(--mat-sys-title-small);
+      font: var(--ds-type-label);
     }
 
+    /* Metadatos: el nivel de ayuda, más denso que el texto, en secundario (T035). */
     .who,
     .diff {
-      color: var(--mat-sys-on-surface-variant);
-      font: var(--mat-sys-body-medium);
+      color: var(--ds-text-secondary);
+      font: var(--ds-type-help);
     }
 
     dl {
       display: flex;
       flex-wrap: wrap;
-      gap: 4px 16px;
-      margin: 4px 0 0;
+      gap: var(--ds-space-1) var(--ds-space-4);
+      margin: var(--ds-space-1) 0 0;
     }
 
     dl div {
       display: flex;
-      gap: 4px;
+      gap: var(--ds-space-1);
     }
 
     dt {
-      color: var(--mat-sys-on-surface-variant);
+      color: var(--ds-text-secondary);
     }
 
     dt::after {

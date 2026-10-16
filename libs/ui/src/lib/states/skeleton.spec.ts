@@ -29,9 +29,11 @@ describe('Skeleton', () => {
     rows.forEach((row) => expect(row.style.height).toBe('72px'));
   });
 
-  it('por defecto muestra tres filas y un texto genérico', async () => {
+  it('por defecto muestra tres filas del alto de la fila del listado, y un texto genérico', async () => {
     const host = await render();
-    expect(host.querySelectorAll('.skeleton-row')).toHaveLength(3);
+    const rows = host.querySelectorAll<HTMLElement>('.skeleton-row');
+    expect(rows).toHaveLength(3);
+    rows.forEach((row) => expect(row.style.height).toBe('var(--ds-row-height)'));
     expect(host.querySelector('.cdk-visually-hidden')?.textContent?.trim()).toBe('Cargando…');
   });
 });

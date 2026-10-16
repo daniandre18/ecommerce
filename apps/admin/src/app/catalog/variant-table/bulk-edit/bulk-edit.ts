@@ -61,27 +61,27 @@ const FIELD_NAMES: Record<BulkField, string> = { price: 'Precio', compareAtPrice
       position: sticky;
       bottom: 0;
       z-index: 1;
-      padding: 12px;
-      border-radius: 12px;
-      background: var(--mat-sys-secondary-container);
-      color: var(--mat-sys-on-secondary-container);
+      padding: var(--ds-space-3);
+      border-radius: var(--ds-radius-lg);
+      background: var(--ds-surface-selected);
+      color: var(--ds-text-primary);
     }
 
     .count {
-      margin: 0 0 8px;
-      font: var(--mat-sys-title-small);
+      margin: 0 0 var(--ds-space-2);
+      font: var(--ds-type-label);
     }
 
     .controls {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       align-items: center;
-      gap: 8px;
+      gap: var(--ds-space-2);
     }
 
     .failure {
-      margin-top: 8px;
-      color: var(--mat-sys-error);
+      margin-top: var(--ds-space-2);
+      color: var(--ds-status-error);
     }
 
     .failure:empty {
@@ -118,7 +118,7 @@ export class BulkEdit {
       }
       const parsed = parseMoneyInput(value(), this.currency());
       if (!parsed.ok) return { kind: 'format', message: parsed.message };
-      return field === 'price' && parsed.value === null ? { kind: 'required', message: 'Escribí el precio: no se puede quitar' } : undefined;
+      return field === 'price' && parsed.value === null ? { kind: 'required', message: 'Escribe el precio: no se puede quitar' } : undefined;
     });
   });
   protected readonly failure = signal('');
@@ -145,7 +145,7 @@ export class BulkEdit {
       } else {
         this.failure.set(
           result.code === 'version-conflict'
-            ? 'Alguna variante cambió mientras tanto. No se aplicó a ninguna: revisá los valores y volvé a aplicar.'
+            ? 'Alguna variante cambió mientras tanto. No se aplicó a ninguna: revisa los valores y vuelve a aplicar.'
             : commandErrorMessage(result.code),
         );
       }

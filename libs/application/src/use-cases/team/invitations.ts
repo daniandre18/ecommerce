@@ -119,7 +119,7 @@ export class AcceptInvitation {
       throw new BusinessRuleError('invalid-argument', 'Esta invitación es para otro correo', { reason: 'email-mismatch' });
     }
     if (existing && isActive(existing)) {
-      throw new BusinessRuleError('invalid-argument', 'Ya sos miembro de este comercio', { reason: 'already-member' });
+      throw new BusinessRuleError('invalid-argument', 'Ya eres miembro de este comercio', { reason: 'already-member' });
     }
 
     const now = this.deps.clock.now();

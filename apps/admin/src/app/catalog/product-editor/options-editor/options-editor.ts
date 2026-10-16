@@ -69,9 +69,9 @@ export class OptionsEditor {
   });
   protected readonly optionsForm = form(this.draft, (path) => {
     applyEach(path.options, (option) => {
-      required(option.name, { message: 'Escribí el nombre de la opción' });
+      required(option.name, { message: 'Escribe el nombre de la opción' });
       applyEach(option.values, (value) => {
-        required(value.label, { message: 'Escribí el valor' });
+        required(value.label, { message: 'Escribe el valor' });
       });
     });
   });
@@ -229,7 +229,7 @@ export class OptionsEditor {
 
 function failureMessage(failure: CommandFailure): string {
   if (failure.code === 'version-conflict') {
-    return 'Alguien más cambió las opciones mientras las editabas. Descartá tus cambios para ver las actuales.';
+    return 'Alguien más cambió las opciones mientras las editabas. Descarta tus cambios para ver las actuales.';
   }
   if (failure.code === 'limit-exceeded') {
     return `Se superan los topes: hasta ${MAX_OPTIONS} opciones y ${MAX_COMBINATIONS} combinaciones`;

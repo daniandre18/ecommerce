@@ -10,35 +10,44 @@
     <!--
       Estructura estática (SC-009): se pinta con el HTML, antes de que llegue y corra el código, y
       Angular la reemplaza al arrancar. Tiene la forma del marco —encabezado de dos filas y renglones—
-      para que el cambio no se note. Estilos acá adentro: la hoja de estilos todavía no llegó.
+      para que el cambio no se note. Estilos acá adentro: la hoja de estilos todavía no llegó, así que no
+      pueden usar var(--ds-*). Cada valor es una copia del token que representa, en cada esquema, y
+      apps/admin/design-system/boot.spec.ts verifica que siga siéndolo (research §4 de la 003).
     -->
     <style>
+      body {
+        margin: 0;
+        background: #f6f7ff;
+      }
       .boot {
         max-width: 1200px;
         margin-inline: auto;
         padding: 16px;
-        font-family: system-ui, sans-serif;
-        color: #49454f;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        color: #666666;
       }
       .boot-header {
         display: flex;
         align-items: center;
         height: 96px;
-        margin-bottom: 8px;
-        font-size: 14px;
+        margin-bottom: 16px;
+        font-size: 0.875rem;
       }
       .boot-row {
         height: 72px;
         margin-bottom: 8px;
-        border-radius: 12px;
-        background: #ece6f0;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.04);
       }
       @media (prefers-color-scheme: dark) {
+        body {
+          background: #13131a;
+        }
         .boot {
-          color: #cac4d0;
+          color: #a7a7a7;
         }
         .boot-row {
-          background: #2b2930;
+          background: rgba(255, 255, 255, 0.06);
         }
       }
       @media (prefers-reduced-motion: no-preference) {
